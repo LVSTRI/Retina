@@ -79,7 +79,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         const auto* mappedPtr = static_cast<const T*>(_allocationInfo.pMappedData);
         if (!mappedPtr) {
-            return;
+            return {};
         }
         // [size] == -1 => whole buffer
         // [size] == 0  => one element
