@@ -34,7 +34,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get upgrade -y
-        sudo apt-get install -y libxrandr-dev libxrandr2 libxinerama-dev
+        sudo apt-get install -y xorg-dev
 
     - name: Setup Ninja
       uses: ashutoshvarma/setup-ninja@v1.1
