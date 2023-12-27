@@ -11,7 +11,7 @@ namespace Retina {
         using Self = CGraphicsPipeline;
 
         CGraphicsPipeline() noexcept;
-        virtual ~CGraphicsPipeline() noexcept override = default;
+        ~CGraphicsPipeline() noexcept override = default;
 
         RETINA_NODISCARD static auto Make(
             const CDevice& device,

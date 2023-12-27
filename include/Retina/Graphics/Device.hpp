@@ -42,9 +42,9 @@ namespace Retina {
         VmaAllocator _allocator = {};
         SPhysicalDeviceProperties _physicalDeviceProperties = {};
 
-        CArcPtr<CQueue> _graphicsQueue = {};
-        CArcPtr<CQueue> _computeQueue = {};
-        CArcPtr<CQueue> _transferQueue = {};
+        CArcPtr<CQueue> _graphicsQueue;
+        CArcPtr<CQueue> _computeQueue;
+        CArcPtr<CQueue> _transferQueue;
 
         SDeviceCreateInfo _createInfo = {};
         std::shared_ptr<spdlog::logger> _logger;

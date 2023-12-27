@@ -13,7 +13,7 @@ namespace Retina {
         using Self = CBinarySemaphore;
 
         CBinarySemaphore() noexcept;
-        virtual ~CBinarySemaphore() noexcept override = default;
+        ~CBinarySemaphore() noexcept override = default;
 
         RETINA_NODISCARD static auto Make(const CDevice& device, const SBinarySemaphoreCreateInfo& createInfo) noexcept -> CArcPtr<Self>;
         RETINA_NODISCARD static auto Make(

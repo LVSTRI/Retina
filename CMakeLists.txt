@@ -128,13 +128,19 @@ target_compile_definitions(Retina PUBLIC
     TRACY_ENABLE
 )
 
+set(RETINA_COMPILER_WARNING_OPTIONS -Wno-missing-field-initializers)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(RETINA_COMPILER_WARNING_OPTIONS ${RETINA_COMPILER_WARNING_OPTIONS}
+        -Wno-language-extension-token
+        -Wno-gnu-statement-expression
+        -Wno-nullability-extension
+    )
+endif()
 target_compile_options(Retina PRIVATE
     -Wall
     -Wextra
-    -Wno-language-extension-token
-    -Wno-gnu-statement-expression
-    -Wno-nullability-extension
     -pedantic
+    ${RETINA_COMPILER_WARNING_OPTIONS}
 )
 
 target_include_directories(Retina PUBLIC

@@ -10,6 +10,9 @@
 
 #include <volk.h>
 
+#include <algorithm>
+#include <ranges>
+
 namespace Retina {
     RETINA_NODISCARD static auto IsSurfaceSupported(const CDevice& device, EQueueDomain domain, VkSurfaceKHR surface) noexcept -> bool {
         RETINA_PROFILE_SCOPED();
@@ -21,6 +24,7 @@ namespace Retina {
                 case EQueueDomain::E_COMPUTE: return device.GetComputeQueue().GetFamilyIndex();
                 case EQueueDomain::E_TRANSFER: return device.GetTransferQueue().GetFamilyIndex();
             }
+            std::unreachable();
         }();
         RETINA_VULKAN_CHECK(
             device.GetLogger(),

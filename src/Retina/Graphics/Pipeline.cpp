@@ -4,14 +4,13 @@
 #include <volk.h>
 
 #if defined(_WIN32)
-    #include <wrl/client.h>
+    #include <atlbase.h>
     #include <Windows.h>
-
-    template <typename T>
-    using CComPtr = Microsoft::WRL::ComPtr<T>;
 #endif
 #include <dxc/dxcapi.h>
 
+#include <vector>
+#include <ranges>
 #include <format>
 #include <span>
 
@@ -82,12 +81,15 @@ namespace Retina {
             L"-Zi",
             L"-O0",
         };
+        const auto appendArguments = [&](std::span<const std::wstring> data) {
+            arguments.insert(arguments.end(), data.begin(), data.end());
+        };
         for (const auto& includeDirectory : includeDirectories) {
-            arguments.insert_range(arguments.end(), std::to_array({
+            appendArguments(std::to_array({
                 L"-I"s, (rootShaderPath / includeDirectory).wstring()
             }));
         }
-        arguments.insert_range(arguments.end(), std::to_array({
+        appendArguments(std::to_array({
             L"-I"s, rootShaderPath.wstring(),
         }));
         auto argumentsPtrs = std::vector<const wchar_t*>();
@@ -106,7 +108,7 @@ namespace Retina {
                 &buffer,
                 argumentsPtrs.data(),
                 static_cast<uint32>(argumentsPtrs.size()),
-                includer.Get(),
+                includer,
                 IID_PPV_ARGS(&compileResult)
             )
         );

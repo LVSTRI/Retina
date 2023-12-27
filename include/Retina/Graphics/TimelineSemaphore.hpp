@@ -13,7 +13,7 @@ namespace Retina {
         using Self = CTimelineSemaphore;
 
         CTimelineSemaphore() noexcept;
-        virtual ~CTimelineSemaphore() noexcept override = default;
+        ~CTimelineSemaphore() noexcept override = default;
 
         RETINA_NODISCARD static auto Make(const CDevice& device, const STimelineSemaphoreCreateInfo& createInfo) noexcept -> CArcPtr<Self>;
         RETINA_NODISCARD static auto Make(

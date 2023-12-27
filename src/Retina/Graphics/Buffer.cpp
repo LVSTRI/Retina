@@ -5,6 +5,8 @@
 
 #include <volk.h>
 
+#include <cstring>
+
 namespace Retina {
     constexpr static auto DEFAULT_BUFFER_USAGE_FLAGS =
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT |

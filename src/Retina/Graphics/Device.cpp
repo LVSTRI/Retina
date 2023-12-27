@@ -7,6 +7,7 @@
 
 #include <volk.h>
 
+#include <cstring>
 #include <span>
 
 #define RETINA_DEVICE_LOGGER_NAME "Device"

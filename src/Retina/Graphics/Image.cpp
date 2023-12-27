@@ -50,6 +50,7 @@ namespace Retina {
                 case EQueueDomain::E_TRANSFER:
                     return device.GetTransferQueue().GetFamilyInfo();
             }
+            std::unreachable();
         }();
         RETINA_LOG_INFO(
             device.GetLogger(),

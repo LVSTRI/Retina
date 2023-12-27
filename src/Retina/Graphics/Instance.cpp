@@ -6,6 +6,7 @@
 #include <volk.h>
 
 #include <algorithm>
+#include <cstring>
 #include <ranges>
 #include <array>
 #include <span>
