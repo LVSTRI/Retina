@@ -21,11 +21,11 @@ jobs:
         c_compiler: [gcc, clang]
         include:
           - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
+            c_compiler: gcc-13
+            cpp_compiler: g++-13
           - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+            c_compiler: clang-17
+            cpp_compiler: clang++-17
 
     steps:
     - uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get upgrade -y
-        sudo apt-get install -y xorg-dev
+        sudo apt-get install -y xorg-dev gcc-13 clang-17
 
     - name: Setup Ninja
       uses: ashutoshvarma/setup-ninja@v1.1
