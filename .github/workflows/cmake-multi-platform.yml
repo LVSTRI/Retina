@@ -32,8 +32,9 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt-get update && sudo apt-get upgrade
-        sudo apt-get install libxrandr-dev libxrandr2
+        sudo apt-get update
+        sudo apt-get upgrade -y
+        sudo apt-get install -y libxrandr-dev libxrandr2 libxinerama-dev
 
     - name: Setup Ninja
       uses: ashutoshvarma/setup-ninja@v1.1
