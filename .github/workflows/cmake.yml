@@ -47,8 +47,8 @@ jobs:
       run: >
         cmake -G Ninja
         -B ${{ github.workspace }}/build
-        -DCMAKE_CXX_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.cxx_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
 
