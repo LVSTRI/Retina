@@ -7,23 +7,31 @@ on:
     branches: ["master"]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest, ubuntu-latest]
         build_type: [Debug, Release]
-        gcc_version: [13]
+        include:
+          - os: ubuntu-latest
+            c_compiler: gcc-13
+            cxx_compiler: g++-13
+          - os: windows-latest
+            c_compiler: clang
+            cxx_compiler: clang++
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Install Dependencies
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
         sudo apt-get upgrade -y
-        sudo apt-get install -y xorg-dev gcc-${{ matrix.gcc_version }} g++-${{ matrix.gcc_version }}
+        sudo apt-get install -y xorg-dev ${{ matrix.c_compiler }} ${{ matrix.cxx_compiler }}
 
     - name: Setup Ninja
       uses: ashutoshvarma/setup-ninja@v1.1
@@ -39,45 +47,10 @@ jobs:
       run: >
         cmake -G Ninja
         -B ${{ github.workspace }}/build
-        -DCMAKE_CXX_COMPILER=g++-${{ matrix.gcc_version }}
-        -DCMAKE_C_COMPILER=gcc-${{ matrix.gcc_version }}
+        -DCMAKE_CXX_COMPILER=g++-${{ matrix.c_compiler }}
+        -DCMAKE_C_COMPILER=gcc-${{ matrix.cxx_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
 
     - name: Build
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
-
-  build-windows:
-    runs-on: windows-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        build_type: [Debug, Release]
-        c_compiler: [clang]
-        cpp_compiler: [clang++]
-
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Ninja
-      uses: ashutoshvarma/setup-ninja@v1.1
-      with:
-        version: 1.10.0
-  
-    - name: Install Vulkan SDK
-      uses: humbletim/install-vulkan-sdk@v1.1.1
-      with:
-        version: latest
-
-    - name: Configure
-      run: >
-        cmake -G Ninja
-        -B ${{ github.workspace }}/build
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
-
-    - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}

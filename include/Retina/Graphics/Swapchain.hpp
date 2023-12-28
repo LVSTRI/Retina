@@ -32,13 +32,12 @@ namespace Retina {
         RETINA_NODISCARD auto GetImages() const noexcept -> std::span<const CArcPtr<CImage>>;
         RETINA_NODISCARD auto GetCreateInfo() const noexcept -> const SSwapchainCreateInfo&;
         RETINA_NODISCARD auto GetCurrentImageIndex() const noexcept -> uint32;
-        RETINA_NODISCARD auto IsLost() const noexcept -> bool;
         RETINA_NODISCARD auto GetDevice() const noexcept -> const CDevice&;
         RETINA_NODISCARD auto GetWindow() const noexcept -> const CWindow&;
 
         auto SetDebugName(std::string_view name) noexcept -> void;
 
-        RETINA_NODISCARD auto AcquireNextImage(const CBinarySemaphore& semaphore) noexcept -> const CImage&;
+        RETINA_NODISCARD auto AcquireNextImage(const CBinarySemaphore& semaphore) noexcept -> bool;
         RETINA_NODISCARD auto GetCurrentImage() const noexcept -> const CImage&;
 
     private:
@@ -51,7 +50,6 @@ namespace Retina {
         std::vector<CArcPtr<CImage>> _images;
 
         uint32 _currentImageIndex = 0;
-        bool _isLost = false;
 
         SSwapchainCreateInfo _createInfo = {};
         CArcPtr<const CDevice> _device;

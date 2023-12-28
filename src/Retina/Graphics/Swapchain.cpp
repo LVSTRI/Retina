@@ -339,11 +339,6 @@ namespace Retina {
         return _createInfo;
     }
 
-    auto CSwapchain::IsLost() const noexcept -> bool {
-        RETINA_PROFILE_SCOPED();
-        return _isLost;
-    }
-
     auto CSwapchain::GetDevice() const noexcept -> const CDevice& {
         RETINA_PROFILE_SCOPED();
         return *_device;
@@ -367,7 +362,7 @@ namespace Retina {
         RETINA_VULKAN_CHECK(_device->GetLogger(), vkSetDebugUtilsObjectNameEXT(_device->GetHandle(), &info));
     }
 
-    auto CSwapchain::AcquireNextImage(const CBinarySemaphore& semaphore) noexcept -> const CImage& {
+    auto CSwapchain::AcquireNextImage(const CBinarySemaphore& semaphore) noexcept -> bool {
         RETINA_PROFILE_SCOPED();
         const auto result =
             vkAcquireNextImageKHR(
@@ -382,9 +377,11 @@ namespace Retina {
             result == VK_ERROR_SURFACE_LOST_KHR ||
             result == VK_SUBOPTIMAL_KHR
         ) {
-            _isLost = true;
+            RETINA_LOG_WARN(_device->GetLogger(), "Swapchain is Out of Date");
+            return false;
         }
-        return *_images[_currentImageIndex];
+        RETINA_VULKAN_CHECK(_device->GetLogger(), result);
+        return true;
     }
 
     auto CSwapchain::GetCurrentImage() const noexcept -> const CImage& {

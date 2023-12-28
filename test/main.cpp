@@ -159,11 +159,14 @@ int main() {
 
     while (window->IsOpen()) {
         const auto currentFrameIndex = frameTimeline->WaitForNextTimelineValue();
-        const auto& swapchainImage = swapchain->AcquireNextImage(*imageAvailableSemaphores[currentFrameIndex]);
-        if (swapchain->IsLost()) {
-            resize();
-            continue;
+        {
+            const auto success = swapchain->AcquireNextImage(*imageAvailableSemaphores[currentFrameIndex]);
+            if (!success) {
+                resize();
+                continue;
+            }
         }
+        const auto& swapchainImage = swapchain->GetCurrentImage();
 
         auto& currentCommandBuffer = *commandBuffers[currentFrameIndex];
         auto& currentCameraBuffer = *cameraBuffers[currentFrameIndex];
