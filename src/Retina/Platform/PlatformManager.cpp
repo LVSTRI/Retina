@@ -53,11 +53,11 @@ namespace Retina::Platform {
         const auto* videoMode = glfwGetVideoMode(monitor);
         const auto maxWidth = videoMode->width;
         const auto maxHeight = videoMode->height;
-        auto position_x = 0_i32;
-        auto position_y = 0_i32;
-        glfwGetMonitorPos(monitor, &position_x, &position_y);
-        const auto x = static_cast<float32>(maxWidth) / 2.0f - static_cast<float32>(width) / 2.0f + static_cast<float32>(position_x);
-        const auto y = static_cast<float32>(maxHeight) / 2.0f - static_cast<float32>(height) / 2.0f + static_cast<float32>(position_y);
+        auto positionX = 0_i32;
+        auto positionY = 0_i32;
+        glfwGetMonitorPos(monitor, &positionX, &positionY);
+        const auto x = static_cast<float32>(maxWidth) / 2.0f - static_cast<float32>(width) / 2.0f + static_cast<float32>(positionX);
+        const auto y = static_cast<float32>(maxHeight) / 2.0f - static_cast<float32>(height) / 2.0f + static_cast<float32>(positionY);
         auto* windowHandle = glfwCreateWindow(static_cast<int32>(width), static_cast<int32>(height), title.data(), nullptr, nullptr);
         RETINA_ASSERT_WITH(windowHandle, "Failed to create window");
         glfwSetWindowPos(windowHandle, static_cast<int32>(x), static_cast<int32>(y));

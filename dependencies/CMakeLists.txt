@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(RetinaDependencies)
 
-find_package(Vulkan REQUIRED COMPONENTS dxc)
+find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
 
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 include(FetchContent)
@@ -61,6 +61,11 @@ FetchContent_Declare(
 )
 set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glm)
+target_compile_definitions(glm INTERFACE
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+    GLM_FORCE_RADIANS
+    GLM_FORCE_AVX2
+)
 
 FetchContent_Declare(
     vma
@@ -98,15 +103,25 @@ set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spirv_cross)
 
+FetchContent_Declare(
+    mio
+    GIT_REPOSITORY https://github.com/vimpunk/mio
+    GIT_TAG        master
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(mio)
+
 add_library(RetinaDependencies INTERFACE)
 target_link_libraries(RetinaDependencies INTERFACE
     TracyClient
-    Vulkan::dxc_lib
-    spirv-cross-hlsl
+    Vulkan::shaderc_combined
+    spirv-cross-glsl
     spdlog
     glfw
     volk
     glm
     vma
+    mio
 )
 target_include_directories(RetinaDependencies INTERFACE ${Vulkan_INCLUDE_DIRS})

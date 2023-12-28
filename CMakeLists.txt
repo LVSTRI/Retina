@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 project(Retina)
 set(CMAKE_CXX_STANDARD 23)
-cmake_policy(SET CMP0148 OLD)
 
 option(RETINA_BUILD_TEST_APPLICATION "Enables Vulkan Beta Extensions" ON)
 option(RETINA_ENABLE_DEBUG_LOGGER "Enables internal Debug Logger" ON)

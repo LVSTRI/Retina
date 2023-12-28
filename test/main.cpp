@@ -111,9 +111,8 @@ int main() {
     };
     auto mainPipeline = Retina::CGraphicsPipeline::Make(*device, {
         .Name = "MainPipeline",
-        .ShaderPath = "Triangle.hlsl",
-        .VertexShaderEntryPoint = "VSMain",
-        .FragmentShaderEntryPoint = "PSMain",
+        .VertexShader = "Triangle.vert.glsl",
+        .FragmentShader = "Triangle.frag.glsl",
         .DescriptorLayouts = { { *descriptorLayout } },
         .DynamicState = { {
             Retina::EDynamicState::E_VIEWPORT,
@@ -210,7 +209,6 @@ int main() {
                 .SetScissor()
                 .BindPipeline(*mainPipeline)
                 .BindDescriptorSet(currentDescriptorSet)
-                .PushConstants(Retina::MakeByteArray(0))
                 .Draw(3, 1, 0, 0)
             .EndRendering()
             .ImageMemoryBarrier({

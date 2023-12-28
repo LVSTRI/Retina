@@ -8,7 +8,7 @@
 #include <volk.h>
 
 namespace Retina {
-    namespace spvc = spirv_cross;
+    namespace Spvc = spirv_cross;
 
     CGraphicsPipeline::CGraphicsPipeline() noexcept : IPipeline(EPipelineType::E_GRAPHICS) {
         RETINA_PROFILE_SCOPED();
@@ -22,42 +22,40 @@ namespace Retina {
         auto pipeline = CArcPtr(new Self());
         const auto vertexShaderBinary = CompileShaderFromSource(
             device,
-            createInfo.ShaderPath,
+            createInfo.VertexShader,
             createInfo.ShaderIncludePaths,
-            MultiByteStringToWide(createInfo.VertexShaderEntryPoint),
             EShaderStage::E_VERTEX
         );
         auto shaderStages = std::vector<VkPipelineShaderStageCreateInfo>();
         shaderStages.reserve(2);
 
-        const auto vertexShaderCompiler = std::make_unique<spvc::CompilerHLSL>(vertexShaderBinary);
+        const auto vertexShaderCompiler = std::make_unique<Spvc::CompilerGLSL>(vertexShaderBinary);
         shaderStages.push_back({
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .pNext = nullptr,
             .flags = {},
             .stage = VK_SHADER_STAGE_VERTEX_BIT,
             .module = MakeShaderModule(device, vertexShaderBinary),
-            .pName = createInfo.VertexShaderEntryPoint.c_str(),
+            .pName = "main",
             .pSpecializationInfo = nullptr,
         });
 
-        auto fragmentShaderCompiler = std::unique_ptr<spvc::CompilerHLSL>();
-        if (createInfo.FragmentShaderEntryPoint) {
+        auto fragmentShaderCompiler = std::unique_ptr<Spvc::CompilerGLSL>();
+        if (createInfo.FragmentShader) {
             const auto fragmentShaderBinary = CompileShaderFromSource(
                 device,
-                createInfo.ShaderPath,
+                *createInfo.FragmentShader,
                 createInfo.ShaderIncludePaths,
-                MultiByteStringToWide(*createInfo.FragmentShaderEntryPoint),
                 EShaderStage::E_FRAGMENT
             );
-            fragmentShaderCompiler = std::make_unique<spvc::CompilerHLSL>(fragmentShaderBinary);
+            fragmentShaderCompiler = std::make_unique<Spvc::CompilerGLSL>(fragmentShaderBinary);
             shaderStages.push_back({
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = {},
                 .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
                 .module = MakeShaderModule(device, fragmentShaderBinary),
-                .pName = createInfo.FragmentShaderEntryPoint->c_str(),
+                .pName = "main",
                 .pSpecializationInfo = nullptr,
             });
         }
@@ -151,7 +149,7 @@ namespace Retina {
         depthStencilStateCreateInfo.maxDepthBounds = createInfo.DepthStencilState.MaxDepthBounds;
 
         auto colorBlendAttachments = createInfo.ColorBlendState.Attachments;
-        if (colorBlendAttachments.empty()) {
+        if (fragmentShaderCompiler && colorBlendAttachments.empty()) {
             const auto& resources = fragmentShaderCompiler->get_shader_resources();
             for (const auto& stageOutput : resources.stage_outputs) {
                 const auto& type = fragmentShaderCompiler->get_type(stageOutput.base_type_id);
@@ -206,7 +204,10 @@ namespace Retina {
         dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
         // TODO: Eventual DSL Reflection when no layout is given
-        auto pushConstantRange = ReflectPushConstantRange(vertexShaderCompiler.get());
+        auto pushConstantRange = ReflectPushConstantRange(*vertexShaderCompiler);
+        if (fragmentShaderCompiler && pushConstantRange.size == 0) {
+            pushConstantRange = ReflectPushConstantRange(*fragmentShaderCompiler);
+        }
         auto descriptorLayoutHandles = std::vector<VkDescriptorSetLayout>();
         if (createInfo.DescriptorLayouts) {
             descriptorLayoutHandles = MakeDescriptorLayoutHandles(*createInfo.DescriptorLayouts);

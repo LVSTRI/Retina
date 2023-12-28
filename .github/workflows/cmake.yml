@@ -1,6 +1,4 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: Retina CI
 
 on:
   push:
@@ -10,13 +8,11 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         build_type: [Debug, Release]
         gcc_version: [13]
 
@@ -39,37 +35,27 @@ jobs:
       with:
         version: latest
 
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
-    - name: Configure CMake
+    - name: Configure
       run: >
         cmake -G Ninja
-        -B ${{ steps.strings.outputs.build-output-dir }}
+        -B ${{ github.workspace }}/build
         -DCMAKE_CXX_COMPILER=g++-${{ matrix.gcc_version }}
         -DCMAKE_C_COMPILER=gcc-${{ matrix.gcc_version }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
 
     - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
   build-windows:
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
         build_type: [Debug, Release]
         c_compiler: [clang]
-        include:
-          - os: windows-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+        cpp_compiler: [clang++]
 
     steps:
     - uses: actions/checkout@v3
@@ -84,16 +70,10 @@ jobs:
       with:
         version: latest
 
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
-    - name: Configure CMake
+    - name: Configure
       run: >
         cmake -G Ninja
-        -B ${{ steps.strings.outputs.build-output-dir }}
+        -B ${{ github.workspace }}/build
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}

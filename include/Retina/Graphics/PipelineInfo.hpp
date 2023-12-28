@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include <spirv_hlsl.hpp>
+#include <spirv_glsl.hpp>
 
 #include <span>
 
@@ -133,9 +133,8 @@ namespace Retina {
 
     struct SGraphicsPipelineCreateInfo {
         std::string Name;
-        fs::path ShaderPath;
-        std::string VertexShaderEntryPoint;
-        std::optional<std::string> FragmentShaderEntryPoint = std::nullopt;
+        fs::path VertexShader;
+        std::optional<fs::path> FragmentShader = std::nullopt;
         std::vector<fs::path> ShaderIncludePaths = {};
 
         std::optional<std::vector<std::reference_wrapper<const CDescriptorLayout>>> DescriptorLayouts = std::nullopt;
@@ -152,10 +151,9 @@ namespace Retina {
 
     struct SMeshShadingPipelineCreateInfo {
         std::string Name;
-        fs::path ShaderPath;
-        std::string MeshShaderEntryPoint;
-        std::optional<std::string> TaskShaderEntryPoint = std::nullopt;
-        std::optional<std::string> FragmentShaderEntryPoint = std::nullopt;
+        fs::path MeshShader;
+        std::optional<fs::path> TaskShader = std::nullopt;
+        std::optional<fs::path> FragmentShader = std::nullopt;
         std::vector<fs::path> ShaderIncludePaths = {};
 
         std::optional<std::vector<std::reference_wrapper<const CDescriptorLayout>>> DescriptorLayouts = std::nullopt;
@@ -171,7 +169,7 @@ namespace Retina {
     };
 
     RETINA_NODISCARD auto MakeShaderModule(const CDevice& device, std::span<const uint32> spirv) noexcept -> VkShaderModule;
-    RETINA_NODISCARD auto ReflectPushConstantRange(const spirv_cross::CompilerHLSL* compiler) noexcept -> VkPushConstantRange;
+    RETINA_NODISCARD auto ReflectPushConstantRange(const spirv_cross::CompilerGLSL& compiler) noexcept -> VkPushConstantRange;
     RETINA_NODISCARD auto MakeDescriptorLayoutHandles(
         std::span<const std::reference_wrapper<const CDescriptorLayout>> descriptorLayouts
     ) noexcept -> std::vector<VkDescriptorSetLayout>;

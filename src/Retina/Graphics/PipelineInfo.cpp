@@ -24,16 +24,16 @@ namespace Retina {
         return shaderModuleHandle;
     }
 
-    auto ReflectPushConstantRange(const spirv_cross::CompilerHLSL* compiler) noexcept -> VkPushConstantRange {
+    auto ReflectPushConstantRange(const spirv_cross::CompilerGLSL& compiler) noexcept -> VkPushConstantRange {
         RETINA_PROFILE_SCOPED();
-        const auto resources = compiler->get_shader_resources();
+        const auto resources = compiler.get_shader_resources();
         auto pushConstantRange = VkPushConstantRange();
         if (!resources.push_constant_buffers.empty()) {
             const auto& pushConstantBuffer = resources.push_constant_buffers[0];
-            const auto& pushConstantType = compiler->get_type(pushConstantBuffer.base_type_id);
+            const auto& pushConstantType = compiler.get_type(pushConstantBuffer.base_type_id);
             pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
             pushConstantRange.offset = 0;
-            pushConstantRange.size = compiler->get_declared_struct_size(pushConstantType);
+            pushConstantRange.size = compiler.get_declared_struct_size(pushConstantType);
         }
         return pushConstantRange;
     }

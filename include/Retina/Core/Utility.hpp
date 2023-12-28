@@ -57,12 +57,12 @@ namespace Retina {
 
     template <typename T>
     RETINA_NODISCARD constexpr auto AsMutRef(T&& value) noexcept -> T& {
-        return *AsMutPtr(value);
+        return *AsMutPtr(std::forward<T>(value));
     }
 
     template <typename T>
     RETINA_NODISCARD constexpr auto AsMutRef(T(&&value)[]) noexcept -> T& {
-        return *AsMutPtr(value);
+        return *AsMutPtr(std::forward<T[]>(value));
     }
 
     template <typename... Ts>

@@ -36,7 +36,6 @@ namespace Retina {
         const CDevice& device,
         const fs::path& path,
         std::span<const fs::path> includeDirectories,
-        std::wstring_view entryPoint,
         EShaderStage shaderStage
     ) noexcept -> std::vector<uint32>;
 }
