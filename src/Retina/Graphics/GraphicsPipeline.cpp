@@ -34,12 +34,9 @@ namespace Retina {
         const auto vertexShaderCompiler = std::make_unique<Spvc::CompilerGLSL>(vertexShaderBinary);
         shaderStages.push_back({
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = {},
             .stage = VK_SHADER_STAGE_VERTEX_BIT,
             .module = MakeShaderModule(device, vertexShaderBinary),
             .pName = "main",
-            .pSpecializationInfo = nullptr,
         });
 
         auto fragmentShaderCompiler = std::unique_ptr<Spvc::CompilerGLSL>();
@@ -53,12 +50,9 @@ namespace Retina {
             fragmentShaderCompiler = std::make_unique<Spvc::CompilerGLSL>(fragmentShaderBinary);
             shaderStages.push_back({
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = {},
                 .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
                 .module = MakeShaderModule(device, fragmentShaderBinary),
                 .pName = "main",
-                .pSpecializationInfo = nullptr,
             });
         }
 
@@ -205,14 +199,13 @@ namespace Retina {
         dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
         dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
-        // TODO: Better push constant handling
         // TODO: Eventual DSL Reflection when no layout is given
         auto descriptorLayoutHandles = std::vector<VkDescriptorSetLayout>();
         if (createInfo.DescriptorLayouts) {
             descriptorLayoutHandles = MakeDescriptorLayoutHandles(*createInfo.DescriptorLayouts);
         }
 
-        const auto pushConstantInfo = ReflectPushConstantRange(std::to_array<spirv_cross::CompilerGLSL*>({
+        const auto pushConstantInfo = ReflectPushConstantRange(std::to_array({
             vertexShaderCompiler.get(),
             fragmentShaderCompiler.get()
         }));

@@ -55,6 +55,8 @@ namespace Retina {
     class CDescriptorTable;
 
     // <Graphics/Resources/ShaderResourceTable.hpp>
+    template <EDescriptorType D, typename T = void>
+    class CShaderResource;
     class CShaderResourceTable;
 
     // <Graphics/Sync/SyncHostTimeline.hpp>
@@ -94,6 +96,9 @@ namespace Retina {
 
     // <Graphics/CommandPoolInfo.hpp>
     struct SCommandPoolCreateInfo;
+
+    // <Graphics/ComputePipeline.hpp>
+    class CComputePipeline;
 
     // <Graphics/DescriptorLayout.hpp>
     class CDescriptorLayout;

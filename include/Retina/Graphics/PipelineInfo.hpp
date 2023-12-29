@@ -140,6 +140,8 @@ namespace Retina {
         std::string Name;
         fs::path ComputeShader;
         std::vector<fs::path> ShaderIncludePaths;
+
+        std::optional<std::vector<std::reference_wrapper<const CDescriptorLayout>>> DescriptorLayouts = std::nullopt;
     };
 
     struct SGraphicsPipelineCreateInfo {

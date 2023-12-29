@@ -41,6 +41,7 @@ set(RETINA_HEADERS
     include/Retina/Graphics/CommandBufferInfo.hpp
     include/Retina/Graphics/CommandPool.hpp
     include/Retina/Graphics/CommandPoolInfo.hpp
+    include/Retina/Graphics/ComputePipeline.hpp
     include/Retina/Graphics/DescriptorLayout.hpp
     include/Retina/Graphics/DescriptorLayoutInfo.hpp
     include/Retina/Graphics/DescriptorPool.hpp
@@ -87,6 +88,7 @@ set(RETINA_SOURCES
     src/Retina/Graphics/Buffer.cpp
     src/Retina/Graphics/CommandBuffer.cpp
     src/Retina/Graphics/CommandPool.cpp
+    src/Retina/Graphics/ComputePipeline.cpp
     src/Retina/Graphics/DescriptorLayout.cpp
     src/Retina/Graphics/DescriptorPool.cpp
     src/Retina/Graphics/DescriptorSet.cpp

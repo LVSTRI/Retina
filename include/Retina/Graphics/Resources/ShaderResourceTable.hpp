@@ -11,7 +11,7 @@
 #include <ranges>
 
 namespace Retina {
-    template <EDescriptorType D, typename T = void>
+    template <EDescriptorType D, typename T>
     class CShaderResource {
     public:
         using Self = CShaderResource;

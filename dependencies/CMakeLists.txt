@@ -155,7 +155,11 @@ set(SHADERC_ENABLE_WERROR_COMPILE OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(shaderc)
 target_compile_options(shaderc PRIVATE -Wno-everything)
+target_compile_options(shaderc_util PRIVATE -Wno-everything)
+target_compile_options(glslang PRIVATE -Wno-everything)
 target_compile_definitions(shaderc PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
+target_compile_definitions(shaderc_util PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
+target_compile_definitions(glslang PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
 
 FetchContent_Declare(
     mio
