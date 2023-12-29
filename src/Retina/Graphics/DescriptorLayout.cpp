@@ -103,8 +103,24 @@ namespace Retina {
         );
     }
 
+    auto CDescriptorLayout::GetBindings() const noexcept -> std::span<const SDescriptorLayoutBinding> {
+        RETINA_PROFILE_SCOPED();
+        return _createInfo.Bindings;
+    }
+
     auto CDescriptorLayout::GetBinding(uint32 binding) const noexcept -> const SDescriptorLayoutBinding& {
         RETINA_PROFILE_SCOPED();
         return _createInfo.Bindings[binding];
+    }
+
+    auto CDescriptorLayout::FindBindingFromDescriptorType(EDescriptorType type) const noexcept -> std::optional<uint32> {
+        RETINA_PROFILE_SCOPED();
+        const auto bindings = GetBindings();
+        for (auto i = 0_u32; i < bindings.size(); ++i) {
+            if (bindings[i].Type == type) {
+                return i;
+            }
+        }
+        return std::nullopt;
     }
 }

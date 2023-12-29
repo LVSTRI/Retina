@@ -50,6 +50,13 @@ namespace Retina {
     // <Graphics/Native/NativeDebugName.hpp>
     class INativeDebugName;
 
+    // <Graphics/Resources/DescriptorTable.hpp>
+    template <EDescriptorType D>
+    class CDescriptorTable;
+
+    // <Graphics/Resources/ShaderResourceTable.hpp>
+    class CShaderResourceTable;
+
     // <Graphics/Sync/SyncHostTimeline.hpp>
     class CSyncHostDeviceTimeline;
 
@@ -60,7 +67,6 @@ namespace Retina {
     class CBuffer;
 
     // <Graphics/BufferInfo.hpp>
-    enum class EBufferExtraCreateFlag : uint32;
     struct SBufferCreateInfo;
 
     // <Graphics/CommandBuffer.hpp>
@@ -173,6 +179,8 @@ namespace Retina {
     struct SPipelineColorBlendStateInfo;
     struct SPipelineDynamicStateInfo;
     struct SPipelineRenderingInfo;
+    struct SPipelinePushConstantInfo;
+    struct SPipelineLayout;
     struct SComputePipelineCreateInfo;
     struct SGraphicsPipelineCreateInfo;
     struct SMeshShadingPipelineCreateInfo;

@@ -24,8 +24,8 @@ namespace Retina {
     };
 
     struct SDescriptorWriteInfo {
-        uint32 Slot = {};
-        uint32 Binding = {};
+        uint32 Slot = 0;
+        uint32 Binding = -1_u32;
         EDescriptorType Type = {};
         std::variant<
             std::vector<SImageDescriptor>,

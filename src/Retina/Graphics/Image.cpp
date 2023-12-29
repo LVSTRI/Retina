@@ -276,4 +276,12 @@ namespace Retina {
         info.pObjectName = name.data();
         RETINA_VULKAN_CHECK(_device->GetLogger(), vkSetDebugUtilsObjectNameEXT(_device->GetHandle(), &info));
     }
+
+    auto CImage::GetDescriptor(EImageLayout layout) const noexcept -> SImageDescriptor {
+        RETINA_PROFILE_SCOPED();
+        return SImageDescriptor {
+            .View = _imageView->GetHandle(),
+            .Layout = layout
+        };
+    }
 }

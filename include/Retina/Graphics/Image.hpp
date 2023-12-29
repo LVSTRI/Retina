@@ -3,6 +3,7 @@
 #include <Retina/Core/Core.hpp>
 
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
+#include <Retina/Graphics/DescriptorSetInfo.hpp>
 #include <Retina/Graphics/ImageInfo.hpp>
 
 #include <vulkan/vulkan.h>
@@ -41,6 +42,8 @@ namespace Retina {
         RETINA_NODISCARD auto GetFormat() const noexcept -> EResourceFormat;
 
         auto SetDebugName(std::string_view name) noexcept -> void;
+
+        RETINA_NODISCARD auto GetDescriptor(EImageLayout layout = EImageLayout::E_GENERAL) const noexcept -> SImageDescriptor;
 
     private:
         VkImage _handle = {};

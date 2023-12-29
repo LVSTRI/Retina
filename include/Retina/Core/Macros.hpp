@@ -83,3 +83,5 @@
     switch (x) {                        \
         __VA_ARGS__                     \
     }
+
+#define inline_requires requires requires

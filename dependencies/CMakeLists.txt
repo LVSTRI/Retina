@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 project(RetinaDependencies)
 
-find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
+find_package(Vulkan REQUIRED)
 
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 include(FetchContent)
@@ -104,6 +104,60 @@ set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spirv_cross)
 
 FetchContent_Declare(
+    spirv-headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Headers
+    GIT_TAG        main
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(spirv-headers)
+
+FetchContent_Declare(
+    spirv-tools
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools
+    GIT_TAG        main
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+set(SKIP_SPIRV_TOOLS_INSTALL ON CACHE BOOL "" FORCE)
+set(SPIRV_WERROR OFF CACHE BOOL "" FORCE)
+set(SPIRV_WARN_EVERYTHING OFF CACHE BOOL "" FORCE)
+set(ENABLE_EXCEPTIONS_ON_MSVC OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(spirv-tools)
+target_compile_options(SPIRV-Tools-static PRIVATE -Wno-everything)
+
+FetchContent_Declare(
+    glslang
+    GIT_REPOSITORY https://github.com/KhronosGroup/glslang
+    GIT_TAG        main
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+set(BUILD_EXTERNAL OFF CACHE BOOL "" FORCE)
+set(BUILD_WERROR OFF CACHE BOOL "" FORCE)
+set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "" FORCE)
+set(ENABLE_RTTI OFF CACHE BOOL "" FORCE)
+set(ENABLE_EXCEPTIONS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glslang)
+
+FetchContent_Declare(
+    shaderc
+    GIT_REPOSITORY https://github.com/google/shaderc
+    GIT_TAG        main
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    FALSE
+)
+set(SHADERC_SKIP_TESTS ON CACHE BOOL "" FORCE)
+set(SHADERC_SKIP_INSTALL ON CACHE BOOL "" FORCE)
+set(SHADERC_SKIP_EXAMPLES ON CACHE BOOL "" FORCE)
+set(SHADERC_ENABLE_WERROR_COMPILE OFF CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(shaderc)
+target_compile_options(shaderc PRIVATE -Wno-everything)
+target_compile_definitions(shaderc PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
+
+FetchContent_Declare(
     mio
     GIT_REPOSITORY https://github.com/vimpunk/mio
     GIT_TAG        master
@@ -112,11 +166,21 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(mio)
 
+FetchContent_Declare(
+    unordered_dense
+    GIT_REPOSITORY https://github.com/martinus/unordered_dense
+    GIT_TAG        main
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(unordered_dense)
+
 add_library(RetinaDependencies INTERFACE)
 target_link_libraries(RetinaDependencies INTERFACE
     TracyClient
-    Vulkan::shaderc_combined
     spirv-cross-glsl
+    unordered_dense
+    shaderc
     spdlog
     glfw
     volk

@@ -118,6 +118,10 @@ namespace Retina {
             auto write = VkWriteDescriptorSet(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
             write.dstSet = _handle;
             write.dstBinding = currentWrite.Binding;
+            if (currentWrite.Binding == -1_u32) {
+                write.dstBinding = *GetLayout().FindBindingFromDescriptorType(currentWrite.Type);
+            }
+
             write.dstArrayElement = currentWrite.Slot;
             write.descriptorType = ToEnumCounterpart(currentWrite.Type);
 
@@ -175,13 +179,15 @@ namespace Retina {
             }
         }
 
-        vkUpdateDescriptorSets(
-            GetDevice().GetHandle(),
-            static_cast<uint32>(descriptorWrites.size()),
-            descriptorWrites.data(),
-            0,
-            nullptr
-        );
+        if (!descriptorWrites.empty()) {
+            vkUpdateDescriptorSets(
+                GetDevice().GetHandle(),
+                static_cast<uint32>(descriptorWrites.size()),
+                descriptorWrites.data(),
+                0,
+                nullptr
+            );
+        }
     }
 
     auto CDescriptorSet::SetDebugName(std::string_view name) noexcept -> void {

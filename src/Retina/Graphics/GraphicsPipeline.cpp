@@ -3,9 +3,11 @@
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/GraphicsPipeline.hpp>
 
-#include <spirv_hlsl.hpp>
+#include <spirv_glsl.hpp>
 
 #include <volk.h>
+
+#include <array>
 
 namespace Retina {
     namespace Spvc = spirv_cross;
@@ -203,21 +205,25 @@ namespace Retina {
         dynamicStateCreateInfo.dynamicStateCount = dynamicStates.size();
         dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
+        // TODO: Better push constant handling
         // TODO: Eventual DSL Reflection when no layout is given
-        auto pushConstantRange = ReflectPushConstantRange(*vertexShaderCompiler);
-        if (fragmentShaderCompiler && pushConstantRange.size == 0) {
-            pushConstantRange = ReflectPushConstantRange(*fragmentShaderCompiler);
-        }
         auto descriptorLayoutHandles = std::vector<VkDescriptorSetLayout>();
         if (createInfo.DescriptorLayouts) {
             descriptorLayoutHandles = MakeDescriptorLayoutHandles(*createInfo.DescriptorLayouts);
         }
+
+        const auto pushConstantInfo = ReflectPushConstantRange(std::to_array<spirv_cross::CompilerGLSL*>({
+            vertexShaderCompiler.get(),
+            fragmentShaderCompiler.get()
+        }));
+        const auto nativePushConstantInfo = std::bit_cast<VkPushConstantRange>(pushConstantInfo);
+
         auto pipelineLayoutCreateInfo = VkPipelineLayoutCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
         pipelineLayoutCreateInfo.setLayoutCount = descriptorLayoutHandles.size();
         pipelineLayoutCreateInfo.pSetLayouts = descriptorLayoutHandles.data();
-        if (pushConstantRange.size > 0) {
+        if (pushConstantInfo.Size > 0) {
             pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-            pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+            pipelineLayoutCreateInfo.pPushConstantRanges = &nativePushConstantInfo;
         }
 
         auto pipelineLayoutHandle = VkPipelineLayout();
@@ -292,7 +298,10 @@ namespace Retina {
         }
 
         pipeline->_handle = graphicsPipelineHandle;
-        pipeline->_layout = pipelineLayoutHandle;
+        pipeline->_layout = {
+            .Handle = pipelineLayoutHandle,
+            .PushConstantInfo = pushConstantInfo,
+        };
         pipeline->_createInfo = createInfo;
         pipeline->_device = device.ToArcPtr();
         pipeline->SetDebugName(createInfo.Name);

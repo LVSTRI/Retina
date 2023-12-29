@@ -3,6 +3,7 @@
 #include <Retina/Core/Core.hpp>
 
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
+#include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/CommandBufferInfo.hpp>
 
 #include <vulkan/vulkan.h>
@@ -16,8 +17,7 @@ namespace Retina {
         };
 
         struct SPipelineInfoState {
-            VkPipelineLayout Layout = {};
-            EPipelineType Type = {};
+            const IPipeline* Pipeline = nullptr;
         };
     }
 
@@ -57,6 +57,8 @@ namespace Retina {
         auto BindPipeline(const IPipeline& pipeline) noexcept -> Self&;
         auto BindDescriptorSet(const CDescriptorSet& descriptorSet) noexcept -> Self&;
         auto PushConstants(std::span<const uint8> values, uint32 offset = 0) noexcept -> Self&;
+        template <typename... Args>
+        auto PushConstants(Args&&... args) noexcept -> Self&;
         auto Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) noexcept -> Self&;
         auto EndRendering() noexcept -> Self&;
         auto MemoryBarrier(const SMemoryBarrier& memoryBarrier) noexcept -> Self&;
@@ -77,4 +79,11 @@ namespace Retina {
         CArcPtr<const CCommandPool> _commandPool;
         CArcPtr<const CQueue> _queue;
     };
+
+    template <typename... Args>
+    auto CCommandBuffer::PushConstants(Args&&... args) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        PushConstants(std::span<const uint8>(MakeByteArray(std::forward<Args>(args)...)));
+        return *this;
+    }
 }

@@ -2,6 +2,9 @@
 
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
 
+#include <Retina/Graphics/Resources/DescriptorTable.hpp>
+#include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
+
 #include <Retina/Graphics/Sync/SyncHostTimeline.hpp>
 
 #include <Retina/Graphics/BinarySemaphore.hpp>

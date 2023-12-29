@@ -2,8 +2,6 @@
 
 #include <Retina/Core/Core.hpp>
 
-#include <spdlog/spdlog.h>
-
 namespace Retina {
     class CSyncHostDeviceTimeline : public IEnableIntrusiveReferenceCount<CSyncHostDeviceTimeline> {
     public:
@@ -28,7 +26,6 @@ namespace Retina {
         CArcPtr<CTimelineSemaphore> _deviceTimelineSemaphore;
 
         uint64 _maxTimelineDifference = 0;
-        std::shared_ptr<spdlog::logger> _logger;
         CArcPtr<const CDevice> _device;
     };
 }

@@ -1,9 +1,11 @@
+#include <Retina/Graphics/DescriptorLayout.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Pipeline.hpp>
 
 #include <volk.h>
 
 #include <shaderc/shaderc.hpp>
+#include <spirv_glsl.hpp>
 #include <mio/mmap.hpp>
 
 #include <utility>
@@ -108,6 +110,67 @@ namespace Retina {
         }
     }
 
+    IPipeline::IPipeline(EPipelineType type) noexcept : _type(type) {
+        RETINA_PROFILE_SCOPED();
+    }
+
+    IPipeline::~IPipeline() noexcept {
+        RETINA_PROFILE_SCOPED();
+        RETINA_LOG_INFO(_device->GetLogger(), "Destroying Pipeline: \"{}\"", GetDebugName());
+        vkDestroyPipelineLayout(_device->GetHandle(), GetLayoutHandle(), nullptr);
+        vkDestroyPipeline(_device->GetHandle(), _handle, nullptr);
+    }
+
+    auto IPipeline::GetHandle() const noexcept -> VkPipeline {
+        RETINA_PROFILE_SCOPED();
+        return _handle;
+    }
+
+    auto IPipeline::GetLayout() const noexcept -> const SPipelineLayout& {
+        RETINA_PROFILE_SCOPED();
+        return _layout;
+    }
+
+    auto IPipeline::GetType() const noexcept -> EPipelineType {
+        RETINA_PROFILE_SCOPED();
+        return _type;
+    }
+
+    auto IPipeline::GetDevice() const noexcept -> const CDevice& {
+        RETINA_PROFILE_SCOPED();
+        return *_device;
+    }
+
+    auto IPipeline::SetDebugName(std::string_view name) noexcept -> void {
+        RETINA_PROFILE_SCOPED();
+        if (name.empty()) {
+            return;
+        }
+        INativeDebugName::SetDebugName(name);
+        auto info = VkDebugUtilsObjectNameInfoEXT(VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT);
+        info.objectType = VK_OBJECT_TYPE_PIPELINE;
+        info.objectHandle = reinterpret_cast<uint64>(_handle);
+        info.pObjectName = name.data();
+
+        RETINA_VULKAN_CHECK(
+            _device->GetLogger(),
+            vkSetDebugUtilsObjectNameEXT(
+                _device->GetHandle(),
+                &info
+            )
+        );
+    }
+
+    auto IPipeline::GetLayoutPushConstantInfo() const noexcept -> const SPipelinePushConstantInfo& {
+        RETINA_PROFILE_SCOPED();
+        return _layout.PushConstantInfo;
+    }
+
+    auto IPipeline::GetLayoutHandle() const noexcept -> VkPipelineLayout {
+        RETINA_PROFILE_SCOPED();
+        return _layout.Handle;
+    }
+
     auto CompileShaderFromSource(
         const CDevice& device,
         const fs::path& path,
@@ -126,6 +189,7 @@ namespace Retina {
         auto compiler = Shc::Compiler();
         auto compilerOptions = Shc::CompileOptions();
         compilerOptions.SetGenerateDebugInfo();
+        compilerOptions.SetSuppressWarnings();
         compilerOptions.SetOptimizationLevel(shaderc_optimization_level_zero);
         compilerOptions.SetIncluder(std::make_unique<Private::CShaderIncluder>(includeDirectoriesWithRoot));
         compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);
@@ -154,49 +218,85 @@ namespace Retina {
         return { spirv.cbegin(), spirv.cend() };
     }
 
-    IPipeline::IPipeline(EPipelineType type) noexcept : _type(type) {
+    auto MakeShaderModule(const CDevice& device, std::span<const uint32> spirv) noexcept -> VkShaderModule {
         RETINA_PROFILE_SCOPED();
-    }
-
-    IPipeline::~IPipeline() noexcept {
-        RETINA_PROFILE_SCOPED();
-        RETINA_LOG_INFO(_device->GetLogger(), "Destroying Pipeline: \"{}\"", GetDebugName());
-        vkDestroyPipelineLayout(_device->GetHandle(), _layout, nullptr);
-        vkDestroyPipeline(_device->GetHandle(), _handle, nullptr);
-    }
-
-    auto IPipeline::GetHandle() const noexcept -> VkPipeline {
-        RETINA_PROFILE_SCOPED();
-        return _handle;
-    }
-
-    auto IPipeline::GetLayout() const noexcept -> VkPipelineLayout {
-        RETINA_PROFILE_SCOPED();
-        return _layout;
-    }
-
-    auto IPipeline::GetType() const noexcept -> EPipelineType {
-        RETINA_PROFILE_SCOPED();
-        return _type;
-    }
-
-    auto IPipeline::SetDebugName(std::string_view name) noexcept -> void {
-        RETINA_PROFILE_SCOPED();
-        if (name.empty()) {
-            return;
-        }
-        INativeDebugName::SetDebugName(name);
-        auto info = VkDebugUtilsObjectNameInfoEXT(VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT);
-        info.objectType = VK_OBJECT_TYPE_PIPELINE;
-        info.objectHandle = reinterpret_cast<uint64>(_handle);
-        info.pObjectName = name.data();
-
+        auto shaderModuleCreateInfo = VkShaderModuleCreateInfo(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
+        shaderModuleCreateInfo.codeSize = spirv.size_bytes();
+        shaderModuleCreateInfo.pCode = spirv.data();
+        auto shaderModuleHandle = VkShaderModule();
         RETINA_VULKAN_CHECK(
-            _device->GetLogger(),
-            vkSetDebugUtilsObjectNameEXT(
-                _device->GetHandle(),
-                &info
+            device.GetLogger(),
+            vkCreateShaderModule(
+                device.GetHandle(),
+                &shaderModuleCreateInfo,
+                nullptr,
+                &shaderModuleHandle
             )
         );
+        return shaderModuleHandle;
+    }
+
+    auto ExecutionModelToShaderStage(const spirv_cross::CompilerGLSL& compiler) noexcept -> EShaderStage {
+        RETINA_PROFILE_SCOPED();
+        switch (compiler.get_execution_model()) {
+            case spv::ExecutionModelVertex: return EShaderStage::E_VERTEX;
+            case spv::ExecutionModelTessellationControl: return EShaderStage::E_TESSELLATION_CONTROL;
+            case spv::ExecutionModelTessellationEvaluation: return EShaderStage::E_TESSELLATION_EVALUATION;
+            case spv::ExecutionModelGeometry: return EShaderStage::E_GEOMETRY;
+            case spv::ExecutionModelFragment: return EShaderStage::E_FRAGMENT;
+            case spv::ExecutionModelGLCompute: RETINA_FALLTHROUGH;
+            case spv::ExecutionModelKernel: return EShaderStage::E_COMPUTE;
+            case spv::ExecutionModelTaskNV: return EShaderStage::E_TASK_NV;
+            case spv::ExecutionModelMeshNV: return EShaderStage::E_MESH_NV;
+            case spv::ExecutionModelRayGenerationKHR: return EShaderStage::E_RAYGEN_KHR;
+            case spv::ExecutionModelIntersectionKHR: return EShaderStage::E_INTERSECTION_KHR;
+            case spv::ExecutionModelAnyHitKHR: return EShaderStage::E_ANY_HIT_KHR;
+            case spv::ExecutionModelClosestHitKHR: return EShaderStage::E_CLOSEST_HIT_KHR;
+            case spv::ExecutionModelMissKHR: return EShaderStage::E_MISS_KHR;
+            case spv::ExecutionModelCallableKHR: return EShaderStage::E_CALLABLE_KHR;
+            case spv::ExecutionModelTaskEXT: return EShaderStage::E_TASK_EXT;
+            case spv::ExecutionModelMeshEXT: return EShaderStage::E_MESH_EXT;
+            default: return {};
+        }
+    }
+
+    auto ReflectPushConstantRange(
+        std::span<const spirv_cross::CompilerGLSL* const> compilers
+    ) noexcept -> SPipelinePushConstantInfo {
+        RETINA_PROFILE_SCOPED();
+        auto pushConstantInfo = SPipelinePushConstantInfo();
+        for (const auto* compiler : compilers) {
+            const auto resources = compiler->get_shader_resources();
+            if (resources.push_constant_buffers.empty()) {
+                continue;
+            }
+            const auto& pushConstantBuffer = resources.push_constant_buffers.back();
+            const auto& pushConstantType = compiler->get_type(pushConstantBuffer.type_id);
+            const auto pushConstantSize = compiler->get_declared_struct_size(pushConstantType);
+            const auto shaderStage = ExecutionModelToShaderStage(*compiler);
+            if (pushConstantInfo.Size == 0) {
+                pushConstantInfo = {
+                    .ShaderStage = shaderStage,
+                    .Offset = 0,
+                    .Size = static_cast<uint32>(pushConstantSize)
+                };
+            } else {
+                RETINA_ASSERT_WITH(pushConstantInfo.Size == pushConstantSize, "Push Constant size mismatch");
+                pushConstantInfo.ShaderStage |= shaderStage;
+            }
+        }
+        return pushConstantInfo;
+    }
+
+    auto MakeDescriptorLayoutHandles(
+        std::span<const std::reference_wrapper<const CDescriptorLayout>> descriptorLayouts
+    ) noexcept -> std::vector<VkDescriptorSetLayout> {
+        RETINA_PROFILE_SCOPED();
+        auto descriptorLayoutHandles = std::vector<VkDescriptorSetLayout>();
+        descriptorLayoutHandles.reserve(descriptorLayouts.size());
+        for (const auto& descriptorLayout : descriptorLayouts) {
+            descriptorLayoutHandles.push_back(descriptorLayout.get().GetHandle());
+        }
+        return descriptorLayoutHandles;
     }
 }

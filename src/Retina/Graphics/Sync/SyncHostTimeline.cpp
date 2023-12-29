@@ -2,20 +2,16 @@
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/TimelineSemaphore.hpp>
 
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 namespace Retina {
     auto CSyncHostDeviceTimeline::Make(const CDevice& device, uint64 maxTimelineDifference) noexcept -> CArcPtr<Self> {
         RETINA_PROFILE_SCOPED();
         auto timeline = CArcPtr(new Self());
-        auto logger = spdlog::stdout_color_mt("SyncHostTimeline");
         timeline->_hostTimelineValue = 0;
         timeline->_deviceTimelineSemaphore = CTimelineSemaphore::Make(device, {
             .Name = "SyncHostTimeline_DeviceTimelineSemaphore",
             .Counter = 0,
         });
         timeline->_maxTimelineDifference = maxTimelineDifference;
-        timeline->_logger = std::move(logger);
         timeline->_device = device.ToArcPtr();
         return timeline;
     }

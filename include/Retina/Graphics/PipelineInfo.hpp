@@ -115,6 +115,17 @@ namespace Retina {
         std::optional<EResourceFormat> StencilAttachmentFormat = std::nullopt;
     };
 
+    struct SPipelinePushConstantInfo {
+        EShaderStage ShaderStage = {};
+        uint32 Offset = 0;
+        uint32 Size = 0;
+    };
+
+    struct SPipelineLayout {
+        VkPipelineLayout Handle = {};
+        SPipelinePushConstantInfo PushConstantInfo = {};
+    };
+
     namespace Constant {
         const inline auto DEFAULT_PIPELINE_TESSELLATION_STATE_INFO = SPipelineTessellationStateInfo();
         const inline auto DEFAULT_PIPELINE_VIEWPORT_STATE_INFO = SPipelineViewportStateInfo();
@@ -167,10 +178,4 @@ namespace Retina {
         SPipelineDynamicStateInfo DynamicState = Constant::DEFAULT_PIPELINE_DYNAMIC_STATE_INFO;
         std::optional<SPipelineRenderingInfo> RenderingInfo = std::nullopt;
     };
-
-    RETINA_NODISCARD auto MakeShaderModule(const CDevice& device, std::span<const uint32> spirv) noexcept -> VkShaderModule;
-    RETINA_NODISCARD auto ReflectPushConstantRange(const spirv_cross::CompilerGLSL& compiler) noexcept -> VkPushConstantRange;
-    RETINA_NODISCARD auto MakeDescriptorLayoutHandles(
-        std::span<const std::reference_wrapper<const CDescriptorLayout>> descriptorLayouts
-    ) noexcept -> std::vector<VkDescriptorSetLayout>;
 }

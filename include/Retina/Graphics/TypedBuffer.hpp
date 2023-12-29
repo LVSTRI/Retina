@@ -21,7 +21,7 @@ namespace Retina {
             uint32 count,
             const SBufferCreateInfo& createInfo
         ) noexcept -> std::vector<CArcPtr<Self>>;
-        RETINA_NODISCARD static auto From(const CBuffer& buffer) noexcept -> CArcPtr<Self>;
+        RETINA_NODISCARD static auto From(CBuffer& buffer) noexcept -> CArcPtr<Self>;
         RETINA_NODISCARD static auto From(std::span<CBuffer> buffers) noexcept -> std::vector<CArcPtr<Self>>;
 
         RETINA_NODISCARD auto GetBuffer() const noexcept -> CBuffer&;
@@ -82,7 +82,7 @@ namespace Retina {
     }
 
     template <typename T>
-    auto CTypedBuffer<T>::From(const CBuffer& buffer) noexcept -> CArcPtr<Self> {
+    auto CTypedBuffer<T>::From(CBuffer& buffer) noexcept -> CArcPtr<Self> {
         RETINA_PROFILE_SCOPED();
         auto typedBuffer = CArcPtr(new Self());
         typedBuffer->_buffer = buffer.ToArcPtr();

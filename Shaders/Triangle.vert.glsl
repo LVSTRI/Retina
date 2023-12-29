@@ -1,13 +1,24 @@
 #version 460
+#include <Intrinsics.glsl>
+#include <Bindings.glsl>
 
-layout (set = 0, binding = 0) restrict readonly buffer BCamera {
+layout (location = 0) out vec4 o_color;
+
+layout (push_constant) uniform UPushConstants {
+    uint u_cameraId;
+};
+
+struct SCamera {
     mat4 Projection;
     mat4 View;
     mat4 ProjView;
     vec4 Position;
-} b_camera;
+};
 
-layout (location = 0) out vec4 o_color;
+RetinaDeclareStorageBuffer(restrict readonly, BCameraBuffer, {
+    SCamera Data;
+});
+#define cameraBufferPtr RetinaGetStorageBuffer(BCameraBuffer, u_cameraId)
 
 void main() {
     const vec3[] trianglePositions = vec3[](
@@ -21,5 +32,5 @@ void main() {
         vec3(0.0, 0.0, 1.0)
     );
     o_color = vec4(triangleColors[gl_VertexIndex], 1.0);
-    gl_Position = b_camera.ProjView * vec4(trianglePositions[gl_VertexIndex], 1.0);
+    gl_Position = cameraBufferPtr.Data.ProjView * vec4(trianglePositions[gl_VertexIndex], 1.0);
 }

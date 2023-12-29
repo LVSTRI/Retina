@@ -40,10 +40,10 @@ namespace Retina::Platform {
 
     auto MakeWindowHandle(std::string_view title, uint32 width, uint32 height, const SWindowFeatures& features) noexcept -> NativeHandle {
         RETINA_PROFILE_SCOPED();
-        const auto featureHintMapping = std::to_array({
-            std::make_pair(GLFW_RESIZABLE, features.Resizable),
-            std::make_pair(GLFW_DECORATED, features.Decorated),
-            std::make_pair(GLFW_FOCUSED, features.Focused),
+        const auto featureHintMapping = std::to_array<std::pair<int32, bool>>({
+            { GLFW_RESIZABLE, features.Resizable },
+            { GLFW_DECORATED, features.Decorated },
+            { GLFW_FOCUSED, features.Focused },
         });
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         for (const auto& [hint, value] : featureHintMapping) {

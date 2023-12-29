@@ -15,6 +15,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 set(RETINA_HEADERS
+    include/Retina/Core/External/HashMap.hpp
+
     include/Retina/Core/ArcPtr.hpp
     include/Retina/Core/Core.hpp
     include/Retina/Core/EnableIntrusiveReferenceCount.hpp
@@ -26,6 +28,9 @@ set(RETINA_HEADERS
     include/Retina/Core/Utility.hpp
 
     include/Retina/Graphics/Native/NativeDebugName.hpp
+
+    include/Retina/Graphics/Resources/DescriptorTable.hpp
+    include/Retina/Graphics/Resources/ShaderResourceTable.hpp
 
     include/Retina/Graphics/Sync/SyncHostTimeline.hpp
 
@@ -73,6 +78,9 @@ set(RETINA_HEADERS
 set(RETINA_SOURCES
     src/Retina/Graphics/Native/NativeDebugName.cpp
 
+    src/Retina/Graphics/Resources/DescriptorTable.cpp
+    src/Retina/Graphics/Resources/ShaderResourceTable.cpp
+
     src/Retina/Graphics/Sync/SyncHostTimeline.cpp
 
     src/Retina/Graphics/BinarySemaphore.cpp
@@ -90,7 +98,6 @@ set(RETINA_SOURCES
     src/Retina/Graphics/ImageView.cpp
     src/Retina/Graphics/Instance.cpp
     src/Retina/Graphics/Pipeline.cpp
-    src/Retina/Graphics/PipelineInfo.cpp
     src/Retina/Graphics/Queue.cpp
     src/Retina/Graphics/Semaphore.cpp
     src/Retina/Graphics/Swapchain.cpp

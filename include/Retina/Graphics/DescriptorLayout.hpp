@@ -24,7 +24,10 @@ namespace Retina {
 
         auto SetDebugName(std::string_view name) noexcept -> void;
 
+        RETINA_NODISCARD auto GetBindings() const noexcept -> std::span<const SDescriptorLayoutBinding>;
         RETINA_NODISCARD auto GetBinding(uint32 binding) const noexcept -> const SDescriptorLayoutBinding&;
+
+        RETINA_NODISCARD auto FindBindingFromDescriptorType(EDescriptorType type) const noexcept -> std::optional<uint32>;
 
     private:
         VkDescriptorSetLayout _handle = {};

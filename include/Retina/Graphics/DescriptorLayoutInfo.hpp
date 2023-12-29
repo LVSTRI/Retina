@@ -15,6 +15,6 @@ namespace Retina {
     struct SDescriptorLayoutCreateInfo {
         std::string Name;
         EDescriptorLayoutCreateFlag Flags = {};
-        std::span<const SDescriptorLayoutBinding> Bindings;
+        std::vector<SDescriptorLayoutBinding> Bindings;
     };
 }

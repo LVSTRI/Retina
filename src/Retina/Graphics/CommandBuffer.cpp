@@ -356,32 +356,25 @@ namespace Retina {
     auto CCommandBuffer::BindPipeline(const IPipeline& pipeline) noexcept -> Self& {
         RETINA_PROFILE_SCOPED();
         vkCmdBindPipeline(_handle, ToPipelineBindPoint(pipeline.GetType()), pipeline.GetHandle());
-        _currentPipelineState.Layout = pipeline.GetLayout();
-        _currentPipelineState.Type = pipeline.GetType();
+        _currentPipelineState.Pipeline = &pipeline;
         return *this;
     }
 
     auto CCommandBuffer::BindDescriptorSet(const CDescriptorSet& descriptorSet) noexcept -> Self& {
         RETINA_PROFILE_SCOPED();
-        vkCmdBindDescriptorSets(
-            _handle,
-            ToPipelineBindPoint(_currentPipelineState.Type),
-            _currentPipelineState.Layout,
-            0,
-            1,
-            AsConstPtr(descriptorSet.GetHandle()),
-            0,
-            nullptr
-        );
+        const auto type = ToPipelineBindPoint(_currentPipelineState.Pipeline->GetType());
+        const auto layoutHandle = _currentPipelineState.Pipeline->GetLayoutHandle();
+        vkCmdBindDescriptorSets(_handle, type, layoutHandle, 0, 1, AsConstPtr(descriptorSet.GetHandle()), 0, nullptr);
         return *this;
     }
 
     auto CCommandBuffer::PushConstants(std::span<const uint8> values, uint32 offset) noexcept -> Self& {
         RETINA_PROFILE_SCOPED();
+        const auto& [handle, pushConstantInfo] = _currentPipelineState.Pipeline->GetLayout();
         vkCmdPushConstants(
             _handle,
-            _currentPipelineState.Layout,
-            VK_SHADER_STAGE_ALL,
+            handle,
+            ToEnumCounterpart(pushConstantInfo.ShaderStage),
             offset,
             values.size(),
             values.data()
