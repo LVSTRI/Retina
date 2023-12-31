@@ -23,13 +23,20 @@ namespace Retina {
         RETINA_NODISCARD constexpr auto operator <=>(const SBufferDescriptor&) const noexcept -> std::strong_ordering = default;
     };
 
+    struct SAccelerationStructureDescriptor {
+        VkAccelerationStructureKHR Handle = {};
+
+        RETINA_NODISCARD constexpr auto operator <=>(const SAccelerationStructureDescriptor&) const noexcept -> std::strong_ordering = default;
+    };
+
     struct SDescriptorWriteInfo {
         uint32 Slot = 0;
         uint32 Binding = -1_u32;
         EDescriptorType Type = {};
         std::variant<
             std::vector<SImageDescriptor>,
-            std::vector<SBufferDescriptor>
+            std::vector<SBufferDescriptor>,
+            std::vector<SAccelerationStructureDescriptor>
         > Descriptors;
 
         RETINA_NODISCARD constexpr auto operator <=>(const SDescriptorWriteInfo&) const noexcept -> std::strong_ordering = default;

@@ -14,6 +14,7 @@ namespace Retina {
         INativeDebugName() noexcept = default;
         ~INativeDebugName() noexcept = default;
 
+    private:
         std::string _name;
     };
 }

@@ -2,14 +2,23 @@
 
 #include <Retina/Core/Core.hpp>
 
+#include <Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
+
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/DescriptorSetInfo.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Image.hpp>
+#include <Retina/Graphics/Sampler.hpp>
 
 namespace Retina {
     template <EDescriptorType Type>
     struct SSelectDescriptorType;
+
+    template <>
+    struct SSelectDescriptorType<EDescriptorType::E_SAMPLER> {
+        using Resource = CSampler;
+        using Descriptor = SImageDescriptor;
+    };
 
     template <>
     struct SSelectDescriptorType<EDescriptorType::E_SAMPLED_IMAGE> {
@@ -35,6 +44,12 @@ namespace Retina {
         using Descriptor = SBufferDescriptor;
     };
 
+    template <>
+    struct SSelectDescriptorType<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR> {
+        using Resource = CTopLevelAccelerationStructure;
+        using Descriptor = SAccelerationStructureDescriptor;
+    };
+
     template <EDescriptorType D>
     class CDescriptorTable {
     public:
@@ -46,20 +61,30 @@ namespace Retina {
         ~CDescriptorTable() noexcept = default;
 
         auto AllocateResource(
+            CArcPtr<CSampler> sampler
+        ) noexcept -> uint32
+            requires (std::same_as<Resource, CSampler>);
+
+        auto AllocateResource(
             CArcPtr<CBuffer> buffer
         ) noexcept -> uint32
-            requires (std::same_as<Descriptor, SBufferDescriptor>);
+            requires (std::same_as<Resource, CBuffer>);
 
         auto AllocateResource(
             std::span<CArcPtr<CBuffer>> buffers
         ) noexcept -> std::vector<uint32>
-            requires (std::same_as<Descriptor, SBufferDescriptor>);
+            requires (std::same_as<Resource, CBuffer>);
 
         auto AllocateResource(
             CArcPtr<CImage> image,
             EImageLayout layout = EImageLayout::E_GENERAL
         ) noexcept -> uint32
-            requires (std::same_as<Descriptor, SImageDescriptor>);
+            requires (std::same_as<Resource, CImage>);
+
+        auto AllocateResource(
+            CArcPtr<CTopLevelAccelerationStructure> accelerationStructure
+        ) noexcept -> uint32
+            requires (std::same_as<Resource, CTopLevelAccelerationStructure>);
 
         auto FreeResource(uint32 index) noexcept -> void;
 
@@ -72,49 +97,4 @@ namespace Retina {
         std::vector<uint32> _free;
         std::vector<std::pair<uint32, Descriptor>> _writes;
     };
-
-    template <EDescriptorType D>
-    auto CDescriptorTable<D>::AllocateResource(
-        CArcPtr<CBuffer> buffer
-    ) noexcept -> uint32
-        requires (std::same_as<Descriptor, SBufferDescriptor>)
-    {
-        RETINA_PROFILE_SCOPED();
-        const auto index = GetFreeIndex();
-        _writes.emplace_back(index, buffer->GetDescriptor());
-        _resources[index] = std::move(buffer);
-        return index;
-    }
-
-    template <EDescriptorType D>
-    auto CDescriptorTable<D>::AllocateResource(
-        std::span<CArcPtr<CBuffer>> buffers
-    ) noexcept -> std::vector<uint32>
-        requires (std::same_as<Descriptor, SBufferDescriptor>)
-    {
-        RETINA_PROFILE_SCOPED();
-        auto indices = std::vector<uint32>();
-        indices.reserve(buffers.size());
-        for (auto&& buffer : buffers) {
-            const auto index = GetFreeIndex();
-            _writes.emplace_back(index, buffer->GetDescriptor());
-            _resources[index] = std::move(buffer);
-            indices.emplace_back(index);
-        }
-        return indices;
-    }
-
-    template <EDescriptorType D>
-    auto CDescriptorTable<D>::AllocateResource(
-        CArcPtr<CImage> image,
-        EImageLayout layout
-    ) noexcept -> uint32
-        requires (std::same_as<Descriptor, SImageDescriptor>)
-    {
-        RETINA_PROFILE_SCOPED();
-        const auto index = GetFreeIndex();
-        _writes.emplace_back(index, image->GetDescriptor(layout));
-        _resources[index] = std::move(image);
-        return index;
-    }
 }

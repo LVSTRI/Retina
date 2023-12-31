@@ -1,5 +1,6 @@
 #include <Retina/Graphics/Sync/SyncHostTimeline.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
+#include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Fence.hpp>
 #include <Retina/Graphics/Queue.hpp>
@@ -156,6 +157,26 @@ namespace Retina {
         queueSubmitInfo.pSignalSemaphoreInfos = signalSemaphoreInfos.data();
         auto guard = std::lock_guard(_lock);
         RETINA_VULKAN_CHECK(*_logger, vkQueueSubmit2(_handle, 1, &queueSubmitInfo, fenceHandle));
+    }
+
+    auto CQueue::Submit(std::function<void(CCommandBuffer&)>&& callback) noexcept -> void {
+        RETINA_PROFILE_SCOPED();
+        auto commandBuffer = CCommandBuffer::Make(*this, {
+            .Name = "TransientCommandBuffer",
+            .CommandPoolInfo = { {
+                .Flags = ECommandPoolCreateFlag::E_TRANSIENT,
+            } }
+        });
+        commandBuffer->Begin();
+        callback(*commandBuffer);
+        commandBuffer->End();
+        auto fence = CFence::Make(GetDevice(), {
+            .Name = "TransientSubmissionFence",
+        });
+        Submit({
+            .CommandBuffers = { *commandBuffer },
+        }, fence.Get());
+        fence->Wait();
     }
 
     auto CQueue::Present(const SQueuePresentInfo& presentInfo) noexcept -> bool {

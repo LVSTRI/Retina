@@ -24,6 +24,7 @@ namespace Retina {
             uint32 count,
             const SBufferCreateInfo& createInfo
         ) noexcept -> std::vector<CArcPtr<Self>>;
+        RETINA_NODISCARD static auto Upload(const CDevice& device, const SBufferUploadInfo<>& info) noexcept -> CArcPtr<Self>;
 
         RETINA_NODISCARD auto GetHandle() const noexcept -> VkBuffer;
         RETINA_NODISCARD auto GetAllocation() const noexcept -> VmaAllocation;

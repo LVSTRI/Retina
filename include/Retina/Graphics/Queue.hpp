@@ -33,6 +33,7 @@ namespace Retina {
 
         auto WaitIdle() noexcept -> void;
         auto Submit(const SQueueSubmitInfo& submitInfo, const CFence* fence = nullptr) noexcept -> void;
+        auto Submit(std::function<void(CCommandBuffer&)>&& callback) noexcept -> void;
         auto Present(const SQueuePresentInfo& presentInfo) noexcept -> bool;
 
     private:

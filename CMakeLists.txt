@@ -29,6 +29,11 @@ set(RETINA_HEADERS
 
     include/Retina/Graphics/Native/NativeDebugName.hpp
 
+    include/Retina/Graphics/RayTracing/AccelerationStructure.hpp
+    include/Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp
+    include/Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.hpp
+    include/Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp
+
     include/Retina/Graphics/Resources/DescriptorTable.hpp
     include/Retina/Graphics/Resources/ShaderResourceTable.hpp
 
@@ -61,8 +66,12 @@ set(RETINA_HEADERS
     include/Retina/Graphics/InstanceInfo.hpp
     include/Retina/Graphics/Pipeline.hpp
     include/Retina/Graphics/PipelineInfo.hpp
+    include/Retina/Graphics/QueryPool.hpp
+    include/Retina/Graphics/QueryPoolInfo.hpp
     include/Retina/Graphics/Queue.hpp
     include/Retina/Graphics/QueueInfo.hpp
+    include/Retina/Graphics/Sampler.hpp
+    include/Retina/Graphics/SamplerInfo.hpp
     include/Retina/Graphics/Semaphore.hpp
     include/Retina/Graphics/SemaphoreInfo.hpp
     include/Retina/Graphics/Swapchain.hpp
@@ -78,6 +87,11 @@ set(RETINA_HEADERS
 
 set(RETINA_SOURCES
     src/Retina/Graphics/Native/NativeDebugName.cpp
+
+    src/Retina/Graphics/RayTracing/AccelerationStructure.cpp
+    src/Retina/Graphics/RayTracing/AccelerationStructureInfo.cpp
+    src/Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.cpp
+    src/Retina/Graphics/RayTracing/TopLevelAccelerationStructure.cpp
 
     src/Retina/Graphics/Resources/DescriptorTable.cpp
     src/Retina/Graphics/Resources/ShaderResourceTable.cpp
@@ -100,7 +114,9 @@ set(RETINA_SOURCES
     src/Retina/Graphics/ImageView.cpp
     src/Retina/Graphics/Instance.cpp
     src/Retina/Graphics/Pipeline.cpp
+    src/Retina/Graphics/QueryPool.cpp
     src/Retina/Graphics/Queue.cpp
+    src/Retina/Graphics/Sampler.cpp
     src/Retina/Graphics/Semaphore.cpp
     src/Retina/Graphics/Swapchain.cpp
     src/Retina/Graphics/TimelineSemaphore.cpp

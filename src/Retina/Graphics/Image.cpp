@@ -30,7 +30,7 @@ namespace Retina {
         _imageView.Reset();
 
         RETINA_LOG_INFO(_device->GetLogger(), "Destroying Image \"{}\"", GetDebugName());
-        const auto isSparse = (_createInfo.Flags & EImageCreateFlag::E_SPARSE_BINDING) == EImageCreateFlag::E_SPARSE_BINDING;
+        const auto isSparse = IsFlagEnabled(_createInfo.Flags, EImageCreateFlag::E_SPARSE_BINDING);
         if (_allocation) {
             vmaDestroyImage(_device->GetAllocator(), _handle, _allocation);
         } else if (isSparse) {

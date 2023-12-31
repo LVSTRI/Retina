@@ -78,4 +78,9 @@ namespace Retina {
         std::mbstowcs(output.data(), input.data(), input.size());
         return output;
     }
+
+    template <typename... Ts>
+    struct MakeOverloadedVisitor : Ts... {
+        using Ts::operator ()...;
+    };
 }

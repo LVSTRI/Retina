@@ -104,13 +104,15 @@ namespace Retina {
         auto features12 = VkPhysicalDeviceVulkan12Features(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES);
         auto features13 = VkPhysicalDeviceVulkan13Features(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES);
         auto rayTracingPipelineFeatures = VkPhysicalDeviceRayTracingPipelineFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR);
+        auto rayTracingPositionFetchFeatures = VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_POSITION_FETCH_FEATURES_KHR);
         auto accelerationStructureFeatures = VkPhysicalDeviceAccelerationStructureFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR);
 
         features.pNext = &features11;
         features11.pNext = &features12;
         features12.pNext = &features13;
         features13.pNext = &rayTracingPipelineFeatures;
-        rayTracingPipelineFeatures.pNext = &accelerationStructureFeatures;
+        rayTracingPipelineFeatures.pNext = &rayTracingPositionFetchFeatures;
+        rayTracingPositionFetchFeatures.pNext = &accelerationStructureFeatures;
         vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
 
         return {
@@ -119,6 +121,7 @@ namespace Retina {
             features12,
             features13,
             rayTracingPipelineFeatures,
+            rayTracingPositionFetchFeatures,
             accelerationStructureFeatures,
         };
     }
@@ -143,11 +146,28 @@ namespace Retina {
             RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
         }
 
+        if (extensionInfo.RayTracing) {
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_RAY_TRACING_POSITION_FETCH_EXTENSION_NAME);
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+        }
+
+        if (extensionInfo.AccelerationStructure) {
+            RETINA_ASSERT_WITH(!extensionInfo.RayTracing, "Ray Tracing Extension already enabled");
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+            RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+        }
+
 #undef RETINA_ENABLE_EXTENSION_OR_PANIC
         return enabledExtensions;
     }
 
-    RETINA_NODISCARD static auto MakeEnabledFeatures(const SDeviceFeatureInfo& featureInfo, const SPhysicalDeviceFeatures& availableFeatures) noexcept -> SPhysicalDeviceFeatures {
+    RETINA_NODISCARD static auto MakeEnabledFeatures(
+        const SDeviceFeatureInfo& featureInfo,
+        const SPhysicalDeviceFeatures& availableFeatures,
+        const SDeviceExtensionInfo& extensionInfo
+    ) noexcept -> SPhysicalDeviceFeatures {
         RETINA_PROFILE_SCOPED();
         const auto logger = spdlog::get(RETINA_DEVICE_LOGGER_NAME);
         RETINA_LOG_INFO(*logger, "Enabling Required and Requested Physical Device Features");
@@ -157,10 +177,10 @@ namespace Retina {
             VkPhysicalDeviceVulkan12Features(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES),
             VkPhysicalDeviceVulkan13Features(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES),
             VkPhysicalDeviceRayTracingPipelineFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR),
+            VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_POSITION_FETCH_FEATURES_KHR),
             VkPhysicalDeviceAccelerationStructureFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR)
         );
 
-        // Enable basic necessary features
 #define RETINA_ENABLE_FEATURE_OR_PANIC(x)                                           \
     do {                                                                            \
         if (!availableFeatures.x) {                                                 \
@@ -248,6 +268,20 @@ namespace Retina {
         RETINA_ENABLE_FEATURE_OR_PANIC(Features13.synchronization2);
         RETINA_ENABLE_FEATURE_OR_PANIC(Features13.dynamicRendering);
         RETINA_ENABLE_FEATURE_OR_PANIC(Features13.maintenance4);
+
+        // Extension Features
+        if (extensionInfo.RayTracing) {
+            RETINA_ENABLE_FEATURE_OR_PANIC(RayTracingPipelineFeatures.rayTracingPipeline);
+            RETINA_ENABLE_FEATURE_OR_PANIC(RayTracingPipelineFeatures.rayTracingPipelineTraceRaysIndirect);
+            RETINA_ENABLE_FEATURE_OR_PANIC(RayTracingPipelineFeatures.rayTraversalPrimitiveCulling);
+
+            RETINA_ENABLE_FEATURE_OR_PANIC(RayTracingPositionFetchFeatures.rayTracingPositionFetch);
+
+            RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.accelerationStructure);
+            RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.accelerationStructureCaptureReplay);
+            RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.descriptorBindingAccelerationStructureUpdateAfterBind);
+        }
+
 #undef RETINA_ENABLE_FEATURE_OR_PANIC
 
         return enabledFeatures;
@@ -356,12 +390,13 @@ namespace Retina {
             }
         }
 
-        auto enabledFeatures = MakeEnabledFeatures(createInfo.Features, physicalDeviceFeatures);
+        auto enabledFeatures = MakeEnabledFeatures(createInfo.Features, physicalDeviceFeatures, createInfo.Extensions);
         enabledFeatures.Features.pNext = &enabledFeatures.Features11;
         enabledFeatures.Features11.pNext = &enabledFeatures.Features12;
         enabledFeatures.Features12.pNext = &enabledFeatures.Features13;
         enabledFeatures.Features13.pNext = &enabledFeatures.RayTracingPipelineFeatures;
-        enabledFeatures.RayTracingPipelineFeatures.pNext = &enabledFeatures.AccelerationStructureFeatures;
+        enabledFeatures.RayTracingPipelineFeatures.pNext = &enabledFeatures.RayTracingPositionFetchFeatures;
+        enabledFeatures.RayTracingPositionFetchFeatures.pNext = &enabledFeatures.AccelerationStructureFeatures;
 
         auto deviceCreateInfo = VkDeviceCreateInfo(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
         deviceCreateInfo.pNext = &enabledFeatures.Features;
@@ -471,6 +506,11 @@ namespace Retina {
         info.objectHandle = reinterpret_cast<uint64>(_handle);
         info.pObjectName = name.data();
         RETINA_VULKAN_CHECK(*_logger, vkSetDebugUtilsObjectNameEXT(_handle, &info));
+    }
+
+    auto CDevice::IsExtensionEnabled(bool SDeviceExtensionInfo::* extension) const noexcept -> bool {
+        RETINA_PROFILE_SCOPED();
+        return _createInfo.Extensions.*extension;
     }
 
     auto CDevice::WaitIdle() const noexcept -> void {

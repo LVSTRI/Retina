@@ -20,12 +20,15 @@ namespace Retina {
         VkPhysicalDeviceVulkan12Features Features12 = {};
         VkPhysicalDeviceVulkan13Features Features13 = {};
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR RayTracingPipelineFeatures = {};
+        VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR RayTracingPositionFetchFeatures = {};
         VkPhysicalDeviceAccelerationStructureFeaturesKHR AccelerationStructureFeatures = {};
     };
 
     struct SDeviceExtensionInfo {
         // TODO
         bool Swapchain = false;
+        bool RayTracing = false;
+        bool AccelerationStructure = false;
 
         RETINA_NODISCARD constexpr auto operator <=>(const SDeviceExtensionInfo&) const noexcept -> std::strong_ordering = default;
     };

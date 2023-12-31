@@ -39,7 +39,7 @@ namespace Retina {
         auto descriptorLayoutCreateInfo = VkDescriptorSetLayoutCreateInfo(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO);
         descriptorLayoutCreateInfo.pNext = &descriptorBindingFlagInfo;
         descriptorLayoutCreateInfo.flags = ToEnumCounterpart(createInfo.Flags);
-        if ((descriptorPoolInfo.Flags & EDescriptorPoolCreateFlag::E_UPDATE_AFTER_BIND_BIT) == EDescriptorPoolCreateFlag::E_UPDATE_AFTER_BIND_BIT) {
+        if (IsFlagEnabled(descriptorPoolInfo.Flags, EDescriptorPoolCreateFlag::E_UPDATE_AFTER_BIND_BIT)) {
             descriptorLayoutCreateInfo.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
         }
         descriptorLayoutCreateInfo.bindingCount = static_cast<uint32>(descriptorLayoutBindings.size());

@@ -13,6 +13,7 @@ namespace Retina {
     enum class EImageLayout : uint32;
     enum class ENativeObjectType : uint32;
     enum class EResourceFormat : uint32;
+    enum class EQueryType : uint32;
     enum class EComponentSwizzle : uint32;
     enum class EBlendFactor : uint32;
     enum class EBlendOperator : uint32;
@@ -22,7 +23,7 @@ namespace Retina {
     enum class EPolygonMode : uint32;
     enum class EStencilOperator : uint32;
     enum class ELogicOperator : uint32;
-    enum class EBorderColor : uint32;
+    enum class ESamplerBorderColor : uint32;
     enum class ESamplerFilter : uint32;
     enum class ESamplerAddressMode : uint32;
     enum class ESamplerMipmapMode : uint32;
@@ -39,16 +40,45 @@ namespace Retina {
     enum class EDescriptorPoolCreateFlag : uint32;
     enum class EDescriptorLayoutCreateFlag : uint32;
     enum class EMemoryProperty : uint32;
+    enum class EQueryPipelineStatistic : uint32;
+    enum class EQueryResultFlag : uint32;
     enum class EBufferCreateFlag : uint32;
     enum class ECommandPoolCreateFlag : uint32;
+    enum class ESamplerReductionMode : uint32;
     enum class EDescriptorBindingFlag : uint32;
     enum class EPipelineStage : uint64;
     enum class EResourceAccess : uint64;
     enum class EPresentMode : uint32;
     enum class EColorSpace : uint32;
+    enum class EAccelerationStructureType : uint32;
+    enum class EAccelerationStructureCopyMode : uint32;
+    enum class EAccelerationStructureGeometryFlag : uint32;
+    enum class EAccelerationStructureGeometryInstanceFlag : uint32;
+    enum class EAccelerationStructureBuildFlag : uint32;
+    enum class EAccelerationStructureBuildMode : uint32;
 
     // <Graphics/Native/NativeDebugName.hpp>
     class INativeDebugName;
+
+    // <Graphics/RayTracing/AccelerationStructure.hpp>
+    class IAccelerationStructure;
+
+    // <Graphics/RayTracing/AccelerationStructureInfo.hpp>
+    struct SAccelerationStructureGeometryTrianglesData;
+    struct SAccelerationStructureGeometryAabbsData;
+    struct SAccelerationStructureGeometryInstance;
+    struct SAccelerationStructureBuildSizeInfo;
+    struct SAccelerationStructureGeometryInstancesData;
+    struct SAccelerationStructureGeometryInfo;
+    struct SAccelerationStructureBuildRangeInfo;
+    struct SAccelerationStructureBuildInfo;
+    struct SBottomLevelAccelerationStructureCreateInfo;
+
+    // <Graphics/RayTracing/BottomLevelAccelerationStructure.hpp>
+    class CBottomLevelAccelerationStructure;
+
+    // <Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
+    class CTopLevelAccelerationStructure;
 
     // <Graphics/Resources/DescriptorTable.hpp>
     template <EDescriptorType D>
@@ -69,6 +99,8 @@ namespace Retina {
     class CBuffer;
 
     // <Graphics/BufferInfo.hpp>
+    template <typename T = uint8>
+    struct SBufferUploadInfo;
     struct SBufferCreateInfo;
 
     // <Graphics/CommandBuffer.hpp>
@@ -80,6 +112,7 @@ namespace Retina {
     struct SDrawMeshTasksIndirectCommand;
     struct SDispatchIndirectCommand;
     struct SMemoryBarrier;
+    struct SBufferMemoryBarrier;
     struct SImageMemoryBarrier;
     struct SBufferCopyRegion;
     struct SImageCopyRegion;
@@ -120,6 +153,7 @@ namespace Retina {
     // <Graphics/DescriptorSetInfo.hpp>
     struct SImageDescriptor;
     struct SBufferDescriptor;
+    struct SAccelerationStructureDescriptor;
     struct SDescriptorWriteInfo;
     struct SDescriptorSetCreateInfo;
 
@@ -190,6 +224,12 @@ namespace Retina {
     struct SGraphicsPipelineCreateInfo;
     struct SMeshShadingPipelineCreateInfo;
 
+    // <Graphics/QueryPool.hpp>
+    class CQueryPool;
+
+    // <Graphics/QueryPoolInfo.hpp>
+    struct SQueryPoolCreateInfo;
+
     // <Graphics/Queue.hpp>
     class CQueue;
 
@@ -200,6 +240,14 @@ namespace Retina {
     struct SQueuePresentInfo;
     struct SQueueFamilyInfo;
     struct SQueueCreateInfo;
+
+    // <Graphics/Sampler.hpp>
+    class CSampler;
+
+    // <Graphics/SamplerInfo.hpp>
+    struct SSamplerFilterInfo;
+    struct SSamplerAddressInfo;
+    struct SSamplerCreateInfo;
 
     // <Graphics/Semaphore.hpp>
     class ISemaphore;

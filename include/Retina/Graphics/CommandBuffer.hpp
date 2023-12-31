@@ -2,9 +2,11 @@
 
 #include <Retina/Core/Core.hpp>
 
+#include <Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp>
+
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
-#include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/CommandBufferInfo.hpp>
+#include <Retina/Graphics/PipelineInfo.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -49,6 +51,7 @@ namespace Retina {
         auto SetDebugName(std::string_view name) noexcept -> void;
 
         auto Begin() noexcept -> Self&;
+
         auto BeginRendering(const SRenderingInfo& renderingInfo) noexcept -> Self&;
         auto SetViewport() noexcept -> Self&;
         auto SetScissor() noexcept -> Self&;
@@ -61,12 +64,35 @@ namespace Retina {
         auto PushConstants(Args&&... args) noexcept -> Self&;
         auto Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) noexcept -> Self&;
         auto EndRendering() noexcept -> Self&;
+
         auto MemoryBarrier(const SMemoryBarrier& memoryBarrier) noexcept -> Self&;
+        auto BufferMemoryBarrier(const SBufferMemoryBarrier& memoryBarrier) noexcept -> Self&;
         auto ImageMemoryBarrier(const SImageMemoryBarrier& imageMemoryBarrier) noexcept -> Self&;
+
+        auto CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> Self&;
+
         auto CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> Self&;
         auto BlitImage(const CImage& source, const CImage& dest, const SImageBlitRegion& blitRegion) noexcept -> Self&;
+
+        auto ResetQueryPool(const CQueryPool& queryPool, uint32 firstQuery, uint32 queryCount = -1_u32) noexcept -> Self&;
+        auto BeginQuery(const CQueryPool& queryPool, uint32 query, bool isPrecise = false) noexcept -> Self&;
+        auto EndQuery(const CQueryPool& queryPool, uint32 query) noexcept -> Self&;
+        auto WriteAccelerationStructureProperties(
+            const CQueryPool& queryPool,
+            const IAccelerationStructure& accelerationStructure,
+            uint32 firstQuery
+        ) noexcept -> Self&;
+
+        auto BuildAccelerationStructure(
+            const SAccelerationStructureBuildInfo& buildInfo
+        ) noexcept -> Self&;
+        auto CopyAccelerationStructure(
+            const SAccelerationStructureCopyInfo& copyInfo
+        ) noexcept -> Self&;
+
         auto BeginNamedRegion(std::string_view regionInfo) noexcept -> Self&;
         auto EndNamedRegion() noexcept -> Self&;
+
         auto End() noexcept -> Self&;
 
     private:

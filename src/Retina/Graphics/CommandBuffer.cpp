@@ -1,3 +1,7 @@
+#include <Retina/Graphics/RayTracing/AccelerationStructure.hpp>
+#include <Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp>
+
+#include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/DescriptorLayout.hpp>
@@ -6,6 +10,7 @@
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/Pipeline.hpp>
 #include <Retina/Graphics/ImageView.hpp>
+#include <Retina/Graphics/QueryPool.hpp>
 #include <Retina/Graphics/Queue.hpp>
 
 #include <volk.h>
@@ -49,6 +54,22 @@ namespace Retina {
         info.srcAccessMask = ToEnumCounterpart(memoryBarrier.SourceAccess);
         info.dstStageMask = ToEnumCounterpart(memoryBarrier.DestStage);
         info.dstAccessMask = ToEnumCounterpart(memoryBarrier.DestAccess);
+        return info;
+    }
+
+    RETINA_NODISCARD static auto MakeNativeBufferMemoryBarrier(const SBufferMemoryBarrier& memoryBarrier) noexcept -> VkBufferMemoryBarrier2 {
+        RETINA_PROFILE_SCOPED();
+        const auto& buffer = memoryBarrier.Buffer.get();
+        auto info = VkBufferMemoryBarrier2(VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2);
+        info.srcStageMask = ToEnumCounterpart(memoryBarrier.SourceStage);
+        info.srcAccessMask = ToEnumCounterpart(memoryBarrier.SourceAccess);
+        info.dstStageMask = ToEnumCounterpart(memoryBarrier.DestStage);
+        info.dstAccessMask = ToEnumCounterpart(memoryBarrier.DestAccess);
+        info.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        info.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        info.buffer = buffer.GetHandle();
+        info.offset = memoryBarrier.Offset;
+        info.size = memoryBarrier.Size;
         return info;
     }
 
@@ -255,7 +276,7 @@ namespace Retina {
             const auto& image = attachmentInfo.Image.get();
             const auto aspectMask = image.GetView().GetAspectMask();
             const auto targetAspectMask = EImageAspect::E_DEPTH | EImageAspect::E_STENCIL;
-            if ((aspectMask & targetAspectMask) == targetAspectMask) {
+            if (IsFlagEnabled(aspectMask, targetAspectMask)) {
                 isDepthStencil = true;
             }
             depthAttachment = MakeNativeRenderingAttachmentInfo(
@@ -406,6 +427,17 @@ namespace Retina {
         return *this;
     }
 
+    auto CCommandBuffer::BufferMemoryBarrier(const SBufferMemoryBarrier& memoryBarrier) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        const auto barrier = MakeNativeBufferMemoryBarrier(memoryBarrier);
+        auto dependencyInfo = VkDependencyInfo(VK_STRUCTURE_TYPE_DEPENDENCY_INFO);
+        dependencyInfo.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        dependencyInfo.bufferMemoryBarrierCount = 1;
+        dependencyInfo.pBufferMemoryBarriers = &barrier;
+        vkCmdPipelineBarrier2(_handle, &dependencyInfo);
+        return *this;
+    }
+
     auto CCommandBuffer::ImageMemoryBarrier(const SImageMemoryBarrier& imageMemoryBarrier) noexcept -> Self& {
         RETINA_PROFILE_SCOPED();
         const auto barrier = MakeNativeImageMemoryBarrier(imageMemoryBarrier);
@@ -414,6 +446,28 @@ namespace Retina {
         dependencyInfo.imageMemoryBarrierCount = 1;
         dependencyInfo.pImageMemoryBarriers = &barrier;
         vkCmdPipelineBarrier2(_handle, &dependencyInfo);
+        return *this;
+    }
+
+    auto CCommandBuffer::CopyBuffer(
+        const CBuffer& source,
+        const CBuffer& dest,
+        const SBufferCopyRegion& copyRegion
+    ) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        auto region = VkBufferCopy2(VK_STRUCTURE_TYPE_BUFFER_COPY_2);
+        region.srcOffset = copyRegion.SourceOffset;
+        region.dstOffset = copyRegion.DestOffset;
+        region.size = copyRegion.Size == Constant::WHOLE_SIZE
+            ? source.GetSize()
+            : copyRegion.Size;
+
+        auto copy = VkCopyBufferInfo2(VK_STRUCTURE_TYPE_COPY_BUFFER_INFO_2);
+        copy.srcBuffer = source.GetHandle();
+        copy.dstBuffer = dest.GetHandle();
+        copy.regionCount = 1;
+        copy.pRegions = &region;
+        vkCmdCopyBuffer2(_handle, &copy);
         return *this;
     }
 
@@ -487,6 +541,86 @@ namespace Retina {
         blit.regionCount = 1;
         blit.pRegions = &region;
         vkCmdBlitImage2(_handle, &blit);
+        return *this;
+    }
+
+    auto CCommandBuffer::ResetQueryPool(const CQueryPool& queryPool, uint32 firstQuery, uint32 queryCount) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        if (queryCount == -1_u32) {
+            queryCount = queryPool.GetCount() - firstQuery;
+        }
+        vkCmdResetQueryPool(_handle, queryPool.GetHandle(), firstQuery, queryCount);
+        return *this;
+    }
+
+    auto CCommandBuffer::BeginQuery(const CQueryPool& queryPool, uint32 query, bool isPrecise) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        vkCmdBeginQuery(_handle, queryPool.GetHandle(), query, isPrecise ? VK_QUERY_CONTROL_PRECISE_BIT : 0);
+        return *this;
+    }
+
+    auto CCommandBuffer::EndQuery(const CQueryPool& queryPool, uint32 query) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        vkCmdEndQuery(_handle, queryPool.GetHandle(), query);
+        return *this;
+    }
+
+    auto CCommandBuffer::WriteAccelerationStructureProperties(
+        const CQueryPool& queryPool,
+        const IAccelerationStructure& accelerationStructure,
+        uint32 firstQuery
+    ) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        vkCmdWriteAccelerationStructuresPropertiesKHR(
+            _handle,
+            1,
+            AsConstPtr(accelerationStructure.GetHandle()),
+            ToEnumCounterpart(queryPool.GetType()),
+            queryPool.GetHandle(),
+            firstQuery
+        );
+        return *this;
+    }
+
+    auto CCommandBuffer::BuildAccelerationStructure(
+        const SAccelerationStructureBuildInfo& buildInfo
+    ) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        auto buildGeometryInfos = MakeNativeAccelerationStructureGeometryInfo(buildInfo.GeometryInfos);
+        auto buildInfosNative = VkAccelerationStructureBuildGeometryInfoKHR(VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR);
+        buildInfosNative.type = ToEnumCounterpart(buildInfo.Type);
+        buildInfosNative.flags = ToEnumCounterpart(buildInfo.Flags);
+        buildInfosNative.mode = ToEnumCounterpart(buildInfo.Mode);
+        buildInfosNative.srcAccelerationStructure = buildInfo.Source;
+        buildInfosNative.dstAccelerationStructure = buildInfo.Dest;
+        buildInfosNative.geometryCount = buildGeometryInfos.size();
+        buildInfosNative.pGeometries = buildGeometryInfos.data();
+        buildInfosNative.scratchData.deviceAddress = buildInfo.ScratchBuffer->GetAddress();
+
+        auto buildRangeInfosNative = std::vector<VkAccelerationStructureBuildRangeInfoKHR>();
+        buildRangeInfosNative.reserve(buildInfo.GeometryInfos.size());
+        for (const auto& each : buildInfo.GeometryInfos) {
+            buildRangeInfosNative.emplace_back(std::bit_cast<VkAccelerationStructureBuildRangeInfoKHR>(each.Range));
+        }
+
+        vkCmdBuildAccelerationStructuresKHR(
+            _handle,
+            1,
+            &buildInfosNative,
+            AsConstPtr(buildRangeInfosNative.data())
+        );
+        return *this;
+    }
+
+    auto CCommandBuffer::CopyAccelerationStructure(
+        const SAccelerationStructureCopyInfo& copyInfo
+    ) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        auto copyInfosNative = VkCopyAccelerationStructureInfoKHR(VK_STRUCTURE_TYPE_COPY_ACCELERATION_STRUCTURE_INFO_KHR);
+        copyInfosNative.src = copyInfo.Source;
+        copyInfosNative.dst = copyInfo.Dest;
+        copyInfosNative.mode = ToEnumCounterpart(copyInfo.Mode);
+        vkCmdCopyAccelerationStructureKHR(_handle, &copyInfosNative);
         return *this;
     }
 

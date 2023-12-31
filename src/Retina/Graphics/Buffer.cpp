@@ -1,4 +1,5 @@
 #include <Retina/Graphics/Buffer.hpp>
+#include <Retina/Graphics/CommandBuffer.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/DescriptorSetInfo.hpp>
 #include <Retina/Graphics/Queue.hpp>
@@ -32,7 +33,7 @@ namespace Retina {
 
     CBuffer::~CBuffer() noexcept {
         RETINA_PROFILE_SCOPED();
-        const auto isSparse = (_createInfo.Flags & EBufferCreateFlag::E_SPARSE_BINDING) == EBufferCreateFlag::E_SPARSE_BINDING;
+        const auto isSparse = IsFlagEnabled(_createInfo.Flags, EBufferCreateFlag::E_SPARSE_BINDING);
         RETINA_LOG_INFO(_device->GetLogger(), "Destroying Buffer: \"{}\"", GetDebugName());
         if (_allocation) {
             vmaDestroyBuffer(_device->GetAllocator(), _handle, _allocation);
@@ -73,20 +74,20 @@ namespace Retina {
         bufferCreateInfo.queueFamilyIndexCount = queueFamilyCount;
         bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 
-        const auto allocationFlags = [&] {
-            if ((createInfo.Heap & Constant::HEAP_TYPE_DEVICE_MAPPABLE) == Constant::HEAP_TYPE_DEVICE_MAPPABLE) {
+        const auto allocationFlags = [&] -> VmaAllocationCreateFlagBits {
+            if (IsFlagEnabled(createInfo.Heap, EMemoryProperty::E_DEVICE_MAPPABLE)) {
                 return VMA_ALLOCATION_CREATE_MAPPED_BIT |
                        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
             }
-            if ((createInfo.Heap & Constant::HEAP_TYPE_HOST_ONLY_COHERENT) == Constant::HEAP_TYPE_HOST_ONLY_COHERENT) {
+            if (IsFlagEnabled(createInfo.Heap, EMemoryProperty::E_HOST_ONLY_COHERENT)) {
                 return VMA_ALLOCATION_CREATE_MAPPED_BIT |
                        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
             }
-            if ((createInfo.Heap & Constant::HEAP_TYPE_HOST_ONLY_CACHED) == Constant::HEAP_TYPE_HOST_ONLY_CACHED) {
+            if (IsFlagEnabled(createInfo.Heap, EMemoryProperty::E_HOST_ONLY_CACHED)) {
                 return VMA_ALLOCATION_CREATE_MAPPED_BIT |
                        VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
             }
-            return VmaAllocationCreateFlagBits();
+            return {};
         }();
 
         // TODO: Handle sparse buffers
@@ -154,6 +155,27 @@ namespace Retina {
             buffers.push_back(Make(device, newCreateInfo));
         }
         return buffers;
+    }
+
+    auto CBuffer::Upload(const CDevice& device, const SBufferUploadInfo<>& info) noexcept -> CArcPtr<Self> {
+        RETINA_PROFILE_SCOPED();
+        auto staging = Self::Make(device, {
+            .Name = "StagingBuffer",
+            .Heap = EMemoryProperty::E_DEVICE_MAPPABLE,
+            .Capacity = info.Data.size_bytes(),
+        });
+        staging->Write(info.Data);
+        auto buffer = Self::Make(device, {
+            .Name = info.Name,
+            .Heap = EMemoryProperty::E_DEVICE_LOCAL,
+            .Capacity = info.Data.size_bytes(),
+        });
+        device
+            .GetTransferQueue()
+            .Submit([&](CCommandBuffer& commands) {
+                commands.CopyBuffer(*staging, *buffer, {});
+            });
+        return buffer;
     }
 
     auto CBuffer::GetHandle() const noexcept -> VkBuffer {

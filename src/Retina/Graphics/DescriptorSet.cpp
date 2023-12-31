@@ -5,6 +5,9 @@
 
 #include <volk.h>
 
+#include <algorithm>
+#include <ranges>
+
 namespace Retina {
     CDescriptorSet::~CDescriptorSet() noexcept {
         RETINA_PROFILE_SCOPED();
@@ -113,7 +116,11 @@ namespace Retina {
         descriptorBufferInfos.reserve(writes.size());
         auto descriptorImageInfos = std::vector<std::vector<VkDescriptorImageInfo>>();
         descriptorImageInfos.reserve(writes.size());
+        auto descriptorAcceleartionStructureInfos = std::vector<std::vector<VkAccelerationStructureKHR>>();
+        descriptorAcceleartionStructureInfos.reserve(writes.size());
 
+        auto accelerationStructureWrites = std::vector<VkWriteDescriptorSetAccelerationStructureKHR>();
+        accelerationStructureWrites.reserve(writes.size());
         for (const auto& currentWrite : writes) {
             auto write = VkWriteDescriptorSet(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET);
             write.dstSet = _handle;
@@ -171,8 +178,25 @@ namespace Retina {
                     descriptorBufferInfos.emplace_back(std::move(bufferInfos));
                 } break;
 
-                case EDescriptorType::E_ACCELERATION_STRUCTURE_KHR:
-                    RETINA_PANIC_WITH(GetDevice().GetLogger(), "Acceleration Structures are not supported");
+                case EDescriptorType::E_ACCELERATION_STRUCTURE_KHR: {
+                    const auto& accelerationStructureDescriptors = std::get<std::vector<SAccelerationStructureDescriptor>>(currentWrite.Descriptors);
+                    auto accelerationStructureInfos = std::vector<VkAccelerationStructureKHR>();
+                    std::ranges::transform(
+                        accelerationStructureDescriptors,
+                        std::back_inserter(accelerationStructureInfos),
+                        [](const auto& descriptor) {
+                            return descriptor.Handle;
+                        }
+                    );
+                    auto accelerationStructureWrite = VkWriteDescriptorSetAccelerationStructureKHR(VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR);
+                    accelerationStructureWrite.accelerationStructureCount = static_cast<uint32>(accelerationStructureInfos.size());
+                    accelerationStructureWrite.pAccelerationStructures = accelerationStructureInfos.data();
+
+                    write.pNext = &accelerationStructureWrites.emplace_back(accelerationStructureWrite);
+                    write.descriptorCount = accelerationStructureWrite.accelerationStructureCount;
+                    descriptorWrites.emplace_back(write);
+                    descriptorAcceleartionStructureInfos.emplace_back(std::move(accelerationStructureInfos));
+                } break;
 
                 default:
                     RETINA_PANIC_WITH(GetDevice().GetLogger(), "Unknown Descriptor Type");

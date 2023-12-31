@@ -1,5 +1,6 @@
 #include <Retina/Core/External/HashMap.hpp>
 
+#include <Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
 #include <Retina/Graphics/Resources/DescriptorTable.hpp>
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/DescriptorLayout.hpp>
@@ -29,11 +30,17 @@ namespace Retina {
             return {};
         }
         auto mergedWrites = External::FastHashMap<uint64, std::vector<D>>();
-        for (const auto& [index, descriptor] : table) {
-            if (mergedWrites.contains(index)) {
-                mergedWrites[index].emplace_back(descriptor);
-            } else {
-                mergedWrites[index] = { descriptor };
+        {
+            const auto& [offset, descriptor] = table[0];
+            auto currentOffset = offset;
+            mergedWrites[currentOffset].push_back(descriptor);
+            for (auto i = 0_u32; i < table.size() - 1; ++i) {
+                const auto& [offset, descriptor] = table[i];
+                const auto& [nextOffset, nextDescriptor] = table[i + 1];
+                mergedWrites[currentOffset].push_back(descriptor);
+                if (offset + 1 != nextOffset) {
+                    currentOffset = nextOffset;
+                }
             }
         }
         return mergedWrites;
@@ -42,57 +49,71 @@ namespace Retina {
     auto CShaderResourceTable::Make(const CDevice& device) noexcept -> CArcPtr<Self> {
         RETINA_PROFILE_SCOPED();
         auto table = CArcPtr(new Self());
+        auto descriptorPoolSizes = std::vector<SDescriptorPoolSize> {
+            { Retina::EDescriptorType::E_SAMPLER, 64 },
+            { Retina::EDescriptorType::E_SAMPLED_IMAGE, 65536 },
+            { Retina::EDescriptorType::E_STORAGE_IMAGE, 65536 },
+            { Retina::EDescriptorType::E_UNIFORM_BUFFER, 65536 },
+            { Retina::EDescriptorType::E_STORAGE_BUFFER, 65536 },
+        };
+        if (device.IsExtensionEnabled(&SDeviceExtensionInfo::RayTracing)) {
+            descriptorPoolSizes.push_back({ Retina::EDescriptorType::E_ACCELERATION_STRUCTURE_KHR, 1024 });
+        }
         auto descriptorPool = Retina::CDescriptorPool::Make(device, {
             .Name = "MainDescriptorPool",
             .Flags = Retina::EDescriptorPoolCreateFlag::E_UPDATE_AFTER_BIND_BIT |
                      Retina::EDescriptorPoolCreateFlag::E_FREE_DESCRIPTOR_SET_BIT,
-            .Sizes = {
-                { Retina::EDescriptorType::E_SAMPLER, 64 },
-                { Retina::EDescriptorType::E_SAMPLED_IMAGE, 65536 },
-                { Retina::EDescriptorType::E_STORAGE_IMAGE, 65536 },
-                { Retina::EDescriptorType::E_UNIFORM_BUFFER, 65536 },
-                { Retina::EDescriptorType::E_STORAGE_BUFFER, 65536 },
-            },
+            .Sizes = std::move(descriptorPoolSizes),
         });
+        auto descriptorBindings = std::vector<SDescriptorLayoutBinding> {
+            {
+                .Count = 64,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_SAMPLER,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            },
+            {
+                .Count = 65536,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_SAMPLED_IMAGE,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            },
+            {
+                .Count = 65536,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_STORAGE_IMAGE,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            },
+            {
+                .Count = 65536,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_UNIFORM_BUFFER,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            },
+            {
+                .Count = 65536,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_STORAGE_BUFFER,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            }
+        };
+        if (device.IsExtensionEnabled(&SDeviceExtensionInfo::RayTracing)) {
+            descriptorBindings.push_back({
+                .Count = 1024,
+                .Stage = Retina::EShaderStage::E_ALL,
+                .Type = Retina::EDescriptorType::E_ACCELERATION_STRUCTURE_KHR,
+                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
+                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
+            });
+        }
         auto descriptorLayout = Retina::CDescriptorLayout::Make(*descriptorPool, {
             .Name = "MainDescriptorLayout",
-            .Bindings = {
-                {
-                    .Count = 64,
-                    .Stage = Retina::EShaderStage::E_ALL,
-                    .Type = Retina::EDescriptorType::E_SAMPLER,
-                    .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                             Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-                },
-                {
-                    .Count = 65536,
-                    .Stage = Retina::EShaderStage::E_ALL,
-                    .Type = Retina::EDescriptorType::E_SAMPLED_IMAGE,
-                    .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                             Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-                },
-                {
-                    .Count = 65536,
-                    .Stage = Retina::EShaderStage::E_ALL,
-                    .Type = Retina::EDescriptorType::E_STORAGE_IMAGE,
-                    .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                             Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-                },
-                {
-                    .Count = 65536,
-                    .Stage = Retina::EShaderStage::E_ALL,
-                    .Type = Retina::EDescriptorType::E_UNIFORM_BUFFER,
-                    .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                             Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-                },
-                {
-                    .Count = 65536,
-                    .Stage = Retina::EShaderStage::E_ALL,
-                    .Type = Retina::EDescriptorType::E_STORAGE_BUFFER,
-                    .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                             Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-                },
-            },
+            .Bindings = std::move(descriptorBindings),
         });
         auto descriptorSet = Retina::CDescriptorSet::Make(device, {
             .Name = "MainDescriptorSet",
@@ -103,6 +124,11 @@ namespace Retina {
         table->_device = device.ToArcPtr();
         table->_descriptorSet = std::move(descriptorSet);
         return table;
+    }
+
+    auto CShaderResourceTable::GetSamplerTable() noexcept -> CDescriptorTable<EDescriptorType::E_SAMPLER>& {
+        RETINA_PROFILE_SCOPED();
+        return _samplerTable;
     }
 
     auto CShaderResourceTable::GetSampledImageTable() noexcept -> CDescriptorTable<EDescriptorType::E_SAMPLED_IMAGE>& {
@@ -125,6 +151,11 @@ namespace Retina {
         return _storageBufferTable;
     }
 
+    auto CShaderResourceTable::GetAccelerationStructureTable() noexcept -> CDescriptorTable<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR>& {
+        RETINA_PROFILE_SCOPED();
+        return _accelerationStructureTable;
+    }
+
     auto CShaderResourceTable::GetDevice() const noexcept -> const CDevice& {
         RETINA_PROFILE_SCOPED();
         return *_device;
@@ -145,30 +176,55 @@ namespace Retina {
         return *_descriptorSet;
     }
 
+    auto CShaderResourceTable::MakeSampler(const SSamplerCreateInfo& info) noexcept -> SamplerResource {
+        RETINA_PROFILE_SCOPED();
+        auto sampler = CSampler::Make(*_device, info);
+        const auto index = _samplerTable.AllocateResource(sampler);
+        return SamplerResource::Make(*this, *sampler, index);
+    }
+
     auto CShaderResourceTable::MakeSampledImage(const SImageCreateInfo& info) noexcept -> SampledImageResource {
         RETINA_PROFILE_SCOPED();
         auto image = CImage::Make(*_device, info);
         const auto index = _sampledImageTable.AllocateResource(image);
-        return SampledImageResource::Make(*this, std::move(image), index);
+        return SampledImageResource::Make(*this, *image, index);
     }
 
     auto CShaderResourceTable::MakeStorageImage(const SImageCreateInfo& info) noexcept -> StorageImageResource {
         RETINA_PROFILE_SCOPED();
         auto image = CImage::Make(*_device, info);
         const auto index = _storageImageTable.AllocateResource(image);
-        return StorageImageResource::Make(*this, std::move(image), index);
+        return StorageImageResource::Make(*this, *image, index);
+    }
+
+    auto CShaderResourceTable::MakeAccelerationStructure(const SAccelerationStructureCreateInfo& info) noexcept -> AccelerationStructureResource {
+        RETINA_PROFILE_SCOPED();
+        auto accelerationStructure = CTopLevelAccelerationStructure::Make(*_device, info);
+        const auto index = _accelerationStructureTable.AllocateResource(accelerationStructure);
+        return AccelerationStructureResource::Make(*this, *accelerationStructure, index);
     }
 
     auto CShaderResourceTable::Update() noexcept -> void {
         RETINA_PROFILE_SCOPED();
-        auto sampledImageWrites = MergeAdjacentWrites(MakeSortedWrites(GetSampledImageTable().GetWrites()));
-        auto storageImageWrites = MergeAdjacentWrites(MakeSortedWrites(GetStorageImageTable().GetWrites()));
-        auto uniformBufferWrites = MergeAdjacentWrites(MakeSortedWrites(GetUniformBufferTable().GetWrites()));
-        auto storageBufferWrites = MergeAdjacentWrites(MakeSortedWrites(GetStorageBufferTable().GetWrites()));
+        auto&& samplerWrites = GetSamplerTable().GetWrites();
+        auto&& sampledImageWrites = GetSampledImageTable().GetWrites();
+        auto&& storageImageWrites = GetStorageImageTable().GetWrites();
+        auto&& uniformBufferWrites = GetUniformBufferTable().GetWrites();
+        auto&& storageBufferWrites = GetStorageBufferTable().GetWrites();
+        auto&& accelerationStructureWrites = GetAccelerationStructureTable().GetWrites();
 
         auto descriptorWrites = std::vector<SDescriptorWriteInfo>();
+        if (!samplerWrites.empty()) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(samplerWrites)))) {
+                descriptorWrites.push_back({
+                    .Slot = static_cast<uint32>(index),
+                    .Type = EDescriptorType::E_SAMPLER,
+                    .Descriptors = std::move(descriptors),
+                });
+            }
+        }
         if (!sampledImageWrites.empty()) {
-            for (auto&& [index, descriptors] : sampledImageWrites) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(sampledImageWrites)))) {
                 descriptorWrites.push_back({
                     .Slot = static_cast<uint32>(index),
                     .Type = EDescriptorType::E_SAMPLED_IMAGE,
@@ -177,7 +233,7 @@ namespace Retina {
             }
         }
         if (!storageImageWrites.empty()) {
-            for (auto&& [index, descriptors] : storageImageWrites) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(storageImageWrites)))) {
                 descriptorWrites.push_back({
                     .Slot = static_cast<uint32>(index),
                     .Type = EDescriptorType::E_STORAGE_IMAGE,
@@ -186,7 +242,7 @@ namespace Retina {
             }
         }
         if (!uniformBufferWrites.empty()) {
-            for (auto&& [index, descriptors] : uniformBufferWrites) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(uniformBufferWrites)))) {
                 descriptorWrites.push_back({
                     .Slot = static_cast<uint32>(index),
                     .Type = EDescriptorType::E_UNIFORM_BUFFER,
@@ -195,7 +251,7 @@ namespace Retina {
             }
         }
         if (!storageBufferWrites.empty()) {
-            for (auto&& [index, descriptors] : storageBufferWrites) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(storageBufferWrites)))) {
                 descriptorWrites.push_back({
                     .Slot = static_cast<uint32>(index),
                     .Type = EDescriptorType::E_STORAGE_BUFFER,
@@ -203,6 +259,16 @@ namespace Retina {
                 });
             }
         }
+        if (!accelerationStructureWrites.empty()) {
+            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(accelerationStructureWrites)))) {
+                descriptorWrites.push_back({
+                    .Slot = static_cast<uint32>(index),
+                    .Type = EDescriptorType::E_ACCELERATION_STRUCTURE_KHR,
+                    .Descriptors = std::move(descriptors),
+                });
+            }
+        }
+
         if (!descriptorWrites.empty()) {
             GetDescriptorSet().Write(descriptorWrites);
         }

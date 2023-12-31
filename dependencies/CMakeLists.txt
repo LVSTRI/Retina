@@ -66,6 +66,7 @@ target_compile_definitions(glm INTERFACE
     GLM_FORCE_RADIANS
     GLM_FORCE_AVX2
 )
+target_compile_options(glm INTERFACE -Wno-everything)
 
 FetchContent_Declare(
     vma

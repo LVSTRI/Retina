@@ -5,6 +5,7 @@
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/BufferInfo.hpp>
 #include <Retina/Graphics/Device.hpp>
+#include <Retina/Graphics/DescriptorSetInfo.hpp>
 
 namespace Retina {
     template <typename T>
@@ -23,6 +24,7 @@ namespace Retina {
         ) noexcept -> std::vector<CArcPtr<Self>>;
         RETINA_NODISCARD static auto From(CBuffer& buffer) noexcept -> CArcPtr<Self>;
         RETINA_NODISCARD static auto From(std::span<CBuffer> buffers) noexcept -> std::vector<CArcPtr<Self>>;
+        RETINA_NODISCARD static auto Upload(const CDevice& device, const SBufferUploadInfo<T>& info) noexcept -> CArcPtr<Self>;
 
         RETINA_NODISCARD auto GetBuffer() const noexcept -> CBuffer&;
         RETINA_NODISCARD auto GetDevice() const noexcept -> const CDevice&;
@@ -41,7 +43,6 @@ namespace Retina {
 
     private:
         CArcPtr<CBuffer> _buffer;
-        CArcPtr<const CDevice> _device;
     };
 
     template <typename T>
@@ -54,7 +55,6 @@ namespace Retina {
             .Heap = createInfo.Heap,
             .Capacity = createInfo.Capacity * sizeof(T),
         });
-        typedBuffer->_device = device.ToArcPtr();
         return typedBuffer;
     }
 
@@ -75,7 +75,6 @@ namespace Retina {
         })) {
             auto typedBuffer = CArcPtr(new Self());
             typedBuffer->_buffer = std::move(buffer);
-            typedBuffer->_device = device.ToArcPtr();
             typedBuffers.emplace_back(typedBuffer);
         }
         return typedBuffers;
@@ -86,7 +85,6 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto typedBuffer = CArcPtr(new Self());
         typedBuffer->_buffer = buffer.ToArcPtr();
-        typedBuffer->_device = buffer.GetDevice().ToArcPtr();
         return typedBuffer;
     }
 
@@ -98,10 +96,24 @@ namespace Retina {
         for (auto& buffer : buffers) {
             auto typedBuffer = CArcPtr(new Self());
             typedBuffer->_buffer = buffer.ToArcPtr();
-            typedBuffer->_device = buffer.GetDevice().ToArcPtr();
             typedBuffers.emplace_back(typedBuffer);
         }
         return typedBuffers;
+    }
+
+    template <typename T>
+    auto CTypedBuffer<T>::Upload(const CDevice& device, const SBufferUploadInfo<T>& info) noexcept -> CArcPtr<Self> {
+        RETINA_PROFILE_SCOPED();
+        auto typedBuffer = CArcPtr(new Self());
+        auto byteView = std::span(
+            reinterpret_cast<const uint8*>(info.Data.data()),
+            info.Data.size_bytes()
+        );
+        typedBuffer->_buffer = CBuffer::Upload(device, {
+            .Name = info.Name,
+            .Data = byteView,
+        });
+        return typedBuffer;
     }
 
     template <typename T>
@@ -113,7 +125,7 @@ namespace Retina {
     template <typename T>
     auto CTypedBuffer<T>::GetDevice() const noexcept -> const CDevice& {
         RETINA_PROFILE_SCOPED();
-        return *_device;
+        return GetBuffer().GetDevice();
     }
 
     template <typename T>

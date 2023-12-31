@@ -2,6 +2,11 @@
 
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
 
+#include <Retina/Graphics/RayTracing/AccelerationStructure.hpp>
+#include <Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp>
+#include <Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.hpp>
+#include <Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
+
 #include <Retina/Graphics/Resources/DescriptorTable.hpp>
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 

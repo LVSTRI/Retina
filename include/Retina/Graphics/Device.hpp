@@ -34,6 +34,7 @@ namespace Retina {
 
         auto SetDebugName(std::string_view name) noexcept -> void;
 
+        auto IsExtensionEnabled(bool SDeviceExtensionInfo::* extension) const noexcept -> bool;
         auto WaitIdle() const noexcept -> void;
 
     private:

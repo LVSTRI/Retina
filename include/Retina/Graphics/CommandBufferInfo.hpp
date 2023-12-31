@@ -53,6 +53,16 @@ namespace Retina {
         RETINA_NODISCARD constexpr auto operator <=>(const SMemoryBarrier&) const noexcept -> std::strong_ordering = default;
     };
 
+    struct SBufferMemoryBarrier {
+        std::reference_wrapper<const CBuffer> Buffer;
+        EPipelineStage SourceStage = EPipelineStage::E_ALL_COMMANDS;
+        EPipelineStage DestStage = EPipelineStage::E_ALL_COMMANDS;
+        EResourceAccess SourceAccess = EResourceAccess::E_MEMORY_READ | EResourceAccess::E_MEMORY_WRITE;
+        EResourceAccess DestAccess = EResourceAccess::E_MEMORY_READ | EResourceAccess::E_MEMORY_WRITE;
+        uint64 Offset = 0;
+        uint64 Size = -1_u64;
+    };
+
     struct SImageMemoryBarrier {
         std::reference_wrapper<const CImage> Image;
         EPipelineStage SourceStage = EPipelineStage::E_ALL_COMMANDS;
@@ -65,8 +75,9 @@ namespace Retina {
     };
 
     struct SBufferCopyRegion {
-        uint32 SourceOffset = 0;
-        uint32 DestOffset = 0;
+        uint64 SourceOffset = 0;
+        uint64 DestOffset = 0;
+        uint64 Size = Constant::WHOLE_SIZE;
 
         RETINA_NODISCARD constexpr auto operator <=>(const SBufferCopyRegion&) const noexcept -> std::strong_ordering = default;
     };
@@ -122,6 +133,12 @@ namespace Retina {
         std::vector<SAttachmentInfo> ColorAttachments;
         std::optional<SAttachmentInfo> DepthAttachment = std::nullopt;
         std::optional<SAttachmentInfo> StencilAttachment = std::nullopt;
+    };
+
+    struct SAccelerationStructureCopyInfo {
+        VkAccelerationStructureKHR Source = {};
+        VkAccelerationStructureKHR Dest = {};
+        EAccelerationStructureCopyMode Mode = {};
     };
 
     struct SCommandBufferCreateInfo {
