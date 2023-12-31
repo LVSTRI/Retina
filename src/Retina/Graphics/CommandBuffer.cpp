@@ -1,5 +1,6 @@
 #include <Retina/Graphics/RayTracing/AccelerationStructure.hpp>
 #include <Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp>
+#include <Retina/Graphics/RayTracing/RayTracingPipeline.hpp>
 
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
@@ -41,8 +42,8 @@ namespace Retina {
         info.resolveMode = VK_RESOLVE_MODE_NONE;
         info.resolveImageView = {};
         info.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        info.loadOp = ToEnumCounterpart(attachmentInfo.LoadOperation);
-        info.storeOp = ToEnumCounterpart(attachmentInfo.StoreOperation);
+        info.loadOp = ToEnumCounterpart(attachmentInfo.LoadOperator);
+        info.storeOp = ToEnumCounterpart(attachmentInfo.StoreOperator);
         info.clearValue = std::bit_cast<VkClearValue>(attachmentInfo.ClearValue);
         return info;
     }
@@ -399,6 +400,24 @@ namespace Retina {
             offset,
             values.size(),
             values.data()
+        );
+        return *this;
+    }
+
+    auto CCommandBuffer::TraceRays(uint32 width, uint32 height, uint32 depth) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        const auto& rayTracingPipeline = *static_cast<const CRayTracingPipeline*>(_currentPipelineState.Pipeline);
+        const auto& shaderBindingTable = rayTracingPipeline.GetShaderBindingTable();
+        vkCmdTraceRaysKHR(
+            _handle,
+            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[0]),
+            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[1]),
+            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[2]),
+            // No callable shaders yet
+            AsConstPtr(VkStridedDeviceAddressRegionKHR()),
+            width,
+            height,
+            depth
         );
         return *this;
     }

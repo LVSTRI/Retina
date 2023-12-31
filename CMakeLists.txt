@@ -32,6 +32,7 @@ set(RETINA_HEADERS
     include/Retina/Graphics/RayTracing/AccelerationStructure.hpp
     include/Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp
     include/Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.hpp
+    include/Retina/Graphics/RayTracing/RayTracingPipeline.hpp
     include/Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp
 
     include/Retina/Graphics/Resources/DescriptorTable.hpp
@@ -91,6 +92,7 @@ set(RETINA_SOURCES
     src/Retina/Graphics/RayTracing/AccelerationStructure.cpp
     src/Retina/Graphics/RayTracing/AccelerationStructureInfo.cpp
     src/Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.cpp
+    src/Retina/Graphics/RayTracing/RayTracingPipeline.cpp
     src/Retina/Graphics/RayTracing/TopLevelAccelerationStructure.cpp
 
     src/Retina/Graphics/Resources/DescriptorTable.cpp

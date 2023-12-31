@@ -30,12 +30,14 @@
 #define RETINA_STORAGE_IMAGE_DESCRIPTOR_BINDING 2
 #define RETINA_UNIFORM_BUFFER_DESCRIPTOR_BINDING 3
 #define RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING 4
+#define RETINA_ACCELERATION_STRUCTURE_DESCRIPTOR_BINDING 5
 
 #define RETINA_SAMPLER_LAYOUT layout (set = 0, binding = RETINA_SAMPLER_DESCRIPTOR_BINDING)
 #define RETINA_SAMPLED_IMAGE_LAYOUT layout (set = 0, binding = RETINA_SAMPLED_IMAGE_DESCRIPTOR_BINDING)
 #define RETINA_STORAGE_IMAGE_LAYOUT layout (set = 0, binding = RETINA_STORAGE_IMAGE_DESCRIPTOR_BINDING)
 #define RETINA_UNIFORM_BUFFER_LAYOUT layout (set = 0, binding = RETINA_UNIFORM_BUFFER_DESCRIPTOR_BINDING)
 #define RETINA_STORAGE_BUFFER_LAYOUT layout (set = 0, binding = RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING)
+#define RETINA_ACCELERATION_STRUCTURE_LAYOUT layout (set = 0, binding = RETINA_ACCELERATION_STRUCTURE_DESCRIPTOR_BINDING)
 
 #define RETINA_DECLARE_SAMPLER_DESCRIPTOR()                             \
     RETINA_SAMPLER_LAYOUT uniform sampler[] u_samplerTable;             \
@@ -55,7 +57,14 @@
 #define RETINA_DECLARE_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)   \
     RETINA_STORAGE_BUFFER_LAYOUT qualifier buffer name block b_storageBufferTable_##name[]
 
+#define RETINA_DECLARE_ACCELERATION_STRUCTURE_DESCRIPTOR() \
+    RETINA_ACCELERATION_STRUCTURE_LAYOUT uniform accelerationStructureEXT u_accelerationStructureTable[]
+
 RETINA_DECLARE_SAMPLER_DESCRIPTOR();
+
+#if defined(RETINA_ENABLE_RAY_TRACING)
+    RETINA_DECLARE_ACCELERATION_STRUCTURE_DESCRIPTOR();
+#endif
 
 // Public
 #define RetinaGetSampler(id) u_samplerTable[id]
@@ -73,6 +82,9 @@ RETINA_DECLARE_SAMPLER_DESCRIPTOR();
 
 #define RetinaDeclareStorageBuffer(qualifier, name, block) RETINA_DECLARE_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)
 #define RetinaGetStorageBuffer(name, id) b_storageBufferTable_##name[id]
+#define RetinaGetStorageBufferMember(name, member, id) RetinaGetStorageBuffer(name, id).member
+
+#define RetinaGetAccelerationStructure(id) u_accelerationStructureTable[id]
 
 
 #endif

@@ -126,6 +126,12 @@ namespace Retina {
         SPipelinePushConstantInfo PushConstantInfo = {};
     };
 
+    struct SShaderBindingTableRegion {
+        uint64 Address = 0;
+        uint64 Stride = 0;
+        uint64 Size = 0;
+    };
+
     namespace Constant {
         const inline auto DEFAULT_PIPELINE_TESSELLATION_STATE_INFO = SPipelineTessellationStateInfo();
         const inline auto DEFAULT_PIPELINE_VIEWPORT_STATE_INFO = SPipelineViewportStateInfo();
@@ -179,5 +185,22 @@ namespace Retina {
         SPipelineColorBlendStateInfo ColorBlendState = Constant::DEFAULT_PIPELINE_COLOR_BLEND_STATE_INFO;
         SPipelineDynamicStateInfo DynamicState = Constant::DEFAULT_PIPELINE_DYNAMIC_STATE_INFO;
         std::optional<SPipelineRenderingInfo> RenderingInfo = std::nullopt;
+    };
+
+    struct SRayTracingPipelineCreateInfo {
+        struct SHitGroup {
+            fs::path ClosestHit;
+            std::optional<fs::path> AnyHit;
+            std::optional<fs::path> Intersection;
+        };
+        std::string Name;
+        fs::path RayGenShader;
+        std::vector<SHitGroup> HitGroupShaders;
+        std::vector<fs::path> MissShaders;
+        std::vector<fs::path> ShaderIncludePaths = {};
+
+        std::optional<std::vector<std::reference_wrapper<const CDescriptorLayout>>> DescriptorLayouts = std::nullopt;
+
+        SPipelineDynamicStateInfo DynamicState = Constant::DEFAULT_PIPELINE_DYNAMIC_STATE_INFO;
     };
 }

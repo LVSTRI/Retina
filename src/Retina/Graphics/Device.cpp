@@ -13,6 +13,13 @@
 #define RETINA_DEVICE_LOGGER_NAME "Device"
 
 namespace Retina {
+    struct SPhysicalDeviceProperties {
+        VkPhysicalDeviceProperties2 Properties = {};
+        VkPhysicalDeviceMemoryProperties2 MemoryProperties = {};
+        VkPhysicalDeviceRayTracingPipelinePropertiesKHR RayTracingPipelineProperties = {};
+        VkPhysicalDeviceAccelerationStructurePropertiesKHR AccelerationStructureProperties = {};
+    };
+
     RETINA_NODISCARD static auto EnumeratePhysicalDevices(const CInstance& instance) -> std::vector<VkPhysicalDevice> {
         RETINA_PROFILE_SCOPED();
         const auto logger = spdlog::get(RETINA_DEVICE_LOGGER_NAME);
@@ -124,6 +131,15 @@ namespace Retina {
             rayTracingPositionFetchFeatures,
             accelerationStructureFeatures,
         };
+    }
+
+    RETINA_NODISCARD static auto MakeDeviceRayTracingProperties(const SPhysicalDeviceProperties& properties) noexcept -> SDeviceRayTracingProperties {
+        RETINA_PROFILE_SCOPED();
+        auto rayTracingProperties = SDeviceRayTracingProperties();
+        const auto* rayTracingPipelinePropertiesPtr = reinterpret_cast<const uint8*>(&properties.RayTracingPipelineProperties.sType);
+        const auto* propertiesBeginPtr = rayTracingPipelinePropertiesPtr + sizeof(VkBaseOutStructure);
+        std::memcpy(&rayTracingProperties, propertiesBeginPtr, sizeof(SDeviceRayTracingProperties));
+        return rayTracingProperties;
     }
 
     RETINA_NODISCARD static auto MakeEnabledExtensions(const SDeviceExtensionInfo& extensionInfo, std::span<const VkExtensionProperties> availableExtensions) noexcept -> std::vector<const char*> {
@@ -330,6 +346,8 @@ namespace Retina {
         const auto availableExtensions = EnumeratePhysicalDeviceExtensions(physicalDevice);
         const auto enabledExtensions = MakeEnabledExtensions(createInfo.Extensions, availableExtensions);
 
+        const auto rayTracingProperties = MakeDeviceRayTracingProperties(physicalDeviceProperties);
+
         RETINA_LOG_INFO(*logger, "Enumerating Queue Families");
         auto queueFamilyCount = 0_u32;
         vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyCount, nullptr);
@@ -411,7 +429,7 @@ namespace Retina {
 
         device->_handle = deviceHandle;
         device->_physicalDevice = physicalDevice;
-        device->_physicalDeviceProperties = physicalDeviceProperties;
+        device->_rayTracingProperties = rayTracingProperties;
         device->_graphicsQueue = CQueue::Make(*device, SQueueCreateInfo {
             .Name = "GraphicsQueue",
             .Domain = EQueueDomain::E_GRAPHICS,

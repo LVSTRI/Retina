@@ -6,6 +6,8 @@
 
 #include <volk.h>
 
+#include <cstring>
+
 namespace Retina {
     IAccelerationStructure::IAccelerationStructure(EAccelerationStructureType type) noexcept : _type(type) {
         RETINA_PROFILE_SCOPED();

@@ -7,13 +7,6 @@
 #include <string>
 
 namespace Retina {
-    struct SPhysicalDeviceProperties {
-        VkPhysicalDeviceProperties2 Properties = {};
-        VkPhysicalDeviceMemoryProperties2 MemoryProperties = {};
-        VkPhysicalDeviceRayTracingPipelinePropertiesKHR RayTracingPipelineProperties = {};
-        VkPhysicalDeviceAccelerationStructurePropertiesKHR AccelerationStructureProperties = {};
-    };
-
     struct SPhysicalDeviceFeatures {
         VkPhysicalDeviceFeatures2 Features = {};
         VkPhysicalDeviceVulkan11Features Features11 = {};
@@ -22,6 +15,17 @@ namespace Retina {
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR RayTracingPipelineFeatures = {};
         VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR RayTracingPositionFetchFeatures = {};
         VkPhysicalDeviceAccelerationStructureFeaturesKHR AccelerationStructureFeatures = {};
+    };
+
+    struct SDeviceRayTracingProperties {
+        uint32 ShaderGroupHandleSize = 0;
+        uint32 MaxRayRecursionDepth = 0;
+        uint32 MaxShaderGroupStride = 0;
+        uint32 ShaderGroupBaseAlignment = 0;
+        uint32 ShaderGroupHandleCaptureReplaySize = 0;
+        uint32 MaxRayDispatchInvocationCount = 0;
+        uint32 ShaderGroupHandleAlignment = 0;
+        uint32 MaxRayHitAttributeSize = 0;
     };
 
     struct SDeviceExtensionInfo {

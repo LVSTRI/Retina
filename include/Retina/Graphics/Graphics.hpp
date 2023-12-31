@@ -5,6 +5,7 @@
 #include <Retina/Graphics/RayTracing/AccelerationStructure.hpp>
 #include <Retina/Graphics/RayTracing/AccelerationStructureInfo.hpp>
 #include <Retina/Graphics/RayTracing/BottomLevelAccelerationStructure.hpp>
+#include <Retina/Graphics/RayTracing/RayTracingPipeline.hpp>
 #include <Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
 
 #include <Retina/Graphics/Resources/DescriptorTable.hpp>

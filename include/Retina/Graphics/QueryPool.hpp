@@ -5,6 +5,8 @@
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
 #include <Retina/Graphics/QueryPoolInfo.hpp>
 
+#include <cstring>
+
 namespace Retina {
     class CQueryPool : public INativeDebugName, public IEnableIntrusiveReferenceCount<CQueryPool> {
     public:

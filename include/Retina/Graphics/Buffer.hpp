@@ -39,6 +39,8 @@ namespace Retina {
         RETINA_NODISCARD auto GetAlignment() const noexcept -> uint64;
         RETINA_NODISCARD auto GetDescriptor(uint64 offset = 0, uint64 size = Constant::WHOLE_SIZE) const noexcept -> SBufferDescriptor;
 
+        auto Clear() noexcept -> void;
+
         template <typename T>
         auto Write(const T& value, uint64 offset = 0) noexcept -> void;
 

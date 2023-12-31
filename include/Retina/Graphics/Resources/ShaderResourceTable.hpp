@@ -2,6 +2,7 @@
 
 #include <Retina/Core/Core.hpp>
 
+#include <Retina/Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
 #include <Retina/Graphics/Resources/DescriptorTable.hpp>
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/Image.hpp>
@@ -18,7 +19,7 @@ namespace Retina {
         using Resource = std::conditional_t<std::is_same_v<T, void>, typename SSelectDescriptorType<D>::Resource, T>;
         using Descriptor = SSelectDescriptorType<D>::Descriptor;
 
-        CShaderResource(Resource& resource) noexcept;
+        CShaderResource() noexcept = default;
         ~CShaderResource() noexcept = default;
 
         CShaderResource(const Self&) noexcept = default;
@@ -26,13 +27,13 @@ namespace Retina {
         auto operator =(const Self&) noexcept -> Self& = default;
         auto operator =(Self&&) noexcept -> Self& = default;
 
-        RETINA_NODISCARD static auto Make(CShaderResourceTable& table, Resource& resource, uint32 handle) noexcept -> Self;
+        RETINA_NODISCARD static auto Make(CShaderResourceTable& table, CArcPtr<Resource> resource, uint32 handle) noexcept -> Self;
         
         RETINA_NODISCARD consteval static auto GetDescriptorType() noexcept -> EDescriptorType;
         
         RETINA_NODISCARD auto GetHandle() const noexcept -> uint32;
-        RETINA_NODISCARD auto GetResource() noexcept -> Resource&;
-        RETINA_NODISCARD auto GetResource() const noexcept -> const Resource&;
+        RETINA_NODISCARD auto GetResource() noexcept -> CArcPtr<Resource>&;
+        RETINA_NODISCARD auto GetResource() const noexcept -> const CArcPtr<Resource>&;
         RETINA_NODISCARD auto GetTable() const noexcept -> const CShaderResourceTable&;
 
         auto Destroy() noexcept -> void;
@@ -46,7 +47,7 @@ namespace Retina {
     private:
         uint32 _handle = 0;
 
-        std::reference_wrapper<Resource> _resource;
+        CArcPtr<Resource> _resource;
         CArcPtr<CShaderResourceTable> _table;
     };
 
@@ -121,7 +122,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto buffer = CTypedBuffer<T>::Make(*_device, info);
         const auto index = _uniformBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return UniformBufferResource<T>::Make(*this, *buffer, index);
+        return UniformBufferResource<T>::Make(*this, std::move(buffer), index);
     }
 
     template <typename T>
@@ -129,7 +130,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto buffer = CTypedBuffer<T>::Upload(*_device, info);
         const auto index = _uniformBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return UniformBufferResource<T>::Make(*this, *buffer, index);
+        return UniformBufferResource<T>::Make(*this, std::move(buffer), index);
     }
 
     template <typename T>
@@ -147,7 +148,7 @@ namespace Retina {
         auto resources = std::vector<UniformBufferResource<T>>();
         resources.reserve(count);
         for (auto i = 0_u32; i < count; ++i) {
-            resources.emplace_back(UniformBufferResource<T>::Make(*this, *buffers[i], indices[i]));
+            resources.emplace_back(UniformBufferResource<T>::Make(*this, std::move(buffers[i]), indices[i]));
         }
         return resources;
     }
@@ -157,7 +158,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto buffer = CTypedBuffer<T>::Make(*_device, info);
         const auto index = _storageBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return StorageBufferResource<T>::Make(*this, *buffer, index);
+        return StorageBufferResource<T>::Make(*this, std::move(buffer), index);
     }
 
     template <typename T>
@@ -165,7 +166,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto buffer = CTypedBuffer<T>::Upload(*_device, info);
         const auto index = _storageBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return StorageBufferResource<T>::Make(*this, *buffer, index);
+        return StorageBufferResource<T>::Make(*this, std::move(buffer), index);
     }
 
     template <typename T>
@@ -183,7 +184,7 @@ namespace Retina {
         auto resources = std::vector<StorageBufferResource<T>>();
         resources.reserve(count);
         for (auto i = 0_u32; i < count; ++i) {
-            resources.emplace_back(StorageBufferResource<T>::Make(*this, *buffers[i], indices[i]));
+            resources.emplace_back(StorageBufferResource<T>::Make(*this, std::move(buffers[i]), indices[i]));
         }
         return resources;
     }
@@ -208,15 +209,11 @@ namespace Retina {
     }
 
     template <EDescriptorType D, typename T>
-    CShaderResource<D, T>::CShaderResource(Resource& resource) noexcept : _resource(resource) {
+    auto CShaderResource<D, T>::Make(CShaderResourceTable& table, CArcPtr<Resource> resource, uint32 handle) noexcept -> Self {
         RETINA_PROFILE_SCOPED();
-    }
-
-    template <EDescriptorType D, typename T>
-    auto CShaderResource<D, T>::Make(CShaderResourceTable& table, Resource& resource, uint32 handle) noexcept -> Self {
-        RETINA_PROFILE_SCOPED();
-        auto shaderResource = Self(resource);
+        auto shaderResource = Self();
         shaderResource._handle = handle;
+        shaderResource._resource = std::move(resource);
         shaderResource._table = table.ToArcPtr();
         return shaderResource;
     }
@@ -234,13 +231,13 @@ namespace Retina {
     }
 
     template <EDescriptorType D, typename T>
-    auto CShaderResource<D, T>::GetResource() noexcept -> Resource& {
+    auto CShaderResource<D, T>::GetResource() noexcept -> CArcPtr<Resource>& {
         RETINA_PROFILE_SCOPED();
         return _resource;
     }
 
     template <EDescriptorType D, typename T>
-    auto CShaderResource<D, T>::GetResource() const noexcept -> const Resource& {
+    auto CShaderResource<D, T>::GetResource() const noexcept -> const CArcPtr<Resource>& {
         RETINA_PROFILE_SCOPED();
         return _resource;
     }
@@ -260,24 +257,24 @@ namespace Retina {
     template <EDescriptorType D, typename T>
     auto CShaderResource<D, T>::operator *() noexcept -> Resource& {
         RETINA_PROFILE_SCOPED();
-        return GetResource();
+        return *_resource;
     }
 
     template <EDescriptorType D, typename T>
     auto CShaderResource<D, T>::operator *() const noexcept -> const Resource& {
         RETINA_PROFILE_SCOPED();
-        return GetResource();
+        return *_resource;
     }
 
     template <EDescriptorType D, typename T>
     auto CShaderResource<D, T>::operator ->() noexcept -> Resource* {
         RETINA_PROFILE_SCOPED();
-        return &GetResource();
+        return _resource.Get();
     }
 
     template <EDescriptorType D, typename T>
     auto CShaderResource<D, T>::operator ->() const noexcept -> const Resource* {
         RETINA_PROFILE_SCOPED();
-        return &GetResource();
+        return _resource.Get();
     }
 }

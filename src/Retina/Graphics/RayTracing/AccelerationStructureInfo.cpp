@@ -16,7 +16,7 @@ namespace Retina {
             auto geometryInfo = VkAccelerationStructureGeometryKHR(VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR);
             geometryInfo.flags = ToEnumCounterpart(each.Flags);
             std::visit(
-                MakeOverloadedVisitor {
+                SOverloadedVisitor {
                     [&](const SAccelerationStructureGeometryTrianglesData& data) {
                         constexpr static auto VERTEX_STRIDE = sizeof(float32[3]);
                         const auto maxVertexIndex = data.PositionBuffer->GetSize() / VERTEX_STRIDE - 1;

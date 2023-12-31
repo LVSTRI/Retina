@@ -62,6 +62,7 @@ namespace Retina {
         auto PushConstants(std::span<const uint8> values, uint32 offset = 0) noexcept -> Self&;
         template <typename... Args>
         auto PushConstants(Args&&... args) noexcept -> Self&;
+        auto TraceRays(uint32 width = 1, uint32 height = 1, uint32 depth = 1) noexcept -> Self&;
         auto Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) noexcept -> Self&;
         auto EndRendering() noexcept -> Self&;
 

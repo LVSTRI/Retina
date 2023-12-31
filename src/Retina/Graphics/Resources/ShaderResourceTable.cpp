@@ -180,28 +180,28 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto sampler = CSampler::Make(*_device, info);
         const auto index = _samplerTable.AllocateResource(sampler);
-        return SamplerResource::Make(*this, *sampler, index);
+        return SamplerResource::Make(*this, std::move(sampler), index);
     }
 
     auto CShaderResourceTable::MakeSampledImage(const SImageCreateInfo& info) noexcept -> SampledImageResource {
         RETINA_PROFILE_SCOPED();
         auto image = CImage::Make(*_device, info);
         const auto index = _sampledImageTable.AllocateResource(image);
-        return SampledImageResource::Make(*this, *image, index);
+        return SampledImageResource::Make(*this, std::move(image), index);
     }
 
     auto CShaderResourceTable::MakeStorageImage(const SImageCreateInfo& info) noexcept -> StorageImageResource {
         RETINA_PROFILE_SCOPED();
         auto image = CImage::Make(*_device, info);
         const auto index = _storageImageTable.AllocateResource(image);
-        return StorageImageResource::Make(*this, *image, index);
+        return StorageImageResource::Make(*this, std::move(image), index);
     }
 
     auto CShaderResourceTable::MakeAccelerationStructure(const SAccelerationStructureCreateInfo& info) noexcept -> AccelerationStructureResource {
         RETINA_PROFILE_SCOPED();
         auto accelerationStructure = CTopLevelAccelerationStructure::Make(*_device, info);
         const auto index = _accelerationStructureTable.AllocateResource(accelerationStructure);
-        return AccelerationStructureResource::Make(*this, *accelerationStructure, index);
+        return AccelerationStructureResource::Make(*this, std::move(accelerationStructure), index);
     }
 
     auto CShaderResourceTable::Update() noexcept -> void {

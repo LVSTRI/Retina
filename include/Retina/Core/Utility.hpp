@@ -79,8 +79,12 @@ namespace Retina {
         return output;
     }
 
+    RETINA_NODISCARD constexpr auto MakeAlignedSize(uint64 size, uint64 alignment) noexcept -> uint64 {
+        return (size + alignment - 1) & ~(alignment - 1);
+    }
+
     template <typename... Ts>
-    struct MakeOverloadedVisitor : Ts... {
+    struct SOverloadedVisitor : Ts... {
         using Ts::operator ()...;
     };
 }

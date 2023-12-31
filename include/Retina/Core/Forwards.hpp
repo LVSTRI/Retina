@@ -77,6 +77,10 @@ namespace Retina {
     // <Graphics/RayTracing/BottomLevelAccelerationStructure.hpp>
     class CBottomLevelAccelerationStructure;
 
+    // <Graphics/RayTracing/RayTracingPipeline.hpp>
+    struct SShaderBindingTable;
+    class CRayTracingPipeline;
+
     // <Graphics/RayTracing/TopLevelAccelerationStructure.hpp>
     class CTopLevelAccelerationStructure;
 
@@ -220,9 +224,11 @@ namespace Retina {
     struct SPipelineRenderingInfo;
     struct SPipelinePushConstantInfo;
     struct SPipelineLayout;
+    struct SShaderBindingTableRegion;
     struct SComputePipelineCreateInfo;
     struct SGraphicsPipelineCreateInfo;
     struct SMeshShadingPipelineCreateInfo;
+    struct SRayTracingPipelineCreateInfo;
 
     // <Graphics/QueryPool.hpp>
     class CQueryPool;

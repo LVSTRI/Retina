@@ -120,8 +120,8 @@ namespace Retina {
 
     struct SAttachmentInfo {
         std::reference_wrapper<const CImage> Image;
-        EAttachmentLoadOperator LoadOperation = EAttachmentLoadOperator::E_CLEAR;
-        EAttachmentStoreOperator StoreOperation = EAttachmentStoreOperator::E_STORE;
+        EAttachmentLoadOperator LoadOperator = EAttachmentLoadOperator::E_CLEAR;
+        EAttachmentStoreOperator StoreOperator = EAttachmentStoreOperator::E_STORE;
         SAttachmentClearValue ClearValue = {};
     };
 

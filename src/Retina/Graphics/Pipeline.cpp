@@ -189,7 +189,6 @@ namespace Retina {
         auto compiler = Shc::Compiler();
         auto compilerOptions = Shc::CompileOptions();
         compilerOptions.SetGenerateDebugInfo();
-        compilerOptions.SetSuppressWarnings();
         compilerOptions.SetOptimizationLevel(shaderc_optimization_level_zero);
         compilerOptions.SetIncluder(std::make_unique<Private::CShaderIncluder>(includeDirectoriesWithRoot));
         compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);

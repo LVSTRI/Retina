@@ -24,6 +24,9 @@ namespace Retina {
         RETINA_NODISCARD auto GetPhysicalDevice() const noexcept -> VkPhysicalDevice;
         RETINA_NODISCARD auto GetAllocator() const noexcept -> VmaAllocator;
 
+        template <typename T>
+        RETINA_NODISCARD auto GetRayTracingProperty(T SDeviceRayTracingProperties::* property) const noexcept;
+
         RETINA_NODISCARD auto GetGraphicsQueue() const noexcept -> CQueue&;
         RETINA_NODISCARD auto GetComputeQueue() const noexcept -> CQueue&;
         RETINA_NODISCARD auto GetTransferQueue() const noexcept -> CQueue&;
@@ -41,7 +44,7 @@ namespace Retina {
         VkDevice _handle = {};
         VkPhysicalDevice _physicalDevice = {};
         VmaAllocator _allocator = {};
-        SPhysicalDeviceProperties _physicalDeviceProperties = {};
+        SDeviceRayTracingProperties _rayTracingProperties = {};
 
         CArcPtr<CQueue> _graphicsQueue;
         CArcPtr<CQueue> _computeQueue;
@@ -51,4 +54,10 @@ namespace Retina {
         std::shared_ptr<spdlog::logger> _logger;
         CArcPtr<const CInstance> _instance;
     };
+
+    template <typename T>
+    auto CDevice::GetRayTracingProperty(T SDeviceRayTracingProperties::* property) const noexcept {
+        RETINA_PROFILE_SCOPED();
+        return _rayTracingProperties.*property;
+    }
 }

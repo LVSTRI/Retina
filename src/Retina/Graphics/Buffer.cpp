@@ -242,6 +242,15 @@ namespace Retina {
         };
     }
 
+    auto CBuffer::Clear() noexcept -> void {
+        RETINA_PROFILE_SCOPED();
+        auto* mappedPtr = static_cast<uint8*>(_allocationInfo.pMappedData);
+        if (mappedPtr) {
+            std::memset(mappedPtr, 0, _createInfo.Capacity);
+        }
+        _size = 0;
+    }
+
     auto CBuffer::Write(const void* data, uint64 size, uint64 offset) noexcept -> void {
         RETINA_PROFILE_SCOPED();
         auto* mappedPtr = static_cast<uint8*>(_allocationInfo.pMappedData);
