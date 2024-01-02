@@ -19,7 +19,7 @@ namespace Retina {
                 SOverloadedVisitor {
                     [&](const SAccelerationStructureGeometryTrianglesData& data) {
                         constexpr static auto VERTEX_STRIDE = sizeof(float32[3]);
-                        const auto maxVertexIndex = data.PositionBuffer->GetSize() / VERTEX_STRIDE - 1;
+                        const auto maxVertexIndex = data.PositionBuffer->GetSize() - 1;
                         auto geometry = VkAccelerationStructureGeometryTrianglesDataKHR(
                             VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR
                         );

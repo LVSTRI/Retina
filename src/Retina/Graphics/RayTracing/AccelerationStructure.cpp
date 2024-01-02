@@ -79,10 +79,11 @@ namespace Retina {
         return handle;
     }
 
-    auto ToNativeTransformMatrix(const glm::mat4& transform) noexcept -> glm::mat3x4 {
+    auto ToNativeTransformMatrix(glm::mat4 transform) noexcept -> VkTransformMatrixKHR {
         RETINA_PROFILE_SCOPED();
-        auto result = glm::mat3x4();
-        std::memcpy(&result, AsConstPtr(glm::transpose(transform)), sizeof(glm::mat3x4));
+        auto result = VkTransformMatrixKHR();
+        transform = glm::transpose(transform);
+        std::memcpy(&result, &transform, sizeof(VkTransformMatrixKHR));
         return result;
     }
 }

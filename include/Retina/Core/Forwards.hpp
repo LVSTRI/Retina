@@ -119,6 +119,7 @@ namespace Retina {
     struct SBufferMemoryBarrier;
     struct SImageMemoryBarrier;
     struct SBufferCopyRegion;
+    struct SBufferImageCopyRegion;
     struct SImageCopyRegion;
     struct SImageBlitRegion;
     union SColorClearValue;
@@ -275,6 +276,12 @@ namespace Retina {
     // <Graphics/TypedBuffer.hpp>
     template <typename T>
     class CTypedBuffer;
+
+    // <Platform/Input.hpp>
+    class CInput;
+
+    // <Platform/InputInfo.hpp>
+    enum class EKeyboard : int32;
 
     // <Platform/Window.hpp>
     class CWindow;

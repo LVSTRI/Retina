@@ -1,6 +1,7 @@
 #ifndef RETINA_SHADERS_BINDINGS_HEADER
 #define RETINA_SHADERS_BINDINGS_HEADER
 
+#extension GL_ARB_separate_shader_objects : require
 #extension GL_EXT_nonuniform_qualifier : enable
 #extension GL_EXT_buffer_reference : enable
 #extension GL_EXT_buffer_reference2 : enable
@@ -28,15 +29,14 @@
 #define RETINA_SAMPLER_DESCRIPTOR_BINDING 0
 #define RETINA_SAMPLED_IMAGE_DESCRIPTOR_BINDING 1
 #define RETINA_STORAGE_IMAGE_DESCRIPTOR_BINDING 2
-#define RETINA_UNIFORM_BUFFER_DESCRIPTOR_BINDING 3
-#define RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING 4
-#define RETINA_ACCELERATION_STRUCTURE_DESCRIPTOR_BINDING 5
+#define RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING 3
+#define RETINA_ACCELERATION_STRUCTURE_DESCRIPTOR_BINDING 4
 
 #define RETINA_SAMPLER_LAYOUT layout (set = 0, binding = RETINA_SAMPLER_DESCRIPTOR_BINDING)
 #define RETINA_SAMPLED_IMAGE_LAYOUT layout (set = 0, binding = RETINA_SAMPLED_IMAGE_DESCRIPTOR_BINDING)
 #define RETINA_STORAGE_IMAGE_LAYOUT layout (set = 0, binding = RETINA_STORAGE_IMAGE_DESCRIPTOR_BINDING)
-#define RETINA_UNIFORM_BUFFER_LAYOUT layout (set = 0, binding = RETINA_UNIFORM_BUFFER_DESCRIPTOR_BINDING)
 #define RETINA_STORAGE_BUFFER_LAYOUT layout (set = 0, binding = RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING)
+#define RETINA_SCALAR_STORAGE_BUFFER_LAYOUT layout (scalar, set = 0, binding = RETINA_STORAGE_BUFFER_DESCRIPTOR_BINDING)
 #define RETINA_ACCELERATION_STRUCTURE_LAYOUT layout (set = 0, binding = RETINA_ACCELERATION_STRUCTURE_DESCRIPTOR_BINDING)
 
 #define RETINA_DECLARE_SAMPLER_DESCRIPTOR()                             \
@@ -49,13 +49,10 @@
 #define RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name) \
     RETINA_STORAGE_IMAGE_LAYOUT uniform type[] u_storageImageTable_##name
 
-#define RETINA_DECLARE_UNIFORM_BUFFER_DESCRIPTOR(type)    \
-    RETINA_UNIFORM_BUFFER_LAYOUT uniform U##type {        \
-        type Data;                                        \
-    } u_uniformBufferTable_##type[]
-
 #define RETINA_DECLARE_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)   \
     RETINA_STORAGE_BUFFER_LAYOUT qualifier buffer name block b_storageBufferTable_##name[]
+#define RETINA_DECLARE_SCALAR_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)   \
+    RETINA_SCALAR_STORAGE_BUFFER_LAYOUT qualifier buffer name block b_storageBufferTable_##name[]
 
 #define RETINA_DECLARE_ACCELERATION_STRUCTURE_DESCRIPTOR() \
     RETINA_ACCELERATION_STRUCTURE_LAYOUT uniform accelerationStructureEXT u_accelerationStructureTable[]
@@ -76,15 +73,11 @@ RETINA_DECLARE_SAMPLER_DESCRIPTOR();
 #define RetinaDeclareStorageImage(type, name) RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name)
 #define RetinaGetStorageImage(name, id) u_storageImageTable_##name[id]
 
-#define RetinaDeclareUniformBuffer(type) RETINA_DECLARE_UNIFORM_BUFFER_DESCRIPTOR(type)
-#define RetinaGetUniformBuffer(type, id) u_uniformBufferTable_##type[id]
-#define RetinaGetUniformBufferData(type, id) RetinaGetUniformBuffer(type, id).Data
-
 #define RetinaDeclareStorageBuffer(qualifier, name, block) RETINA_DECLARE_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)
+#define RetinaDeclareScalarStorageBuffer(qualifier, name, block) RETINA_DECLARE_SCALAR_STORAGE_BUFFER_DESCRIPTOR(qualifier, name, block)
 #define RetinaGetStorageBuffer(name, id) b_storageBufferTable_##name[id]
 #define RetinaGetStorageBufferMember(name, member, id) RetinaGetStorageBuffer(name, id).member
 
 #define RetinaGetAccelerationStructure(id) u_accelerationStructureTable[id]
-
 
 #endif

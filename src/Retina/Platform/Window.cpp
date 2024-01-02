@@ -1,6 +1,10 @@
 #include <Retina/Platform/Window.hpp>
 
 namespace Retina {
+    CWindow::CWindow() noexcept : _input(*this) {
+        RETINA_PROFILE_SCOPED();
+    }
+
     CWindow::~CWindow() noexcept {
         RETINA_PROFILE_SCOPED();
         Platform::DestroyWindowHandle(_handle);
@@ -22,11 +26,6 @@ namespace Retina {
         return _handle;
     }
 
-    auto CWindow::GetCreateInfo() const noexcept -> const SWindowCreateInfo& {
-        RETINA_PROFILE_SCOPED();
-        return _createInfo;
-    }
-
     auto CWindow::GetTitle() const noexcept -> std::string_view {
         RETINA_PROFILE_SCOPED();
         return _createInfo.Title;
@@ -40,6 +39,21 @@ namespace Retina {
     auto CWindow::GetHeight() const noexcept -> uint32 {
         RETINA_PROFILE_SCOPED();
         return _height;
+    }
+
+    auto CWindow::GetInput() noexcept -> CInput& {
+        RETINA_PROFILE_SCOPED();
+        return _input;
+    }
+
+    auto CWindow::GetInput() const noexcept -> const CInput& {
+        RETINA_PROFILE_SCOPED();
+        return _input;
+    }
+
+    auto CWindow::GetCreateInfo() const noexcept -> const SWindowCreateInfo& {
+        RETINA_PROFILE_SCOPED();
+        return _createInfo;
     }
 
     auto CWindow::GetFeatures() const noexcept -> const SWindowFeatures& {

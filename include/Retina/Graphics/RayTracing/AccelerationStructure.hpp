@@ -5,7 +5,6 @@
 #include <Retina/Graphics/Native/NativeDebugName.hpp>
 
 #include <glm/mat4x4.hpp>
-#include <glm/mat3x4.hpp>
 
 namespace Retina {
     class IAccelerationStructure : public INativeDebugName, public IEnableIntrusiveReferenceCount<IAccelerationStructure> {
@@ -40,5 +39,5 @@ namespace Retina {
         EAccelerationStructureType type
     ) noexcept -> VkAccelerationStructureKHR;
 
-    RETINA_NODISCARD auto ToNativeTransformMatrix(const glm::mat4& transform) noexcept -> glm::mat3x4;
+    RETINA_NODISCARD auto ToNativeTransformMatrix(glm::mat4 transform) noexcept -> VkTransformMatrixKHR;
 }

@@ -31,17 +31,18 @@ namespace Retina {
         }
         auto mergedWrites = External::FastHashMap<uint64, std::vector<D>>();
         {
-            const auto& [offset, descriptor] = table[0];
+            const auto& [offset, _0] = table[0];
             auto currentOffset = offset;
-            mergedWrites[currentOffset].push_back(descriptor);
             for (auto i = 0_u32; i < table.size() - 1; ++i) {
                 const auto& [offset, descriptor] = table[i];
-                const auto& [nextOffset, nextDescriptor] = table[i + 1];
+                const auto& [nextOffset, _0] = table[i + 1];
                 mergedWrites[currentOffset].push_back(descriptor);
                 if (offset + 1 != nextOffset) {
                     currentOffset = nextOffset;
                 }
             }
+            const auto& [_1, lastDescriptor] = table.back();
+            mergedWrites[currentOffset].push_back(lastDescriptor);
         }
         return mergedWrites;
     }
@@ -53,8 +54,7 @@ namespace Retina {
             { Retina::EDescriptorType::E_SAMPLER, 64 },
             { Retina::EDescriptorType::E_SAMPLED_IMAGE, 65536 },
             { Retina::EDescriptorType::E_STORAGE_IMAGE, 65536 },
-            { Retina::EDescriptorType::E_UNIFORM_BUFFER, 65536 },
-            { Retina::EDescriptorType::E_STORAGE_BUFFER, 65536 },
+            { Retina::EDescriptorType::E_STORAGE_BUFFER, 131072 },
         };
         if (device.IsExtensionEnabled(&SDeviceExtensionInfo::RayTracing)) {
             descriptorPoolSizes.push_back({ Retina::EDescriptorType::E_ACCELERATION_STRUCTURE_KHR, 1024 });
@@ -88,14 +88,7 @@ namespace Retina {
                          Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
             },
             {
-                .Count = 65536,
-                .Stage = Retina::EShaderStage::E_ALL,
-                .Type = Retina::EDescriptorType::E_UNIFORM_BUFFER,
-                .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
-                         Retina::EDescriptorBindingFlag::E_PARTIALLY_BOUND,
-            },
-            {
-                .Count = 65536,
+                .Count = 131072,
                 .Stage = Retina::EShaderStage::E_ALL,
                 .Type = Retina::EDescriptorType::E_STORAGE_BUFFER,
                 .Flags = Retina::EDescriptorBindingFlag::E_UPDATE_UNUSED_WHILE_PENDING |
@@ -139,11 +132,6 @@ namespace Retina {
     auto CShaderResourceTable::GetStorageImageTable() noexcept -> CDescriptorTable<EDescriptorType::E_STORAGE_IMAGE>& {
         RETINA_PROFILE_SCOPED();
         return _storageImageTable;
-    }
-
-    auto CShaderResourceTable::GetUniformBufferTable() noexcept -> CDescriptorTable<EDescriptorType::E_UNIFORM_BUFFER>& {
-        RETINA_PROFILE_SCOPED();
-        return _uniformBufferTable;
     }
 
     auto CShaderResourceTable::GetStorageBufferTable() noexcept -> CDescriptorTable<EDescriptorType::E_STORAGE_BUFFER>& {
@@ -209,7 +197,6 @@ namespace Retina {
         auto&& samplerWrites = GetSamplerTable().GetWrites();
         auto&& sampledImageWrites = GetSampledImageTable().GetWrites();
         auto&& storageImageWrites = GetStorageImageTable().GetWrites();
-        auto&& uniformBufferWrites = GetUniformBufferTable().GetWrites();
         auto&& storageBufferWrites = GetStorageBufferTable().GetWrites();
         auto&& accelerationStructureWrites = GetAccelerationStructureTable().GetWrites();
 
@@ -237,15 +224,6 @@ namespace Retina {
                 descriptorWrites.push_back({
                     .Slot = static_cast<uint32>(index),
                     .Type = EDescriptorType::E_STORAGE_IMAGE,
-                    .Descriptors = std::move(descriptors),
-                });
-            }
-        }
-        if (!uniformBufferWrites.empty()) {
-            for (auto&& [index, descriptors] : MergeAdjacentWrites(MakeSortedWrites(std::move(uniformBufferWrites)))) {
-                descriptorWrites.push_back({
-                    .Slot = static_cast<uint32>(index),
-                    .Type = EDescriptorType::E_UNIFORM_BUFFER,
                     .Descriptors = std::move(descriptors),
                 });
             }

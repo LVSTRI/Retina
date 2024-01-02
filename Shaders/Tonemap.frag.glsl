@@ -9,8 +9,8 @@ layout (push_constant) uniform UPushConstant {
     uint u_inputImageId;
 };
 
-RetinaDeclareStorageImage(restrict readonly image2D, u_image2DBlock);
-#define inputImage RetinaGetStorageImage(u_image2DBlock, u_inputImageId)
+RetinaDeclareStorageImage(restrict readonly image2D, SReadonlyImage2DBlock);
+#define g_inputImage RetinaGetStorageImage(SReadonlyImage2DBlock, u_inputImageId)
 
 vec3 Tonemap(in vec3 color) {
     const float luminance = GetLuminance(color);
@@ -19,5 +19,5 @@ vec3 Tonemap(in vec3 color) {
 }
 
 void main() {
-    o_output = vec4(ToNonLinearFromLinear(Tonemap(vec3(imageLoad(inputImage, ivec2(gl_FragCoord.xy))))), 1.0);
+    o_output = vec4(ToNonLinearFromLinear(Tonemap(vec3(imageLoad(g_inputImage, ivec2(gl_FragCoord.xy))))), 1.0);
 }

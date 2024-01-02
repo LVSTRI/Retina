@@ -71,6 +71,11 @@ namespace Retina {
         auto ImageMemoryBarrier(const SImageMemoryBarrier& imageMemoryBarrier) noexcept -> Self&;
 
         auto CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> Self&;
+        auto CopyBufferToImage(
+            const CBuffer& source,
+            const CImage& dest,
+            const SBufferImageCopyRegion& copyRegion
+        ) noexcept -> Self&;
 
         auto CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> Self&;
         auto BlitImage(const CImage& source, const CImage& dest, const SImageBlitRegion& blitRegion) noexcept -> Self&;

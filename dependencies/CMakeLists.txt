@@ -66,7 +66,11 @@ target_compile_definitions(glm INTERFACE
     GLM_FORCE_RADIANS
     GLM_FORCE_AVX2
 )
-target_compile_options(glm INTERFACE -Wno-everything)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(glm INTERFACE -Wno-everything)
+else()
+    target_compile_options(glm INTERFACE -w)
+endif()
 
 FetchContent_Declare(
     vma
@@ -90,7 +94,11 @@ if (NOT vma_POPULATED)
         ${vma_SOURCE_DIR}/include
     )
     target_link_libraries(vma PRIVATE volk)
-    target_compile_options(vma PRIVATE -Wno-everything)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(vma INTERFACE -Wno-everything)
+    else()
+        target_compile_options(vma INTERFACE -w)
+    endif()
 endif()
 
 FetchContent_Declare(
@@ -117,7 +125,7 @@ FetchContent_MakeAvailable(spirv-headers)
 FetchContent_Declare(
     spirv-tools
     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Tools
-    GIT_TAG        main
+    GIT_TAG        f0cc85efdbbe3a46eae90e0f915dc1509836d0fc
     GIT_PROGRESS   TRUE
     GIT_SHALLOW    TRUE
 )
@@ -126,7 +134,11 @@ set(SPIRV_WERROR OFF CACHE BOOL "" FORCE)
 set(SPIRV_WARN_EVERYTHING OFF CACHE BOOL "" FORCE)
 set(ENABLE_EXCEPTIONS_ON_MSVC OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spirv-tools)
-target_compile_options(SPIRV-Tools-static PRIVATE -Wno-everything)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(SPIRV-Tools-static INTERFACE -Wno-everything)
+else()
+    target_compile_options(SPIRV-Tools-static INTERFACE -w)
+endif()
 
 FetchContent_Declare(
     glslang
@@ -155,9 +167,16 @@ set(SHADERC_SKIP_EXAMPLES ON CACHE BOOL "" FORCE)
 set(SHADERC_ENABLE_WERROR_COMPILE OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(shaderc)
-target_compile_options(shaderc PRIVATE -Wno-everything)
-target_compile_options(shaderc_util PRIVATE -Wno-everything)
-target_compile_options(glslang PRIVATE -Wno-everything)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(shaderc PRIVATE -Wno-everything)
+    target_compile_options(shaderc_util PRIVATE -Wno-everything)
+    target_compile_options(glslang PRIVATE -Wno-everything)
+else()
+    target_compile_options(shaderc PRIVATE -w)
+    target_compile_options(shaderc_util PRIVATE -w)
+    target_compile_options(glslang PRIVATE -w)
+endif()
+
 target_compile_definitions(shaderc PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
 target_compile_definitions(shaderc_util PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)
 target_compile_definitions(glslang PRIVATE $<$<BOOL:${WIN32}>:_CRT_SECURE_NO_WARNINGS>)

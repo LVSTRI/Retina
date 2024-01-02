@@ -189,11 +189,13 @@ namespace Retina {
         auto compiler = Shc::Compiler();
         auto compilerOptions = Shc::CompileOptions();
         compilerOptions.SetGenerateDebugInfo();
-        compilerOptions.SetOptimizationLevel(shaderc_optimization_level_zero);
+        compilerOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
         compilerOptions.SetIncluder(std::make_unique<Private::CShaderIncluder>(includeDirectoriesWithRoot));
         compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);
         compilerOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
         compilerOptions.SetTargetSpirv(shaderc_spirv_version_1_6);
+        compilerOptions.SetPreserveBindings(true);
+
         auto spirv = compiler.CompileGlslToSpv(
             shaderSource.data(),
             shaderSource.size(),

@@ -65,6 +65,11 @@ namespace Retina {
         return *AsMutPtr(std::forward<T[]>(value));
     }
 
+    template <typename T>
+    RETINA_NODISCARD constexpr auto ToUnderlying(T value) noexcept -> std::underlying_type_t<T> {
+        return static_cast<std::underlying_type_t<T>>(value);
+    }
+
     template <typename... Ts>
     RETINA_NODISCARD constexpr auto MakeByteArray(Ts&&... values) noexcept -> std::array<uint8, SizeBytesOfPack<Ts...>()> {
         auto output = std::array<uint8, SizeBytesOfPack<Ts...>()>();

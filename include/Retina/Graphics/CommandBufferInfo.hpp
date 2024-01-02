@@ -82,6 +82,13 @@ namespace Retina {
         RETINA_NODISCARD constexpr auto operator <=>(const SBufferCopyRegion&) const noexcept -> std::strong_ordering = default;
     };
 
+    struct SBufferImageCopyRegion {
+        uint64 Offset = 0;
+        SImageSubresourceRange Subresource = {};
+        SOffset3D ImageOffset = {};
+        SExtent3D Extent = {};
+    };
+
     struct SImageCopyRegion {
         SOffset3D SourceOffset = {};
         SOffset3D DestOffset = {};

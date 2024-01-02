@@ -80,6 +80,8 @@ set(RETINA_HEADERS
     include/Retina/Graphics/TimelineSemaphore.hpp
     include/Retina/Graphics/TypedBuffer.hpp
 
+    include/Retina/Platform/Input.hpp
+    include/Retina/Platform/InputInfo.hpp
     include/Retina/Platform/Platform.hpp
     include/Retina/Platform/PlatformManager.hpp
     include/Retina/Platform/Window.hpp
@@ -123,6 +125,7 @@ set(RETINA_SOURCES
     src/Retina/Graphics/Swapchain.cpp
     src/Retina/Graphics/TimelineSemaphore.cpp
 
+    src/Retina/Platform/Input.cpp
     src/Retina/Platform/PlatformManager.cpp
     src/Retina/Platform/Window.cpp
 )
@@ -176,8 +179,48 @@ target_include_directories(Retina PUBLIC
 target_link_libraries(Retina PUBLIC RetinaDependencies)
 
 if (${RETINA_BUILD_TEST_APPLICATION})
+    include(FetchContent)
+    FetchContent_Declare(
+        cgltf
+        GIT_REPOSITORY https://github.com/jkuhlmann/cgltf
+        GIT_TAG        master
+        GIT_SHALLOW    TRUE
+        GIT_PROGRESS   TRUE
+    )
+    FetchContent_GetProperties(cgltf)
+    if (NOT cgltf_POPULATED)
+        FetchContent_Populate(cgltf)
+
+        add_library(cgltf STATIC test/cgltf.cpp)
+        target_include_directories(cgltf PUBLIC ${cgltf_SOURCE_DIR})
+        target_compile_options(cgltf PRIVATE -Wno-everything)
+    endif()
+
+    FetchContent_Declare(
+        ktx_software
+        GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+        GIT_TAG        170e75893e3d232a2c4f241afe199256f8abb6f9
+        GIT_SHALLOW    TRUE
+        GIT_PROGRESS   TRUE
+    )
+    FetchContent_GetProperties(ktx_software)
+    if (NOT ktx_software_POPULATED)
+        set(KTX_FEATURE_TESTS OFF CACHE BOOL "" FORCE)
+        set(KTX_FEATURE_TOOLS_CTS OFF CACHE BOOL "" FORCE)
+        set(KTX_FEATURE_VK_UPLOAD OFF CACHE BOOL "" FORCE)
+        set(KTX_FEATURE_GL_UPLOAD OFF CACHE BOOL "" FORCE)
+        FetchContent_Populate(ktx_software)
+
+        add_subdirectory(${ktx_software_SOURCE_DIR} ${ktx_software_BINARY_DIR})
+    endif()
     add_executable(RetinaTest
         test/main.cpp
     )
-    target_link_libraries(RetinaTest PRIVATE Retina)
+    target_link_libraries(RetinaTest PRIVATE Retina cgltf ktx_read)
+
+    add_custom_command(TARGET RetinaTest POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:ktx_read>
+            $<TARGET_FILE_DIR:RetinaTest>
+    )
 endif()

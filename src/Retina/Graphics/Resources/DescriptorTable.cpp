@@ -109,7 +109,6 @@ namespace Retina {
     template class CDescriptorTable<EDescriptorType::E_SAMPLER>;
     template class CDescriptorTable<EDescriptorType::E_SAMPLED_IMAGE>;
     template class CDescriptorTable<EDescriptorType::E_STORAGE_IMAGE>;
-    template class CDescriptorTable<EDescriptorType::E_UNIFORM_BUFFER>;
     template class CDescriptorTable<EDescriptorType::E_STORAGE_BUFFER>;
     template class CDescriptorTable<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR>;
 }

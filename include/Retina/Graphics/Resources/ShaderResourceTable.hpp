@@ -55,8 +55,6 @@ namespace Retina {
     using SampledImageResource = CShaderResource<EDescriptorType::E_SAMPLED_IMAGE>;
     using StorageImageResource = CShaderResource<EDescriptorType::E_STORAGE_IMAGE>;
     template <typename T>
-    using UniformBufferResource = CShaderResource<EDescriptorType::E_UNIFORM_BUFFER, CTypedBuffer<T>>;
-    template <typename T>
     using StorageBufferResource = CShaderResource<EDescriptorType::E_STORAGE_BUFFER, CTypedBuffer<T>>;
     using AccelerationStructureResource = CShaderResource<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR>;
 
@@ -72,7 +70,6 @@ namespace Retina {
         RETINA_NODISCARD auto GetSamplerTable() noexcept -> CDescriptorTable<EDescriptorType::E_SAMPLER>&;
         RETINA_NODISCARD auto GetSampledImageTable() noexcept -> CDescriptorTable<EDescriptorType::E_SAMPLED_IMAGE>&;
         RETINA_NODISCARD auto GetStorageImageTable() noexcept -> CDescriptorTable<EDescriptorType::E_STORAGE_IMAGE>&;
-        RETINA_NODISCARD auto GetUniformBufferTable() noexcept -> CDescriptorTable<EDescriptorType::E_UNIFORM_BUFFER>&;
         RETINA_NODISCARD auto GetStorageBufferTable() noexcept -> CDescriptorTable<EDescriptorType::E_STORAGE_BUFFER>&;
         RETINA_NODISCARD auto GetAccelerationStructureTable() noexcept -> CDescriptorTable<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR>&;
 
@@ -85,12 +82,6 @@ namespace Retina {
         RETINA_NODISCARD auto MakeSampledImage(const SImageCreateInfo& info) noexcept -> SampledImageResource;
         RETINA_NODISCARD auto MakeStorageImage(const SImageCreateInfo& info) noexcept -> StorageImageResource;
 
-        template <typename T>
-        RETINA_NODISCARD auto MakeUniformBuffer(const SBufferCreateInfo& info) noexcept -> UniformBufferResource<T>;
-        template <typename T>
-        RETINA_NODISCARD auto MakeUniformBuffer(const SBufferUploadInfo<T>& info) noexcept -> UniformBufferResource<T>;
-        template <typename T>
-        RETINA_NODISCARD auto MakeUniformBuffer(uint32 count, const SBufferCreateInfo& info) noexcept -> std::vector<UniformBufferResource<T>>;
         template <typename T>
         RETINA_NODISCARD auto MakeStorageBuffer(const SBufferCreateInfo& info) noexcept -> StorageBufferResource<T>;
         template <typename T>
@@ -109,49 +100,12 @@ namespace Retina {
         CDescriptorTable<EDescriptorType::E_SAMPLER> _samplerTable;
         CDescriptorTable<EDescriptorType::E_SAMPLED_IMAGE> _sampledImageTable;
         CDescriptorTable<EDescriptorType::E_STORAGE_IMAGE> _storageImageTable;
-        CDescriptorTable<EDescriptorType::E_UNIFORM_BUFFER> _uniformBufferTable;
         CDescriptorTable<EDescriptorType::E_STORAGE_BUFFER> _storageBufferTable;
         CDescriptorTable<EDescriptorType::E_ACCELERATION_STRUCTURE_KHR> _accelerationStructureTable;
 
         CArcPtr<const CDevice> _device;
         CArcPtr<const CDescriptorSet> _descriptorSet;
     };
-
-    template <typename T>
-    auto CShaderResourceTable::MakeUniformBuffer(const SBufferCreateInfo& info) noexcept -> UniformBufferResource<T> {
-        RETINA_PROFILE_SCOPED();
-        auto buffer = CTypedBuffer<T>::Make(*_device, info);
-        const auto index = _uniformBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return UniformBufferResource<T>::Make(*this, std::move(buffer), index);
-    }
-
-    template <typename T>
-    auto CShaderResourceTable::MakeUniformBuffer(const SBufferUploadInfo<T>& info) noexcept -> UniformBufferResource<T> {
-        RETINA_PROFILE_SCOPED();
-        auto buffer = CTypedBuffer<T>::Upload(*_device, info);
-        const auto index = _uniformBufferTable.AllocateResource(buffer->GetBuffer().ToArcPtr());
-        return UniformBufferResource<T>::Make(*this, std::move(buffer), index);
-    }
-
-    template <typename T>
-    auto CShaderResourceTable::MakeUniformBuffer(
-        uint32 count,
-        const SBufferCreateInfo& info
-    ) noexcept -> std::vector<UniformBufferResource<T>> {
-        RETINA_PROFILE_SCOPED();
-        auto buffers = CTypedBuffer<T>::Make(*_device, count, info);
-        auto bufferHandles = std::vector<CArcPtr<CBuffer>>();
-        std::ranges::transform(buffers, std::back_inserter(bufferHandles), [](const auto& buffer) {
-            return buffer->GetBuffer().ToArcPtr();
-        });
-        const auto indices = _uniformBufferTable.AllocateResource(bufferHandles);
-        auto resources = std::vector<UniformBufferResource<T>>();
-        resources.reserve(count);
-        for (auto i = 0_u32; i < count; ++i) {
-            resources.emplace_back(UniformBufferResource<T>::Make(*this, std::move(buffers[i]), indices[i]));
-        }
-        return resources;
-    }
 
     template <typename T>
     auto CShaderResourceTable::MakeStorageBuffer(const SBufferCreateInfo& info) noexcept -> StorageBufferResource<T> {
@@ -193,17 +147,20 @@ namespace Retina {
     auto CShaderResourceTable::FreeResource(const C& resource) noexcept -> void {
         RETINA_PROFILE_SCOPED();
         switch (C::GetDescriptorType()) {
+            case EDescriptorType::E_SAMPLER:
+                _samplerTable.FreeResource(resource.GetHandle());
+                break;
             case EDescriptorType::E_SAMPLED_IMAGE:
                 _sampledImageTable.FreeResource(resource.GetHandle());
                 break;
             case EDescriptorType::E_STORAGE_IMAGE:
                 _storageImageTable.FreeResource(resource.GetHandle());
                 break;
-            case EDescriptorType::E_UNIFORM_BUFFER:
-                _uniformBufferTable.FreeResource(resource.GetHandle());
-                break;
             case EDescriptorType::E_STORAGE_BUFFER:
                 _storageBufferTable.FreeResource(resource.GetHandle());
+                break;
+            case EDescriptorType::E_ACCELERATION_STRUCTURE_KHR:
+                _accelerationStructureTable.FreeResource(resource.GetHandle());
                 break;
         }
     }

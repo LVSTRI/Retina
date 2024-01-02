@@ -4,7 +4,6 @@
 
 #include <Retina/Graphics/TypedBuffer.hpp>
 
-#include <glm/mat3x4.hpp>
 #include <glm/vec3.hpp>
 
 #include <variant>
@@ -20,7 +19,7 @@ namespace Retina {
     };
 
     struct SAccelerationStructureGeometryInstance {
-        glm::mat3x4 Transform = {};
+        VkTransformMatrixKHR Transform = {};
         uint32 ObjectIndex : 24 = 0;
         uint32 Mask : 8 = 0xff;
         uint32 ShaderBindingTableOffset : 24 = 0;

@@ -410,10 +410,9 @@ namespace Retina {
         const auto& shaderBindingTable = rayTracingPipeline.GetShaderBindingTable();
         vkCmdTraceRaysKHR(
             _handle,
-            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[0]),
-            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[1]),
-            &std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[2]),
-            // No callable shaders yet
+            AsConstPtr(std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[0])),
+            AsConstPtr(std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[1])),
+            AsConstPtr(std::bit_cast<VkStridedDeviceAddressRegionKHR>(shaderBindingTable.Regions[2])),
             AsConstPtr(VkStridedDeviceAddressRegionKHR()),
             width,
             height,
@@ -487,6 +486,40 @@ namespace Retina {
         copy.regionCount = 1;
         copy.pRegions = &region;
         vkCmdCopyBuffer2(_handle, &copy);
+        return *this;
+    }
+
+    auto CCommandBuffer::CopyBufferToImage(
+        const CBuffer& source,
+        const CImage& dest,
+        const SBufferImageCopyRegion& copyRegion
+    ) noexcept -> Self& {
+        RETINA_PROFILE_SCOPED();
+        const auto subresourceLayers = MakeNativeImageSubresourceLayers(dest, copyRegion.Subresource);
+        const auto offset = std::bit_cast<VkOffset3D>(copyRegion.ImageOffset);
+        const auto extent = std::bit_cast<VkExtent3D>(copyRegion.Extent);
+        auto region = VkBufferImageCopy2(VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2);
+        region.bufferOffset = copyRegion.Offset;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource = subresourceLayers;
+        region.imageOffset = offset;
+        region.imageExtent = extent;
+        if (copyRegion.Extent == SExtent3D()) {
+            region.imageExtent = {
+                .width = std::max(dest.GetWidth() >> copyRegion.Subresource.BaseLevel, 1_u32),
+                .height = std::max(dest.GetHeight() >> copyRegion.Subresource.BaseLevel, 1_u32),
+                .depth = 1
+            };
+        }
+
+        auto copy = VkCopyBufferToImageInfo2(VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2);
+        copy.srcBuffer = source.GetHandle();
+        copy.dstImage = dest.GetHandle();
+        copy.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        copy.regionCount = 1;
+        copy.pRegions = &region;
+        vkCmdCopyBufferToImage2(_handle, &copy);
         return *this;
     }
 

@@ -16,13 +16,13 @@ namespace Retina {
 
     struct SSamplerCreateInfo {
         std::string Name;
-        bool CompareEnable = false;
-        bool AnisotropyEnable = false;
         SSamplerFilterInfo Filter;
         SSamplerAddressInfo Address;
         ESamplerMipmapMode MipmapMode = ESamplerMipmapMode::E_NEAREST;
         ESamplerBorderColor BorderColor = ESamplerBorderColor::E_FLOAT_TRANSPARENT_BLACK;
+        bool CompareEnable = false;
         ECompareOperator CompareOperator = ECompareOperator::E_NEVER;
+        bool AnisotropyEnable = false;
         float32 Anisotropy = 0.0f;
         float32 LodBias = 0.0f;
 

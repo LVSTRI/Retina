@@ -6,6 +6,8 @@
 
 #include <volk.h>
 
+#include <algorithm>
+
 namespace Retina {
     RETINA_NODISCARD static auto GetImageSparseMemoryRequirements(const CDevice& device, VkImage image) noexcept -> std::vector<VkSparseImageMemoryRequirements> {
         RETINA_PROFILE_SCOPED();
@@ -69,11 +71,14 @@ namespace Retina {
             : VK_SHARING_MODE_EXCLUSIVE;
         const auto queueFamilyIndices = [&] -> std::vector<uint32> {
             if (createInfo.IsCrossDomain) {
-                return {
+                auto families = std::vector {
                     device.GetGraphicsQueue().GetFamilyIndex(),
                     device.GetComputeQueue().GetFamilyIndex(),
                     device.GetTransferQueue().GetFamilyIndex()
                 };
+                std::sort(families.begin(), families.end());
+                families.erase(std::unique(families.begin(), families.end()), families.end());
+                return families;
             } else {
                 return { queueInfo.FamilyIndex };
             }

@@ -46,6 +46,7 @@ namespace Retina {
         RETINA_PROFILE_SCOPED();
         auto buffer = CArcPtr(new Self());
         RETINA_LOG_INFO(device.GetLogger(), "Creating Buffer: \"{}\"", createInfo.Name);
+        RETINA_LOG_INFO(device.GetLogger(), "- Capacity: {}", createInfo.Capacity);
         auto queueFamilyIndices = std::to_array({
             device.GetGraphicsQueue().GetFamilyIndex(),
             device.GetComputeQueue().GetFamilyIndex(),
@@ -126,7 +127,6 @@ namespace Retina {
 
         const auto address = GetBufferDeviceAddress(device, bufferHandle);
         RETINA_LOG_INFO(device.GetLogger(), "- Address: {}", reinterpret_cast<const void*>(address));
-        RETINA_LOG_INFO(device.GetLogger(), "- Capacity: {}", createInfo.Capacity);
 
         buffer->_handle = bufferHandle;
         buffer->_memoryRequirements = memoryRequirements;

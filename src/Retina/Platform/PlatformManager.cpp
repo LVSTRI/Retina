@@ -30,6 +30,7 @@ namespace Retina::Platform {
             }
 
             RETINA_NODISCARD auto GetLogger() const noexcept -> spdlog::logger& {
+                RETINA_PROFILE_SCOPED();
                 return *_logger;
             }
 
@@ -102,6 +103,26 @@ namespace Retina::Platform {
             )
         );
         return surface;
+    }
+
+    auto IsKeyReleased(NativeHandle handle, EKeyboard key) noexcept -> bool {
+        RETINA_PROFILE_SCOPED();
+        return glfwGetKey(static_cast<GLFWwindow*>(handle), static_cast<int32>(key)) == GLFW_RELEASE;
+    }
+
+    auto IsKeyPressed(NativeHandle handle, EKeyboard key) noexcept -> bool {
+        RETINA_PROFILE_SCOPED();
+        return glfwGetKey(static_cast<GLFWwindow*>(handle), static_cast<int32>(key)) == GLFW_PRESS;
+    }
+
+    auto IsKeyRepeated(NativeHandle handle, EKeyboard key) noexcept -> bool {
+        RETINA_PROFILE_SCOPED();
+        return glfwGetKey(static_cast<GLFWwindow*>(handle), static_cast<int32>(key)) == GLFW_REPEAT;
+    }
+
+    auto GetTimeSinceInit() noexcept -> float32 {
+        RETINA_PROFILE_SCOPED();
+        return static_cast<float32>(glfwGetTime());
     }
 
     auto PollEvents() noexcept -> void {
