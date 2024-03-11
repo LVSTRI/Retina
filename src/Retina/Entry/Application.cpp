@@ -147,7 +147,7 @@ namespace Retina::Entry {
         .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
       })
       .BeginRendering({
-        .Name = std::format("MainPass"),
+        .Name = "MainPass",
         .ColorAttachments = {
           {
             .ImageView = _mainImage->GetView(),
@@ -158,23 +158,27 @@ namespace Retina::Entry {
         }
       })
       .EndRendering()
-      .ImageMemoryBarrier({
-        .Image = *_mainImage,
-        .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-        .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
-        .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-        .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_READ,
-        .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
-        .NewLayout = Graphics::EImageLayout::E_TRANSFER_SRC_OPTIMAL,
-      })
-      .ImageMemoryBarrier({
-        .Image = _swapchain->GetCurrentImage(),
-        .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-        .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
-        .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-        .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
-        .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
-        .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+      .Barrier({
+        .ImageMemoryBarriers = {
+          {
+            .Image = *_mainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_READ,
+            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_TRANSFER_SRC_OPTIMAL,
+          },
+          {
+            .Image = _swapchain->GetCurrentImage(),
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+          }
+        }
       })
       .BlitImage(*_mainImage, _swapchain->GetCurrentImage(), {})
       .ImageMemoryBarrier({

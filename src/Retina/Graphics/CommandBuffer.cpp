@@ -295,6 +295,30 @@ namespace Retina::Graphics {
     return *this;
   }
 
+  auto CCommandBuffer::Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    auto memoryBarriers = std::vector<VkMemoryBarrier2>();
+    memoryBarriers.reserve(barrierInfo.MemoryBarriers.size());
+    for (const auto& barrier : barrierInfo.MemoryBarriers) {
+      memoryBarriers.push_back(Details::MakeNativeMemoryBarrier(barrier));
+    }
+
+    auto imageMemoryBarriers = std::vector<VkImageMemoryBarrier2>();
+    imageMemoryBarriers.reserve(barrierInfo.ImageMemoryBarriers.size());
+    for (const auto& barrier : barrierInfo.ImageMemoryBarriers) {
+      imageMemoryBarriers.push_back(Details::MakeNativeImageMemoryBarrier(barrier));
+    }
+
+    auto dependencyInfo = VkDependencyInfo(VK_STRUCTURE_TYPE_DEPENDENCY_INFO);
+    dependencyInfo.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+    dependencyInfo.memoryBarrierCount = memoryBarriers.size();
+    dependencyInfo.pMemoryBarriers = memoryBarriers.data();
+    dependencyInfo.imageMemoryBarrierCount = imageMemoryBarriers.size();
+    dependencyInfo.pImageMemoryBarriers = imageMemoryBarriers.data();
+    vkCmdPipelineBarrier2(_handle, &dependencyInfo);
+    return *this;
+  }
+
   auto CCommandBuffer::MemoryBarrier(const SMemoryBarrier& barrier) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     auto memoryBarrier = Details::MakeNativeMemoryBarrier(barrier);

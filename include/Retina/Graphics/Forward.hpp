@@ -14,6 +14,7 @@ namespace Retina::Graphics {
   struct SDispatchIndirectCommand;
   struct SMemoryBarrier;
   struct SImageMemoryBarrier;
+  struct SMemoryBarrierInfo;
   struct SImageCopyRegion;
   struct SImageBlitRegion;
   union SColorClearValue;

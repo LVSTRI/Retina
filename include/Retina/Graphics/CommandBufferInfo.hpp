@@ -54,6 +54,11 @@ namespace Retina::Graphics {
     SImageSubresourceRange SubresourceRange = {};
   };
 
+  struct SMemoryBarrierInfo {
+    std::vector<SMemoryBarrier> MemoryBarriers;
+    std::vector<SImageMemoryBarrier> ImageMemoryBarriers;
+  };
+
   struct SImageCopyRegion {
     SOffset3D SourceOffset = {};
     SOffset3D DestOffset = {};
