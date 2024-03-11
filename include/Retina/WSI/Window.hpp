@@ -1,0 +1,47 @@
+#pragma once
+
+#include <Retina/Core/Core.hpp>
+
+#include <Retina/WSI/Forward.hpp>
+#include <Retina/WSI/WindowInfo.hpp>
+
+#include <memory>
+
+namespace Retina::WSI {
+  class CWindow {
+  public:
+    using EventDispatcher = Core::CEventDispatcher<
+      SWindowResizeEvent,
+      SWindowCloseEvent,
+      SWindowKeyboardEvent,
+      SWindowMouseButtonEvent,
+      SWindowMousePositionEvent,
+      SWindowMouseScrollEvent
+    >;
+
+    CWindow() noexcept = default;
+    ~CWindow() noexcept;
+    RETINA_DELETE_COPY(CWindow);
+    RETINA_DECLARE_MOVE(CWindow);
+
+    RETINA_NODISCARD static auto Make(const SWindowCreateInfo& createInfo) noexcept -> std::unique_ptr<CWindow>;
+
+    RETINA_NODISCARD auto GetHandle() const noexcept -> WindowHandle;
+    RETINA_NODISCARD auto GetEventDispatcher() noexcept -> EventDispatcher&;
+    RETINA_NODISCARD auto GetCreateInfo() const noexcept -> const SWindowCreateInfo&;
+
+    RETINA_NODISCARD auto GetTitle() const noexcept -> std::string_view;
+    RETINA_NODISCARD auto GetWidth() const noexcept -> uint32;
+    RETINA_NODISCARD auto GetHeight() const noexcept -> uint32;
+
+    RETINA_NODISCARD auto IsFeatureEnabled(bool SWindowFeature::* feature) const noexcept -> bool;
+
+    RETINA_NODISCARD auto IsOpen() const noexcept -> bool;
+
+  private:
+    WindowHandle _handle = nullptr;
+    EventDispatcher _dispatcher;
+
+    SWindowCreateInfo _createInfo = {};
+  };
+}
