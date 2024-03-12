@@ -21,14 +21,15 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     const auto& mainTimeline = _device->GetMainTimeline();
     const auto currentTimelineValue = mainTimeline.GetDeviceTimelineValue();
-    for (auto& packet : _packets) {
-      if (packet.TimelineValue < currentTimelineValue) {
-        packet.Deletion();
+    for (auto it = _packets.begin(); it != _packets.end();) {
+      auto& [timelineValue, deletion] = *it;
+      if (timelineValue < currentTimelineValue) {
+        deletion();
+        it = _packets.erase(it);
+      } else {
+        ++it;
       }
     }
-    std::erase_if(_packets, [currentTimelineValue](const SDeletionQueuePacket& packet) {
-      return packet.TimelineValue < currentTimelineValue;
-    });
   }
 
   auto CDeletionQueue::Flush() noexcept -> void {
