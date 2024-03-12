@@ -84,7 +84,6 @@ namespace Retina::Entry {
   auto CApplication::Run() noexcept -> void {
     RETINA_PROFILE_SCOPED();
     while (_isRunning) {
-      WSI::PollEvents();
       OnUpdate();
       OnRender();
       RETINA_MARK_FRAME();
@@ -93,8 +92,8 @@ namespace Retina::Entry {
 
   auto CApplication::OnWindowResize(const WSI::SWindowResizeEvent& windowResizeEvent) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    while (windowResizeEvent.Width == 0 || windowResizeEvent.Height == 0) {
-      WSI::WaitEvents();
+    if (windowResizeEvent.Width == 0 || windowResizeEvent.Height == 0) {
+      return false;
     }
     _device->WaitIdle();
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
@@ -140,6 +139,10 @@ namespace Retina::Entry {
 
   auto CApplication::OnUpdate() noexcept -> void {
     RETINA_PROFILE_SCOPED();
+    while (!_swapchain->IsValid()) {
+      WSI::WaitEvents();
+    }
+    WSI::PollEvents();
   }
 
   auto CApplication::OnRender() noexcept -> void {
