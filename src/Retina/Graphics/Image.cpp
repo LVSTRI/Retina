@@ -182,7 +182,7 @@ namespace Retina::Graphics {
     for (auto i = 0_u32; i < swapchainImages.size(); ++i) {
       const auto swapchainImage = swapchainImages[i];
       auto currentImageCreateInfo = info;
-      currentImageCreateInfo.Name = std::format("{}{}", info.Name, i);
+      currentImageCreateInfo.Name += std::to_string(i);
 
       auto self = Core::CArcPtr(new CImage());
       self->_handle = swapchainImage;

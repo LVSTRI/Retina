@@ -3,6 +3,12 @@
 #include <Retina/Graphics/CommandBufferInfo.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/CommandPoolInfo.hpp>
+#include <Retina/Graphics/DescriptorLayout.hpp>
+#include <Retina/Graphics/DescriptorLayoutInfo.hpp>
+#include <Retina/Graphics/DescriptorPool.hpp>
+#include <Retina/Graphics/DescriptorPoolInfo.hpp>
+#include <Retina/Graphics/DescriptorSet.hpp>
+#include <Retina/Graphics/DescriptorSetInfo.hpp>
 #include <Retina/Graphics/DeletionQueue.hpp>
 #include <Retina/Graphics/DeletionQueueInfo.hpp>
 #include <Retina/Graphics/Device.hpp>

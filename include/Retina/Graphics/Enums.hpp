@@ -2281,7 +2281,7 @@ namespace Retina::Graphics {
   };
 
   // VkDescriptorSetLayoutCreateFlagBits
-  enum class EDescriptorSetLayoutCreateFlag : std::underlying_type_t<VkDescriptorSetLayoutCreateFlagBits> {
+  enum class EDescriptorLayoutCreateFlag : std::underlying_type_t<VkDescriptorSetLayoutCreateFlagBits> {
     E_UPDATE_AFTER_BIND_POOL = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
     E_PUSH_DESCRIPTOR_KHR = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR,
     E_DESCRIPTOR_BUFFER_EXT = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
@@ -4256,7 +4256,7 @@ namespace Retina::Graphics {
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkPipelineLayoutCreateFlagBits, EPipelineLayoutCreateFlag);
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkSamplerCreateFlagBits, ESamplerCreateFlag);
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkDescriptorPoolCreateFlagBits, EDescriptorPoolCreateFlag);
-    RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkDescriptorSetLayoutCreateFlagBits, EDescriptorSetLayoutCreateFlag);
+    RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkDescriptorSetLayoutCreateFlagBits, EDescriptorLayoutCreateFlag);
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkAttachmentDescriptionFlagBits, EAttachmentDescriptionFlag);
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkDependencyFlagBits, EDependencyFlag);
     RETINA_ENUM_COUNTERPART_SPECIALIZATION(VkFramebufferCreateFlagBits, EFramebufferCreateFlag);
@@ -4542,7 +4542,7 @@ namespace Retina::Graphics {
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkPipelineLayoutCreateFlagBits, EPipelineLayoutCreateFlag, VkPipelineLayoutCreateFlags)
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkSamplerCreateFlagBits, ESamplerCreateFlag, VkSamplerCreateFlags)
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkDescriptorPoolCreateFlagBits, EDescriptorPoolCreateFlag, VkDescriptorPoolCreateFlags)
-  RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkDescriptorSetLayoutCreateFlagBits, EDescriptorSetLayoutCreateFlag, VkDescriptorSetLayoutCreateFlags)
+  RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkDescriptorSetLayoutCreateFlagBits, EDescriptorLayoutCreateFlag, VkDescriptorSetLayoutCreateFlags)
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkAttachmentDescriptionFlagBits, EAttachmentDescriptionFlag, VkAttachmentDescriptionFlags)
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkDependencyFlagBits, EDependencyFlag, VkDependencyFlags)
   RETINA_FLAG_ENUM_AS_STRING_OVERLOAD(VkFramebufferCreateFlagBits, EFramebufferCreateFlag, VkFramebufferCreateFlags)

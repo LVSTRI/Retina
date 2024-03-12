@@ -2,8 +2,8 @@
 
 #include <utility>
 
-#define RETINA_DEFER(f) const auto _defer = ::Retina::Core::CDefer(f);
-#define RETINA_STATIC_DEFER(f) const static auto _defer = ::Retina::Core::CDefer(f);
+#define RETINA_DEFER(f) const auto _defer = ::Retina::Core::CDefer(f)
+#define RETINA_STATIC_DEFER(f) const static auto _defer = ::Retina::Core::CDefer(f)
 
 namespace Retina::Core {
   template <typename F>

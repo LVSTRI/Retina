@@ -262,6 +262,7 @@ def main():
         converted_declaration_name = as_retina_enum_declaration(k, {
             'Format': 'ResourceFormat',
             'AccessFlag': 'ResourceAccessFlag',
+            'DescriptorSetLayoutCreateFlag': 'DescriptorLayoutCreateFlag',
         })
         converted_enums[converted_declaration_name] = as_retina_enum_values(k, v)
         converted_enum_mapping[k] = converted_declaration_name

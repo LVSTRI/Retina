@@ -8,8 +8,10 @@
 namespace Retina::Graphics {
   CDescriptorPool::~CDescriptorPool() noexcept {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_INFO("Descriptor pool ({}) destroyed", GetDebugName());
-    vkDestroyDescriptorPool(GetDevice().GetHandle(), _handle, nullptr);
+    if (_handle) {
+      vkDestroyDescriptorPool(GetDevice().GetHandle(), _handle, nullptr);
+      RETINA_GRAPHICS_INFO("Descriptor pool ({}) destroyed", GetDebugName());
+    }
   }
 
   auto CDescriptorPool::Make(
@@ -49,6 +51,7 @@ namespace Retina::Graphics {
     self->_createInfo = createInfo;
     self->_device = device.ToArcPtr();
     self->SetDebugName(createInfo.Name);
+    return self;
   }
 
   auto CDescriptorPool::Make(

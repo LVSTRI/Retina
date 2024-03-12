@@ -36,12 +36,25 @@ namespace Retina::Graphics {
   // <Retina/Graphics/DeletionQueueInfo.hpp>
   struct SDeletionQueuePacket;
 
+  // <Retina/Graphics/DescriptorLayout.hpp>
+  class CDescriptorLayout;
+
+  // <Retina/Graphics/DescriptorLayoutInfo.hpp>
+  struct SDescriptorLayoutBinding;
+  struct SDescriptorLayoutCreateInfo;
+
   // <Retina/Graphics/DescriptorPool.hpp>
   class CDescriptorPool;
 
   // <Retina/Graphics/DescriptorPoolInfo.hpp>
   struct SDescriptorPoolSize;
   struct SDescriptorPoolCreateInfo;
+
+  // <Retina/Graphics/DescriptorSetInfo.hpp>
+  struct SImageDescriptor;
+  struct SBufferDescriptor;
+  struct SDescriptorWriteInfo;
+  struct SDescriptorSetCreateInfo;
 
   // <Retina/Graphics/Device.hpp>
   class CDevice;

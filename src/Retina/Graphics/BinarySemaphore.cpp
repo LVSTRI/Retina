@@ -45,7 +45,7 @@ namespace Retina::Graphics {
     semaphores.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
       auto currentCreateInfo = createInfo;
-      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      currentCreateInfo.Name += std::to_string(i);
       semaphores.emplace_back(Make(device, currentCreateInfo));
     }
     return semaphores;

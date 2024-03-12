@@ -3,6 +3,7 @@
 #include <Retina/Core/Macros.hpp>
 
 #include <utility>
+#include <compare>
 
 namespace Retina::Core {
   template <typename T>
@@ -23,6 +24,8 @@ namespace Retina::Core {
 
     template <typename... Args>
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator ()(Args&&... args) const noexcept -> decltype(auto);
+
+    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CReferenceWrapper&) const noexcept -> std::strong_ordering = default;
 
   private:
     T* _ptr = nullptr;

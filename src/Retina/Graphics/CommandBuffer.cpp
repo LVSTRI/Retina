@@ -112,7 +112,7 @@ namespace Retina::Graphics {
     commandBuffers.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
       auto currentCreateInfo = createInfo;
-      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      currentCreateInfo.Name += std::to_string(i);
       commandBuffers.emplace_back(Make(queue, currentCreateInfo));
     }
     return commandBuffers;
@@ -159,7 +159,7 @@ namespace Retina::Graphics {
     commandBuffers.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
       auto currentCreateInfo = createInfo;
-      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      currentCreateInfo.Name += std::to_string(i);
       commandBuffers.emplace_back(MakeWith(commandPool, currentCreateInfo));
     }
     return commandBuffers;

@@ -141,7 +141,7 @@ namespace Retina::Graphics {
     std::filesystem::path ComputeShader;
     std::vector<std::filesystem::path> ShaderIncludePaths;
 
-    //std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
   };
 
   struct SGraphicsPipelineCreateInfo {
@@ -150,7 +150,7 @@ namespace Retina::Graphics {
     std::optional<std::filesystem::path> FragmentShader = std::nullopt;
     std::vector<std::filesystem::path> ShaderIncludePaths = {};
 
-    //std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
 
     SPipelineTessellationStateInfo TessellationState = DEFAULT_PIPELINE_TESSELLATION_STATE_INFO;
     SPipelineViewportStateInfo ViewportState = DEFAULT_PIPELINE_VIEWPORT_STATE_INFO;
@@ -169,7 +169,7 @@ namespace Retina::Graphics {
     std::optional<std::filesystem::path> FragmentShader = std::nullopt;
     std::vector<std::filesystem::path> ShaderIncludePaths = {};
 
-    //std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
 
     SPipelineViewportStateInfo ViewportState = DEFAULT_PIPELINE_VIEWPORT_STATE_INFO;
     SPipelineRasterizationStateInfo RasterizationState = DEFAULT_PIPELINE_RASTERIZATION_STATE_INFO;
