@@ -4,8 +4,9 @@
 #include <volk.h>
 
 namespace Retina::Graphics {
-  ISemaphore::ISemaphore(ESemaphoreKind kind) noexcept
-    : _kind(kind)
+  ISemaphore::ISemaphore(const CDevice& device, ESemaphoreKind kind) noexcept
+    : _kind(kind),
+      _device(device)
   {
     RETINA_PROFILE_SCOPED();
   }
@@ -13,7 +14,7 @@ namespace Retina::Graphics {
   ISemaphore::~ISemaphore() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
-      vkDestroySemaphore(_device->GetHandle(), _handle, nullptr);
+      vkDestroySemaphore(GetDevice().GetHandle(), _handle, nullptr);
     }
   }
 
@@ -29,6 +30,6 @@ namespace Retina::Graphics {
 
   auto ISemaphore::GetDevice() const noexcept -> const CDevice& {
     RETINA_PROFILE_SCOPED();
-    return *_device;
+    return _device;
   }
 }

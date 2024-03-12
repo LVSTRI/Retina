@@ -421,7 +421,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     auto waitSemaphores = std::vector<VkSemaphore>();
     waitSemaphores.reserve(presentInfo.WaitSemaphores.size());
     for (const auto& semaphore : presentInfo.WaitSemaphores) {
-      waitSemaphores.emplace_back(semaphore.get().GetHandle());
+      waitSemaphores.emplace_back(semaphore->GetHandle());
     }
 
     auto queuePresentInfo = VkPresentInfoKHR(VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);

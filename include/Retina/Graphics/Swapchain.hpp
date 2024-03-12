@@ -58,6 +58,6 @@ namespace Retina::Graphics {
 
     SSwapchainCreateInfo _createInfo = {};
     Core::CArcPtr<const CDevice> _device;
-    std::reference_wrapper<const WSI::CWindow> _window;
+    Core::CReferenceWrapper<const WSI::CWindow> _window;
   };
 }

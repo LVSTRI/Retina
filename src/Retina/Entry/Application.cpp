@@ -218,9 +218,9 @@ namespace Retina::Entry {
         { *_imageAvailableSemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER },
       },
       .SignalSemaphores = {
-        { *_presentReadySemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER }
+        { *_presentReadySemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER },
       },
-      .Timeline = &_mainTimeline,
+      .Timeline = _mainTimeline.get(),
     });
 
     if (!_swapchain->Present({ { *_presentReadySemaphores[frameIndex] } })) {
@@ -230,6 +230,6 @@ namespace Retina::Entry {
 
   auto CApplication::WaitForNextFrameIndex() noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
-    return _mainTimeline.WaitForNextHostTimelineValue() % FRAMES_IN_FLIGHT;
+    return _mainTimeline->WaitForNextHostTimelineValue() % FRAMES_IN_FLIGHT;
   }
 }

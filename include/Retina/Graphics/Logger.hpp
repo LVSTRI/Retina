@@ -12,5 +12,5 @@
 #define RETINA_GRAPHICS_PANIC_WITH(message, ...) RETINA_PANIC_WITH(::Retina::Graphics::GetMainLogger(), message, __VA_ARGS__)
 
 namespace Retina::Graphics {
-  RETINA_NODISCARD auto GetMainLogger() noexcept -> Core::CLogger&;
+  auto GetMainLogger() noexcept -> Core::CLogger&;
 }

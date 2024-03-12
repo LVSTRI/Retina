@@ -8,12 +8,21 @@
 #include <memory>
 #include <format>
 
-#define RETINA_LOGGER_TRACE(f, ...) f.Trace(__VA_ARGS__)
-#define RETINA_LOGGER_DEBUG(f, ...) f.Debug(__VA_ARGS__)
-#define RETINA_LOGGER_INFO(f, ...) f.Info(__VA_ARGS__)
-#define RETINA_LOGGER_WARN(f, ...) f.Warn(__VA_ARGS__)
-#define RETINA_LOGGER_ERROR(f, ...) f.Error(__VA_ARGS__)
-#define RETINA_LOGGER_CRITICAL(f, ...) f.Critical(__VA_ARGS__)
+#if defined(RETINA_ENABLE_LOGGING)
+  #define RETINA_LOGGER_TRACE(f, ...) f.Trace(__VA_ARGS__)
+  #define RETINA_LOGGER_DEBUG(f, ...) f.Debug(__VA_ARGS__)
+  #define RETINA_LOGGER_INFO(f, ...) f.Info(__VA_ARGS__)
+  #define RETINA_LOGGER_WARN(f, ...) f.Warn(__VA_ARGS__)
+  #define RETINA_LOGGER_ERROR(f, ...) f.Error(__VA_ARGS__)
+  #define RETINA_LOGGER_CRITICAL(f, ...) f.Critical(__VA_ARGS__)
+#else
+  #define RETINA_LOGGER_TRACE(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+  #define RETINA_LOGGER_DEBUG(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+  #define RETINA_LOGGER_INFO(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+  #define RETINA_LOGGER_WARN(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+  #define RETINA_LOGGER_ERROR(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+  #define RETINA_LOGGER_CRITICAL(f, ...) RETINA_UNUSED(f, __VA_ARGS__)
+#endif
 
 #define RETINA_CORE_TRACE(...) RETINA_LOGGER_TRACE(::Retina::Core::GetMainLogger(), __VA_ARGS__)
 #define RETINA_CORE_DEBUG(...) RETINA_LOGGER_DEBUG(::Retina::Core::GetMainLogger(), __VA_ARGS__)
@@ -56,7 +65,7 @@ namespace Retina::Core {
     std::shared_ptr<spdlog::logger> _handle;
   };
 
-  RETINA_NODISCARD auto GetMainLogger() noexcept -> CLogger&;
+  auto GetMainLogger() noexcept -> CLogger&;
 
   template <typename... Args>
   auto CLogger::Trace(fmt::format_string<Args...> format, Args&& ... args) noexcept -> void {

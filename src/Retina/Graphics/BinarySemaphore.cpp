@@ -6,8 +6,8 @@
 #include <volk.h>
 
 namespace Retina::Graphics {
-  CBinarySemaphore::CBinarySemaphore() noexcept
-    : ISemaphore(ESemaphoreKind::E_BINARY)
+  CBinarySemaphore::CBinarySemaphore(const CDevice& device) noexcept
+    : ISemaphore(device, ESemaphoreKind::E_BINARY)
   {
     RETINA_PROFILE_SCOPED();
   }
@@ -22,7 +22,7 @@ namespace Retina::Graphics {
     const SBinarySemaphoreCreateInfo& createInfo
   ) noexcept -> Core::CArcPtr<CBinarySemaphore> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CBinarySemaphore());
+    auto self = Core::CArcPtr(new CBinarySemaphore(device));
 
     auto semaphoreCreateInfo = VkSemaphoreCreateInfo(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO);
     auto semaphoreHandle = VkSemaphore();
@@ -30,7 +30,6 @@ namespace Retina::Graphics {
     RETINA_GRAPHICS_INFO("Binary semaphore ({}) initialized", createInfo.Name);
 
     self->_handle = semaphoreHandle;
-    self->_device = device.ToArcPtr();
     self->_createInfo = createInfo;
     self->SetDebugName(createInfo.Name);
     return self;
@@ -64,7 +63,7 @@ namespace Retina::Graphics {
 
   auto CBinarySemaphore::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(_device->GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
+    RETINA_GRAPHICS_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
     _createInfo.Name = name;
   }
 }

@@ -16,7 +16,7 @@ namespace Retina::Graphics {
       EImageLayout layout
     ) noexcept -> VkRenderingAttachmentInfo {
       RETINA_PROFILE_SCOPED();
-      const auto& imageView = attachmentInfo.ImageView.get();
+      const auto& imageView = *attachmentInfo.ImageView;
       auto info = VkRenderingAttachmentInfo(VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO);
       info.imageView = imageView.GetHandle();
       info.imageLayout = AsEnumCounterpart(layout);
@@ -41,7 +41,7 @@ namespace Retina::Graphics {
 
     RETINA_NODISCARD RETINA_INLINE auto MakeNativeImageMemoryBarrier(const SImageMemoryBarrier& barrier) noexcept -> VkImageMemoryBarrier2 {
       RETINA_PROFILE_SCOPED();
-      const auto& image = barrier.Image.get();
+      const auto& image = *barrier.Image;
       auto info = VkImageMemoryBarrier2(VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2);
       info.srcStageMask = AsEnumCounterpart(barrier.SourceStage);
       info.srcAccessMask = AsEnumCounterpart(barrier.SourceAccess);
@@ -157,7 +157,6 @@ namespace Retina::Graphics {
     const SCommandBufferCreateInfo& createInfo
   ) noexcept -> std::vector<Core::CArcPtr<CCommandBuffer>> {
     RETINA_PROFILE_SCOPED();
-    RETINA_PROFILE_SCOPED();
     auto commandBuffers = std::vector<Core::CArcPtr<CCommandBuffer>>();
     commandBuffers.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
@@ -228,7 +227,7 @@ namespace Retina::Graphics {
     auto colorAttachments = std::vector<VkRenderingAttachmentInfo>();
     colorAttachments.reserve(renderingInfo.ColorAttachments.size());
     for (const auto& attachment : renderingInfo.ColorAttachments) {
-      const auto& imageView = attachment.ImageView.get();
+      const auto& imageView = *attachment.ImageView;
       const auto& image = imageView.GetImage();
       const auto subresource = imageView.GetSubresourceRange();
       colorAttachments.emplace_back(
@@ -243,7 +242,7 @@ namespace Retina::Graphics {
     auto depthStencilAttachment = VkRenderingAttachmentInfo();
     if (renderingInfo.DepthStencilAttachment) {
       const auto& attachmentInfo = *renderingInfo.DepthStencilAttachment;
-      const auto& imageView = attachmentInfo.ImageView.get();
+      const auto& imageView = *attachmentInfo.ImageView;
       const auto& image = imageView.GetImage();
       const auto subresource = imageView.GetSubresourceRange();
       depthStencilAttachment = Details::MakeNativeRenderingAttachmentInfo(
@@ -371,6 +370,7 @@ namespace Retina::Graphics {
     const auto destSubresource = MakeNativeImageSubresourceLayers(dest, blitRegion.DestSubresource);
     const auto sourceOffsets = std::bit_cast<std::array<VkOffset3D, 2>>(blitRegion.SourceOffsets);
     const auto destOffsets = std::bit_cast<std::array<VkOffset3D, 2>>(blitRegion.DestOffsets);
+
     auto region = VkImageBlit2(VK_STRUCTURE_TYPE_IMAGE_BLIT_2);
     region.srcSubresource = sourceSubresource;
     region.srcOffsets[0] = sourceOffsets[0];
@@ -382,6 +382,7 @@ namespace Retina::Graphics {
         .z = 1
       };
     }
+
     region.dstSubresource = destSubresource;
     region.dstOffsets[0] = destOffsets[0];
     region.dstOffsets[1] = destOffsets[1];

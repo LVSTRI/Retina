@@ -39,7 +39,7 @@
 #define RETINA_STRINGIFY_EXPAND(x) #x
 #define RETINA_STRINGIFY(x) RETINA_STRINGIFY_EXPAND(x)
 
-#define RETINA_UNUSED(x) (void)(x)
+#define RETINA_UNUSED(...) (void)(__VA_ARGS__)
 
 #define RETINA_DECLARE_COPY_CONSTRUCTOR(T, ...) __VA_ARGS__ T(const T&) noexcept
 #define RETINA_DECLARE_MOVE_CONSTRUCTOR(T, ...) __VA_ARGS__ T(T&&) noexcept

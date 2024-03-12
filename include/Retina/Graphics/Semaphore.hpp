@@ -17,11 +17,11 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetDevice() const noexcept -> const CDevice&;
 
   protected:
-    ISemaphore(ESemaphoreKind kind) noexcept;
+    ISemaphore(const CDevice& device, ESemaphoreKind kind) noexcept;
 
     VkSemaphore _handle = {};
     ESemaphoreKind _kind = {};
 
-    Core::CArcPtr<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

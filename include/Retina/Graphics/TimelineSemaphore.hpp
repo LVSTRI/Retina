@@ -5,7 +5,7 @@
 namespace Retina::Graphics {
   class CTimelineSemaphore : public ISemaphore {
   public:
-    CTimelineSemaphore() noexcept;
+    CTimelineSemaphore(const CDevice& device) noexcept;
     ~CTimelineSemaphore() noexcept override;
 
     RETINA_NODISCARD static auto Make(

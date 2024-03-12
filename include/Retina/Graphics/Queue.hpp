@@ -41,6 +41,6 @@ namespace Retina::Graphics {
     std::mutex _mutex;
 
     SQueueCreateInfo _createInfo = {};
-    std::reference_wrapper<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

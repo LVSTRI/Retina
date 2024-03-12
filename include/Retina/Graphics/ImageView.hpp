@@ -31,6 +31,6 @@ namespace Retina::Graphics {
     EImageAspectFlag _aspectMask = {};
 
     SImageViewCreateInfo _createInfo = {};
-    std::reference_wrapper<const CImage> _image;
+    Core::CReferenceWrapper<const CImage> _image;
   };
 }

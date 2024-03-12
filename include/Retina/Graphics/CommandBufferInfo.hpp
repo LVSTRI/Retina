@@ -44,7 +44,7 @@ namespace Retina::Graphics {
   };
 
   struct SImageMemoryBarrier {
-    std::reference_wrapper<const CImage> Image;
+    Core::CReferenceWrapper<const CImage> Image;
     EPipelineStageFlag SourceStage = EPipelineStageFlag::E_ALL_COMMANDS;
     EPipelineStageFlag DestStage = EPipelineStageFlag::E_ALL_COMMANDS;
     EResourceAccessFlag SourceAccess = EResourceAccessFlag::E_MEMORY_WRITE;
@@ -92,7 +92,7 @@ namespace Retina::Graphics {
   };
 
   struct SAttachmentInfo {
-    std::reference_wrapper<const CImageView> ImageView;
+    Core::CReferenceWrapper<const CImageView> ImageView;
     EAttachmentLoadOperator LoadOperator = EAttachmentLoadOperator::E_CLEAR;
     EAttachmentStoreOperator StoreOperator = EAttachmentStoreOperator::E_STORE;
     SAttachmentClearValue ClearValue = {};

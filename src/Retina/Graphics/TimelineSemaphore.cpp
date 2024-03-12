@@ -6,8 +6,8 @@
 #include <volk.h>
 
 namespace Retina::Graphics {
-  CTimelineSemaphore::CTimelineSemaphore() noexcept
-    : ISemaphore(ESemaphoreKind::E_TIMELINE)
+  CTimelineSemaphore::CTimelineSemaphore(const CDevice& device) noexcept
+    : ISemaphore(device, ESemaphoreKind::E_TIMELINE)
   {
     RETINA_PROFILE_SCOPED();
   }
@@ -22,7 +22,7 @@ namespace Retina::Graphics {
     const STimelineSemaphoreCreateInfo& createInfo
   ) noexcept -> Core::CArcPtr<CTimelineSemaphore> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CTimelineSemaphore());
+    auto self = Core::CArcPtr(new CTimelineSemaphore(device));
     auto timelineSemaphoreCreateInfo = VkSemaphoreTypeCreateInfo(VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO);
     timelineSemaphoreCreateInfo.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE;
     timelineSemaphoreCreateInfo.initialValue = createInfo.Value;
@@ -34,7 +34,6 @@ namespace Retina::Graphics {
     RETINA_GRAPHICS_INFO("Timeline semaphore ({}) initialized", createInfo.Name);
 
     self->_handle = semaphoreHandle;
-    self->_device = device.ToArcPtr();
     self->_createInfo = createInfo;
     self->SetDebugName(createInfo.Name);
 
@@ -70,14 +69,14 @@ namespace Retina::Graphics {
 
   auto CTimelineSemaphore::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(_device->GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
+    RETINA_GRAPHICS_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
     _createInfo.Name = name;
   }
 
   auto CTimelineSemaphore::GetCounter() const noexcept -> uint64 {
     RETINA_PROFILE_SCOPED();
     auto value = 0_u64;
-    RETINA_GRAPHICS_VULKAN_CHECK(vkGetSemaphoreCounterValue(_device->GetHandle(), _handle, &value));
+    RETINA_GRAPHICS_VULKAN_CHECK(vkGetSemaphoreCounterValue(GetDevice().GetHandle(), _handle, &value));
     return value;
   }
 
@@ -88,7 +87,7 @@ namespace Retina::Graphics {
     semaphoreWaitInfo.pSemaphores = &_handle;
     semaphoreWaitInfo.pValues = &value;
 
-    const auto result = vkWaitSemaphores(_device->GetHandle(), &semaphoreWaitInfo, timeout);
+    const auto result = vkWaitSemaphores(GetDevice().GetHandle(), &semaphoreWaitInfo, timeout);
     switch (result) {
       case VK_SUCCESS:
         return true;
@@ -106,6 +105,6 @@ namespace Retina::Graphics {
     semaphoreSignalInfo.semaphore = _handle;
     semaphoreSignalInfo.value = value;
 
-    RETINA_GRAPHICS_VULKAN_CHECK(vkSignalSemaphore(_device->GetHandle(), &semaphoreSignalInfo));
+    RETINA_GRAPHICS_VULKAN_CHECK(vkSignalSemaphore(GetDevice().GetHandle(), &semaphoreSignalInfo));
   }
 }

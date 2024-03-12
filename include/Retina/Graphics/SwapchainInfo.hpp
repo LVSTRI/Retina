@@ -16,6 +16,6 @@ namespace Retina::Graphics {
   };
 
   struct SSwapchainPresentInfo {
-    std::vector<std::reference_wrapper<const CBinarySemaphore>> WaitSemaphores;
+    std::vector<Core::CReferenceWrapper<const CBinarySemaphore>> WaitSemaphores;
   };
 }

@@ -22,13 +22,13 @@ namespace Retina::Graphics {
   };
 
   struct SQueueSemaphoreSubmitInfo {
-    std::reference_wrapper<const ISemaphore> Semaphore;
+    Core::CReferenceWrapper<const ISemaphore> Semaphore;
     EPipelineStageFlag Stage = EPipelineStageFlag::E_NONE;
     uint64 Value = -1_u64;
   };
 
   struct SQueueSubmitInfo {
-    std::vector<std::reference_wrapper<const CCommandBuffer>> CommandBuffers;
+    std::vector<Core::CReferenceWrapper<const CCommandBuffer>> CommandBuffers;
     std::vector<SQueueSemaphoreSubmitInfo> WaitSemaphores;
     std::vector<SQueueSemaphoreSubmitInfo> SignalSemaphores;
     const CHostDeviceTimeline* Timeline = nullptr;

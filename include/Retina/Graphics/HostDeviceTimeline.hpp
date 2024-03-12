@@ -4,10 +4,12 @@
 
 #include <Retina/Graphics/Forward.hpp>
 
+#include <memory>
+
 namespace Retina::Graphics {
   class CHostDeviceTimeline {
   public:
-    CHostDeviceTimeline() noexcept = default;
+    CHostDeviceTimeline(const CDevice& device) noexcept;
     ~CHostDeviceTimeline() noexcept = default;
     RETINA_DELETE_COPY(CHostDeviceTimeline);
     RETINA_DEFAULT_MOVE(CHostDeviceTimeline);
@@ -15,7 +17,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD static auto Make(
       const CDevice& device,
       uint64 maxTimelineDifference = 2
-    ) noexcept -> CHostDeviceTimeline;
+    ) noexcept -> std::unique_ptr<CHostDeviceTimeline>;
 
     RETINA_NODISCARD auto GetMaxTimelineDifference() const noexcept -> uint64;
     RETINA_NODISCARD auto GetHostTimelineValue() const noexcept -> uint64;
@@ -32,6 +34,6 @@ namespace Retina::Graphics {
     uint64 _hostTimelineValue = 0;
     Core::CArcPtr<const CTimelineSemaphore> _deviceTimeline;
 
-    Core::CArcPtr<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

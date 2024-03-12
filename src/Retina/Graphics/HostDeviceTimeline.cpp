@@ -3,19 +3,24 @@
 #include <Retina/Graphics/TimelineSemaphore.hpp>
 
 namespace Retina::Graphics {
+  CHostDeviceTimeline::CHostDeviceTimeline(const CDevice& device) noexcept
+    : _device(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
+
   auto CHostDeviceTimeline::Make(
     const CDevice& device,
     uint64 maxTimelineDifference
-  ) noexcept -> CHostDeviceTimeline {
+  ) noexcept -> std::unique_ptr<CHostDeviceTimeline> {
     RETINA_PROFILE_SCOPED();
-    auto self = CHostDeviceTimeline();
-    self._maxTimelineDifference = maxTimelineDifference;
-    self._hostTimelineValue = 0;
-    self._deviceTimeline = CTimelineSemaphore::Make(device, {
+    auto self = std::make_unique<CHostDeviceTimeline>(device);
+    self->_maxTimelineDifference = maxTimelineDifference;
+    self->_hostTimelineValue = 0;
+    self->_deviceTimeline = CTimelineSemaphore::Make(device, {
       .Name = "HostDeviceTimeline_DeviceTimeline",
       .Value = 0,
     });
-    self._device = device.ToArcPtr();
     return self;
   }
 

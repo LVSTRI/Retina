@@ -90,7 +90,7 @@ namespace Retina::Graphics {
     waitSemaphoreInfos.reserve(submitInfo.WaitSemaphores.size());
     for (const auto& [semaphore, stage, value] : submitInfo.WaitSemaphores) {
       auto semaphoreSubmitInfo = VkSemaphoreSubmitInfo(VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO);
-      semaphoreSubmitInfo.semaphore = semaphore.get().GetHandle();
+      semaphoreSubmitInfo.semaphore = semaphore->GetHandle();
       semaphoreSubmitInfo.stageMask = AsEnumCounterpart(stage);
       semaphoreSubmitInfo.value = value;
       waitSemaphoreInfos.emplace_back(semaphoreSubmitInfo);
@@ -100,7 +100,7 @@ namespace Retina::Graphics {
     signalSemaphoreInfos.reserve(submitInfo.SignalSemaphores.size());
     for (const auto& [semaphore, stage, value] : submitInfo.SignalSemaphores) {
       auto semaphoreSubmitInfo = VkSemaphoreSubmitInfo(VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO);
-      semaphoreSubmitInfo.semaphore = semaphore.get().GetHandle();
+      semaphoreSubmitInfo.semaphore = semaphore->GetHandle();
       semaphoreSubmitInfo.stageMask = AsEnumCounterpart(stage);
       semaphoreSubmitInfo.value = value;
       signalSemaphoreInfos.emplace_back(semaphoreSubmitInfo);
@@ -119,7 +119,7 @@ namespace Retina::Graphics {
     commandBufferInfos.reserve(submitInfo.CommandBuffers.size());
     for (const auto& commandBuffer : submitInfo.CommandBuffers) {
       auto commandBufferInfo = VkCommandBufferSubmitInfo(VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO);
-      commandBufferInfo.commandBuffer = commandBuffer.get().GetHandle();
+      commandBufferInfo.commandBuffer = commandBuffer->GetHandle();
       commandBufferInfos.emplace_back(commandBufferInfo);
     }
 

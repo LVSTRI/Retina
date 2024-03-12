@@ -45,7 +45,7 @@ namespace Retina::Entry {
 
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _imageAvailableSemaphores;
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _presentReadySemaphores;
-    Graphics::CHostDeviceTimeline _mainTimeline;
+    std::unique_ptr<Graphics::CHostDeviceTimeline> _mainTimeline;
 
     Core::CArcPtr<Graphics::CImage> _mainImage;
   };

@@ -5,7 +5,7 @@
 namespace Retina::Graphics {
   class CBinarySemaphore : public ISemaphore {
   public:
-    CBinarySemaphore() noexcept;
+    CBinarySemaphore(const CDevice& device) noexcept;
     ~CBinarySemaphore() noexcept override;
 
     RETINA_NODISCARD static auto Make(
