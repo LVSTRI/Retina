@@ -73,9 +73,9 @@ namespace Retina::Entry {
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
 
-    _mainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+    _mainPipeline = Graphics::CMeshShadingPipeline::Make(*_device, {
       .Name = "MainPipeline",
-      .VertexShader = Details::GetShaderPath("Main.vert.glsl"),
+      .MeshShader = Details::GetShaderPath("Main.mesh.glsl"),
       .FragmentShader = Details::GetShaderPath("Main.frag.glsl"),
       .DynamicState = { {
         Graphics::EDynamicState::E_VIEWPORT,
@@ -206,7 +206,7 @@ namespace Retina::Entry {
       .SetViewport()
       .SetScissor()
       .BindPipeline(*_mainPipeline)
-      .Draw(3)
+      .DrawMeshTasks(1)
       .EndRendering()
       .Barrier({
         .ImageMemoryBarriers = {

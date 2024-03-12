@@ -48,6 +48,6 @@ namespace Retina::Entry {
     std::unique_ptr<Graphics::CHostDeviceTimeline> _frameTimeline;
 
     Core::CArcPtr<Graphics::CImage> _mainImage;
-    Core::CArcPtr<Graphics::CGraphicsPipeline> _mainPipeline;
+    Core::CArcPtr<Graphics::CMeshShadingPipeline> _mainPipeline;
   };
 }

@@ -63,6 +63,8 @@ namespace Retina::Graphics {
       uint32 firstInstance = 0
     ) noexcept -> CCommandBuffer&;
 
+    auto DrawMeshTasks(uint32 x = 1, uint32 y = 1, uint32 z = 1) noexcept -> CCommandBuffer&;
+
     auto Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer&;
     auto MemoryBarrier(const SMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
     auto ImageMemoryBarrier(const SImageMemoryBarrier& barrier) noexcept -> CCommandBuffer&;

@@ -30,6 +30,9 @@ namespace Retina::Graphics {
   // <Retina/Graphics/CommandPoolInfo.hpp>
   struct SCommandPoolCreateInfo;
 
+  // <Retina/Graphics/ComputePipeline.hpp>
+  class CComputePipeline;
+
   // <Retina/Graphics/DeletionQueue.hpp>
   class CDeletionQueue;
 
@@ -101,6 +104,9 @@ namespace Retina::Graphics {
   // <Retina/Graphics/InstanceInfo.hpp>
   struct SInstanceFeature;
   struct SInstanceCreateInfo;
+
+  // <Retina/Graphics/MeshShadingPipeline.hpp>
+  class CMeshShadingPipeline;
 
   // <Retina/Graphics/Pipeline.hpp>
   class IPipeline;

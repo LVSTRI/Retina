@@ -3,6 +3,7 @@
 #include <Retina/Graphics/CommandBufferInfo.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/CommandPoolInfo.hpp>
+#include <Retina/Graphics/ComputePipeline.hpp>
 #include <Retina/Graphics/DescriptorLayout.hpp>
 #include <Retina/Graphics/DescriptorLayoutInfo.hpp>
 #include <Retina/Graphics/DescriptorPool.hpp>
@@ -26,6 +27,7 @@
 #include <Retina/Graphics/InstanceInfo.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/MeshShadingPipeline.hpp>
 #include <Retina/Graphics/Pipeline.hpp>
 #include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/Queue.hpp>

@@ -2,7 +2,7 @@
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
-#include <Retina/Graphics/GraphicsPipeline.hpp>
+#include <Retina/Graphics/MeshShadingPipeline.hpp>
 
 #include <spirv_glsl.hpp>
 
@@ -12,39 +12,56 @@
 #include <array>
 
 namespace Retina::Graphics {
-  CGraphicsPipeline::CGraphicsPipeline() noexcept
-    : IPipeline(EPipelineType::E_GRAPHICS)
+  CMeshShadingPipeline::CMeshShadingPipeline() noexcept
+    : IPipeline(EPipelineType::E_MESH_SHADING)
   {
     RETINA_PROFILE_SCOPED();
   }
 
-  CGraphicsPipeline::~CGraphicsPipeline() noexcept {
+  CMeshShadingPipeline::~CMeshShadingPipeline() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
-      RETINA_GRAPHICS_INFO("Graphics pipeline ({}) destroyed", GetDebugName());
+      RETINA_GRAPHICS_INFO("Mesh shading pipeline ({}) destroyed", GetDebugName());
     }
   }
 
-  auto CGraphicsPipeline::Make(
+  auto CMeshShadingPipeline::Make(
     const CDevice& device,
-    const SGraphicsPipelineCreateInfo& createInfo
-  ) noexcept -> Core::CArcPtr<CGraphicsPipeline> {
+    const SMeshShadingPipelineCreateInfo& createInfo
+  ) noexcept -> Core::CArcPtr<CMeshShadingPipeline> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CGraphicsPipeline());
+    auto self = Core::CArcPtr(new CMeshShadingPipeline());
     auto shaderStages = std::vector<VkPipelineShaderStageCreateInfo>();
 
-    const auto vertexShaderBinary = Details::CompileShaderFromSource(
-      createInfo.VertexShader,
+    const auto meshShaderBinary = Details::CompileShaderFromSource(
+      createInfo.MeshShader,
       createInfo.IncludeDirectories,
-      EShaderStageFlag::E_VERTEX
+      EShaderStageFlag::E_MESH_EXT
     );
-    const auto vertexShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(vertexShaderBinary);
+    const auto meshShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(meshShaderBinary);
     {
       auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
-      stage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-      stage.module = Details::MakeShaderModule(device, vertexShaderBinary);
+      stage.stage = VK_SHADER_STAGE_MESH_BIT_EXT;
+      stage.module = Details::MakeShaderModule(device, meshShaderBinary);
       stage.pName = "main";
       shaderStages.emplace_back(stage);
+    }
+
+    auto taskShaderCompiler = std::unique_ptr<spirv_cross::CompilerGLSL>();
+    if (createInfo.TaskShader) {
+      const auto taskShaderBinary = Details::CompileShaderFromSource(
+        createInfo.TaskShader.value(),
+        createInfo.IncludeDirectories,
+        EShaderStageFlag::E_TASK_EXT
+      );
+      taskShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(taskShaderBinary);
+      {
+        auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+        stage.stage = VK_SHADER_STAGE_TASK_BIT_EXT;
+        stage.module = Details::MakeShaderModule(device, taskShaderBinary);
+        stage.pName = "main";
+        shaderStages.emplace_back(stage);
+      }
     }
 
     auto fragmentShaderCompiler = std::unique_ptr<spirv_cross::CompilerGLSL>();
@@ -63,13 +80,6 @@ namespace Retina::Graphics {
         shaderStages.emplace_back(stage);
       }
     }
-
-    auto vertexInputStateCreateInfo = VkPipelineVertexInputStateCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
-    auto inputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO);
-    inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-
-    auto tessellationStateCreateInfo = VkPipelineTessellationStateCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO);
-    tessellationStateCreateInfo.patchControlPoints = createInfo.TessellationState.PatchControlPoints;
 
     auto viewports = std::vector<VkViewport>();
     auto scissors = std::vector<VkRect2D>();
@@ -234,7 +244,8 @@ namespace Retina::Graphics {
 
     const auto descriptorLayoutHandles = Details::MakeDescriptorLayoutHandles(createInfo.DescriptorLayouts);
     const auto pushConstantRange = Details::ReflectPushConstantRange(std::to_array({
-      vertexShaderCompiler.get(),
+      meshShaderCompiler.get(),
+      taskShaderCompiler.get(),
       fragmentShaderCompiler.get()
     }));
     const auto nativePushConstantInfo = std::bit_cast<VkPushConstantRange>(pushConstantRange);
@@ -261,9 +272,9 @@ namespace Retina::Graphics {
     pipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
     pipelineCreateInfo.stageCount = shaderStages.size();
     pipelineCreateInfo.pStages = shaderStages.data();
-    pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
-    pipelineCreateInfo.pTessellationState = &tessellationStateCreateInfo;
+    pipelineCreateInfo.pVertexInputState = nullptr;
+    pipelineCreateInfo.pInputAssemblyState = nullptr;
+    pipelineCreateInfo.pTessellationState = nullptr;
     pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
     pipelineCreateInfo.pRasterizationState = &rasterizationStateCreateInfo;
     pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
@@ -284,7 +295,7 @@ namespace Retina::Graphics {
         &pipelineHandle
       )
     );
-    RETINA_GRAPHICS_INFO("Graphics pipeline ({}) initialized", createInfo.Name);
+    RETINA_GRAPHICS_INFO("Mesh shading pipeline ({}) initialized", createInfo.Name);
 
     for (const auto& stage : shaderStages) {
       vkDestroyShaderModule(device.GetHandle(), stage.module, nullptr);
@@ -301,17 +312,17 @@ namespace Retina::Graphics {
     return self;
   }
 
-  auto CGraphicsPipeline::GetCreateInfo() const noexcept -> const SGraphicsPipelineCreateInfo& {
+  auto CMeshShadingPipeline::GetCreateInfo() const noexcept -> const SMeshShadingPipelineCreateInfo& {
     RETINA_PROFILE_SCOPED();
     return _createInfo;
   }
 
-  auto CGraphicsPipeline::GetDebugName() const noexcept -> std::string_view {
+  auto CMeshShadingPipeline::GetDebugName() const noexcept -> std::string_view {
     RETINA_PROFILE_SCOPED();
     return _createInfo.Name;
   }
 
-  auto CGraphicsPipeline::SetDebugName(std::string_view name) noexcept -> void {
+  auto CMeshShadingPipeline::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_SET_DEBUG_NAME(_device->GetHandle(), _handle, VK_OBJECT_TYPE_PIPELINE, name);
     _createInfo.Name = name;

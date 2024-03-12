@@ -4,6 +4,7 @@ target_sources(Retina.Graphics PRIVATE
   BinarySemaphore.cpp
   CommandBuffer.cpp
   CommandPool.cpp
+  ComputePipeline.cpp
   DeletionQueue.cpp
   DescriptorLayout.cpp
   DescriptorPool.cpp
@@ -17,6 +18,7 @@ target_sources(Retina.Graphics PRIVATE
   ImageView.cpp
   Instance.cpp
   Logger.cpp
+  MeshShadingPipeline.cpp
   Pipeline.cpp
   Queue.cpp
   Semaphore.cpp

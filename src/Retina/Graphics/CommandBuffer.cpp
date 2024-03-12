@@ -356,6 +356,12 @@ namespace Retina::Graphics {
     return *this;
   }
 
+  auto CCommandBuffer::DrawMeshTasks(uint32 x, uint32 y, uint32 z) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdDrawMeshTasksEXT(_handle, x, y, z);
+    return *this;
+  }
+
   auto CCommandBuffer::Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     auto memoryBarriers = std::vector<VkMemoryBarrier2>();
