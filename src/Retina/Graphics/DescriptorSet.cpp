@@ -23,7 +23,7 @@ namespace Retina::Graphics {
     }
 
     RETINA_NODISCARD RETINA_INLINE auto GetNativeBufferDescriptors(
-      std::span<const SBufferDescriptor> descriptors
+      std::span<const SBufferDescriptor>
     ) noexcept -> std::vector<VkDescriptorBufferInfo> {
       RETINA_PROFILE_SCOPED();
       // TODO: Implement

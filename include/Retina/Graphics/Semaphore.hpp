@@ -19,6 +19,7 @@ namespace Retina::Graphics {
   protected:
     ISemaphore(const CDevice& device, ESemaphoreKind kind) noexcept;
 
+  protected:
     VkSemaphore _handle = {};
     ESemaphoreKind _kind = {};
 

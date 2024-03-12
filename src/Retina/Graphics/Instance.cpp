@@ -83,7 +83,7 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
       vkDestroyInstance(_handle, nullptr);
-      RETINA_GRAPHICS_INFO("Instance ({}) destroyed", (const void*)_handle);
+      RETINA_GRAPHICS_INFO("Instance ({}) destroyed", static_cast<const void*>(_handle));
       volkFinalize();
       RETINA_GRAPHICS_INFO("Terminated graphics backend");
     }

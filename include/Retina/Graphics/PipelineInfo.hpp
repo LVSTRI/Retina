@@ -6,15 +6,13 @@
 #include <Retina/Graphics/Enums.hpp>
 #include <Retina/Graphics/Forward.hpp>
 
-#include <spirv_cross/spirv_glsl.hpp>
-
 #include <filesystem>
 #include <span>
 
 namespace Retina::Graphics {
   enum class EPipelineType {
     E_GRAPHICS,
-    E_MESH_SHAING,
+    E_MESH_SHADING,
     E_COMPUTE,
     E_RAY_TRACING,
   };
@@ -123,11 +121,6 @@ namespace Retina::Graphics {
     uint32 Size = 0;
   };
 
-  struct SPipelineLayout {
-    VkPipelineLayout Handle = {};
-    SPipelinePushConstantInfo PushConstant = {};
-  };
-
   const inline auto DEFAULT_PIPELINE_TESSELLATION_STATE_INFO = SPipelineTessellationStateInfo();
   const inline auto DEFAULT_PIPELINE_VIEWPORT_STATE_INFO = SPipelineViewportStateInfo();
   const inline auto DEFAULT_PIPELINE_RASTERIZATION_STATE_INFO = SPipelineRasterizationStateInfo();
@@ -139,18 +132,18 @@ namespace Retina::Graphics {
   struct SComputePipelineCreateInfo {
     std::string Name;
     std::filesystem::path ComputeShader;
-    std::vector<std::filesystem::path> ShaderIncludePaths;
+    std::vector<std::filesystem::path> IncludeDirectories;
 
-    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<Core::CReferenceWrapper<const CDescriptorLayout>> DescriptorLayouts;
   };
 
   struct SGraphicsPipelineCreateInfo {
     std::string Name;
     std::filesystem::path VertexShader;
     std::optional<std::filesystem::path> FragmentShader = std::nullopt;
-    std::vector<std::filesystem::path> ShaderIncludePaths = {};
+    std::vector<std::filesystem::path> IncludeDirectories;
 
-    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<Core::CReferenceWrapper<const CDescriptorLayout>> DescriptorLayouts;
 
     SPipelineTessellationStateInfo TessellationState = DEFAULT_PIPELINE_TESSELLATION_STATE_INFO;
     SPipelineViewportStateInfo ViewportState = DEFAULT_PIPELINE_VIEWPORT_STATE_INFO;
@@ -167,9 +160,9 @@ namespace Retina::Graphics {
     std::filesystem::path MeshShader;
     std::optional<std::filesystem::path> TaskShader = std::nullopt;
     std::optional<std::filesystem::path> FragmentShader = std::nullopt;
-    std::vector<std::filesystem::path> ShaderIncludePaths = {};
+    std::vector<std::filesystem::path> IncludeDirectories;
 
-    std::vector<std::reference_wrapper<const CDescriptorLayout>> DescriptorLayouts;
+    std::vector<Core::CReferenceWrapper<const CDescriptorLayout>> DescriptorLayouts;
 
     SPipelineViewportStateInfo ViewportState = DEFAULT_PIPELINE_VIEWPORT_STATE_INFO;
     SPipelineRasterizationStateInfo RasterizationState = DEFAULT_PIPELINE_RASTERIZATION_STATE_INFO;

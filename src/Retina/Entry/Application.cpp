@@ -1,6 +1,16 @@
 #include <Retina/Entry/Application.hpp>
 
+#include <filesystem>
+
 namespace Retina::Entry {
+  namespace Details {
+    RETINA_NODISCARD RETINA_INLINE auto GetShaderPath(const std::filesystem::path& path) noexcept -> std::filesystem::path {
+      RETINA_PROFILE_SCOPED();
+      return std::filesystem::path(RETINA_ENTRY_SHADER_DIRECTORY) / path;
+
+    }
+  }
+
   CApplication::CApplication() noexcept {
     RETINA_PROFILE_SCOPED();
     WSI::Initialize();
@@ -56,11 +66,26 @@ namespace Retina::Entry {
       .Name = "MainImage",
       .Width = _swapchain->GetWidth(),
       .Height = _swapchain->GetHeight(),
-      .Format = _swapchain->GetFormat(),
+      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
         Graphics::EImageUsageFlag::E_TRANSFER_SRC,
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+
+    _mainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+      .Name = "MainPipeline",
+      .VertexShader = Details::GetShaderPath("Main.vert.glsl"),
+      .FragmentShader = Details::GetShaderPath("Main.frag.glsl"),
+      .DynamicState = { {
+        Graphics::EDynamicState::E_VIEWPORT,
+        Graphics::EDynamicState::E_SCISSOR,
+      } },
+      .RenderingInfo = {
+        {
+          .ColorAttachmentFormats = { _mainImage->GetFormat() },
+        }
+      },
     });
 
     _window->GetEventDispatcher().Attach(this, &CApplication::OnWindowResize);
@@ -96,6 +121,7 @@ namespace Retina::Entry {
       return false;
     }
     _device->WaitIdle();
+    _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
     _mainImage = Graphics::CImage::Make(*_device, {
       .Name = "MainImage",
@@ -177,6 +203,10 @@ namespace Retina::Entry {
           }
         }
       })
+      .SetViewport()
+      .SetScissor()
+      .BindPipeline(*_mainPipeline)
+      .Draw(3)
       .EndRendering()
       .Barrier({
         .ImageMemoryBarriers = {

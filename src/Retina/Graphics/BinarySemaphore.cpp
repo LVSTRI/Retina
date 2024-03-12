@@ -14,7 +14,9 @@ namespace Retina::Graphics {
 
   CBinarySemaphore::~CBinarySemaphore() noexcept {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_INFO("Binary semaphore ({}) destroyed", GetDebugName());
+    if (_handle) {
+      RETINA_GRAPHICS_INFO("Binary semaphore ({}) destroyed", GetDebugName());
+    }
   }
 
   auto CBinarySemaphore::Make(

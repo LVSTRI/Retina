@@ -33,6 +33,7 @@ namespace Retina::Core {
   private:
     RETINA_NODISCARD constexpr auto GetFreeSlot() noexcept -> S;
 
+  private:
     std::vector<T> _storage;
     std::vector<S> _free;
   };

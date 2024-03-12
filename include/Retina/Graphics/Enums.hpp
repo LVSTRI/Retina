@@ -4758,19 +4758,19 @@ namespace Retina::Graphics {
 
   template <typename T>
     requires (std::is_scoped_enum_v<T>)
-  RETINA_NODISCARD constexpr auto operator &=(T& left, T right) noexcept -> T& {
+  constexpr auto operator &=(T& left, T right) noexcept -> T& {
     return left = left & right;
   }
 
   template <typename T>
     requires (std::is_scoped_enum_v<T>)
-  RETINA_NODISCARD constexpr auto operator |=(T& left, T right) noexcept -> T& {
+  constexpr auto operator |=(T& left, T right) noexcept -> T& {
     return left = left | right;
   }
 
   template <typename T>
     requires (std::is_scoped_enum_v<T>)
-  RETINA_NODISCARD constexpr auto operator ^=(T& left, T right) noexcept -> T& {
+  constexpr auto operator ^=(T& left, T right) noexcept -> T& {
     return left = left ^ right;
   }
 

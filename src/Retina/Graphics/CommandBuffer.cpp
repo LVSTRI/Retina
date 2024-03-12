@@ -5,6 +5,7 @@
 #include <Retina/Graphics/ImageView.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/Pipeline.hpp>
 #include <Retina/Graphics/Queue.hpp>
 
 #include <volk.h>
@@ -209,7 +210,7 @@ namespace Retina::Graphics {
     return *this;
   }
 
-  auto CCommandBuffer::BeginRendering(const SRenderingInfo& renderingInfo) noexcept -> CCommandBuffer& {
+  auto CCommandBuffer::BeginRendering(SRenderingInfo renderingInfo) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     auto regionName = renderingInfo.Name;
     if (regionName.empty()) {
@@ -217,7 +218,7 @@ namespace Retina::Graphics {
     }
     BeginNamedRegion(regionName);
 
-    auto attachmentSize = VkExtent2D();
+    auto attachmentSize = SExtent2D();
     auto layerCount = 0_u32;
 
     auto colorAttachments = std::vector<VkRenderingAttachmentInfo>();
@@ -248,18 +249,19 @@ namespace Retina::Graphics {
       layerCount = subresource.LayerCount;
     }
 
-    auto commandRenderingInfo = VkRenderingInfo(VK_STRUCTURE_TYPE_RENDERING_INFO);
-    commandRenderingInfo.renderArea = std::bit_cast<VkRect2D>(renderingInfo.RenderArea);
     if (renderingInfo.RenderArea == SRect2D()) {
-      commandRenderingInfo.renderArea = {
-        .offset = { 0, 0 },
-        .extent = attachmentSize
+      renderingInfo.RenderArea = {
+        .Offset = { 0, 0 },
+        .Extent = attachmentSize
       };
     }
-    commandRenderingInfo.layerCount = renderingInfo.LayerCount;
     if (renderingInfo.LayerCount == -1_u32) {
-      commandRenderingInfo.layerCount = layerCount;
+      renderingInfo.LayerCount = layerCount;
     }
+
+    auto commandRenderingInfo = VkRenderingInfo(VK_STRUCTURE_TYPE_RENDERING_INFO);
+    commandRenderingInfo.renderArea = std::bit_cast<VkRect2D>(renderingInfo.RenderArea);
+    commandRenderingInfo.layerCount = renderingInfo.LayerCount;
     commandRenderingInfo.viewMask = renderingInfo.ViewMask;
     commandRenderingInfo.colorAttachmentCount = colorAttachments.size();
     commandRenderingInfo.pColorAttachments = colorAttachments.data();
@@ -267,15 +269,79 @@ namespace Retina::Graphics {
       commandRenderingInfo.pDepthAttachment = &depthStencilAttachment;
       commandRenderingInfo.pStencilAttachment = &depthStencilAttachment;
     }
-    vkCmdBeginRendering(_handle, &commandRenderingInfo);
 
-    EndNamedRegion();
+    vkCmdBeginRendering(_handle, &commandRenderingInfo);
+    _currentState.RenderingInfo = std::move(renderingInfo);
+    return *this;
+  }
+
+  auto CCommandBuffer::SetViewport() noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    RETINA_ASSERT_WITH(
+      _currentState.RenderingInfo,
+      "Cannot retrieve rendering state, did you forget to call BeginRendering()?"
+    );
+    const auto& renderingInfo = *_currentState.RenderingInfo;
+    const auto renderArea = renderingInfo.RenderArea;
+    const auto viewport = SViewport(
+      static_cast<float32>(renderArea.Offset.X),
+      static_cast<float32>(renderArea.Offset.Y),
+      static_cast<float32>(renderArea.Extent.Width),
+      static_cast<float32>(renderArea.Extent.Height)
+    );
+    return SetViewport(viewport);
+  }
+
+  auto CCommandBuffer::SetScissor() noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    RETINA_ASSERT_WITH(
+      _currentState.RenderingInfo,
+      "Cannot retrieve rendering state, did you forget to call BeginRendering()?"
+    );
+    const auto& renderingInfo = *_currentState.RenderingInfo;
+    const auto renderArea = renderingInfo.RenderArea;
+    const auto scissor = SScissor(
+      renderArea.Offset.X,
+      renderArea.Offset.Y,
+      renderArea.Extent.Width,
+      renderArea.Extent.Height
+    );
+    return SetScissor(scissor);
+  }
+
+  auto CCommandBuffer::SetViewport(const SViewport& viewport) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    const auto nativeViewport = VkViewport(
+      viewport.X,
+      viewport.Y,
+      viewport.Width,
+      viewport.Height,
+      0.0f,
+      1.0f
+    );
+    vkCmdSetViewport(_handle, 0, 1, &nativeViewport);
+    return *this;
+  }
+
+  auto CCommandBuffer::SetScissor(const SScissor& scissor) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    const auto nativeScissor = std::bit_cast<VkRect2D>(scissor);
+    vkCmdSetScissor(_handle, 0, 1, &nativeScissor);
     return *this;
   }
 
   auto CCommandBuffer::EndRendering() noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     vkCmdEndRendering(_handle);
+    EndNamedRegion();
+    _currentState.RenderingInfo = std::nullopt;
+    return *this;
+  }
+
+  auto CCommandBuffer::BindPipeline(const IPipeline& pipeline) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdBindPipeline(_handle, AsEnumCounterpart(pipeline.GetBindPoint()), pipeline.GetHandle());
+    _currentState.Pipeline = &pipeline;
     return *this;
   }
 

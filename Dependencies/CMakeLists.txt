@@ -1,10 +1,7 @@
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 include(FetchContent)
 
-find_package(Vulkan REQUIRED COMPONENTS
-  SPIRV-Tools
-  shaderc_combined
-)
+find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
 
 # debugbreak
 FetchContent_Declare(
@@ -21,10 +18,20 @@ if (NOT debugbreak_POPULATED)
   target_include_directories(debugbreak INTERFACE ${debugbreak_SOURCE_DIR})
 endif ()
 
+# mio
+FetchContent_Declare(
+  mio
+  GIT_REPOSITORY https://github.com/vimpunk/mio
+  GIT_TAG 8b6b7d878c89e81614d05edca7936de41ccdd2da
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(mio)
+
 FetchContent_Declare(
   fmtlib
   GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG c816fa67519c32653fca5a6bc3fdfe5d0cd341b9
+  GIT_TAG df6e7b22f7fef9c37736b3718c5ccb357df7dcd2
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
@@ -113,6 +120,18 @@ if (NOT vma_POPULATED)
   target_compile_options(vma PRIVATE -w)
 endif ()
 
+# SPIRV-Cross
+FetchContent_Declare(
+    spirv_cross
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross
+    GIT_TAG        2a7c8184921897ff3d6c6c3f70af4099e2e00331
+    GIT_PROGRESS   TRUE
+    GIT_SHALLOW    TRUE
+)
+set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS ON CACHE BOOL "" FORCE)
+set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(spirv_cross)
+
 # unordered_dense
 FetchContent_Declare(
   unordered_dense
@@ -127,6 +146,7 @@ add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
   debugbreak
+  mio
   spdlog
   TracyClient
   unordered_dense
@@ -141,9 +161,9 @@ target_link_libraries(Retina.WSI.Dependencies INTERFACE
 add_library(Retina.Graphics.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Graphics.Dependencies INTERFACE
+  spirv-cross-glsl
   volk
   Vulkan::shaderc_combined
-  Vulkan::SPIRV-Tools
 )
 
 add_library(Retina.Graphics.Vulkan INTERFACE)

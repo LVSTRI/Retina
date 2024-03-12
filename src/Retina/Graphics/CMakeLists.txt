@@ -10,12 +10,14 @@ target_sources(Retina.Graphics PRIVATE
   DescriptorSet.cpp
   Device.cpp
   Fence.cpp
+  GraphicsPipeline.cpp
   HostDeviceTimeline.cpp
   Image.cpp
   ImageInfo.cpp
   ImageView.cpp
   Instance.cpp
   Logger.cpp
+  Pipeline.cpp
   Queue.cpp
   Semaphore.cpp
   Swapchain.cpp

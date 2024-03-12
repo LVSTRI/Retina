@@ -70,6 +70,9 @@ namespace Retina::Graphics {
   // <Retina/Graphics/FenceInfo.hpp>
   struct SFenceCreateInfo;
 
+  // <Retina/Graphics/GraphicsPipeline.hpp>
+  class CGraphicsPipeline;
+
   // <Retina/Graphics/HostDeviceTimeline.hpp>
   class CHostDeviceTimeline;
 
@@ -99,6 +102,9 @@ namespace Retina::Graphics {
   struct SInstanceFeature;
   struct SInstanceCreateInfo;
 
+  // <Retina/Graphics/Pipeline.hpp>
+  class IPipeline;
+
   // <Retina/Graphics/PipelineInfo.hpp>
   enum class EPipelineType;
   struct SViewport;
@@ -114,7 +120,6 @@ namespace Retina::Graphics {
   struct SPipelineDynamicStateInfo;
   struct SPipelineRenderingInfo;
   struct SPipelinePushConstantInfo;
-  struct SPipelineLayout;
   struct SComputePipelineCreateInfo;
   struct SGraphicsPipelineCreateInfo;
   struct SMeshShadingPipelineCreateInfo;

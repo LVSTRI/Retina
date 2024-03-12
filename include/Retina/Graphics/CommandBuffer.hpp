@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Retina/Graphics/CommandBufferInfo.hpp>
+#include <Retina/Graphics/PipelineInfo.hpp>
 
 #include <vulkan/vulkan.h>
 
@@ -46,8 +47,14 @@ namespace Retina::Graphics {
     auto Begin() noexcept -> CCommandBuffer&;
     auto End() noexcept -> CCommandBuffer&;
 
-    auto BeginRendering(const SRenderingInfo& renderingInfo) noexcept -> CCommandBuffer&;
+    auto BeginRendering(SRenderingInfo renderingInfo) noexcept -> CCommandBuffer&;
+    auto SetViewport() noexcept -> CCommandBuffer&;
+    auto SetScissor() noexcept -> CCommandBuffer&;
+    auto SetViewport(const SViewport& viewport) noexcept -> CCommandBuffer&;
+    auto SetScissor(const SScissor& scissor) noexcept -> CCommandBuffer&;
     auto EndRendering() noexcept -> CCommandBuffer&;
+
+    auto BindPipeline(const IPipeline& pipeline) noexcept -> CCommandBuffer&;
 
     auto Draw(
       uint32 vertexCount,
@@ -67,8 +74,16 @@ namespace Retina::Graphics {
     auto EndNamedRegion() noexcept -> CCommandBuffer&;
 
   private:
+    struct SInternalState {
+      std::optional<SRenderingInfo> RenderingInfo = std::nullopt;
+      const IPipeline* Pipeline = nullptr;
+    };
+
+  private:
     VkCommandBuffer _handle = {};
     SCommandBufferCreateInfo _createInfo = {};
+    SInternalState _currentState = {};
+
     Core::CArcPtr<CCommandPool> _commandPool;
     Core::CArcPtr<const CQueue> _queue;
   };

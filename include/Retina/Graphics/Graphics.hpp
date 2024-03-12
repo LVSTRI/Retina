@@ -17,6 +17,7 @@
 #include <Retina/Graphics/Fence.hpp>
 #include <Retina/Graphics/FenceInfo.hpp>
 #include <Retina/Graphics/Forward.hpp>
+#include <Retina/Graphics/GraphicsPipeline.hpp>
 #include <Retina/Graphics/HostDeviceTimeline.hpp>
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/ImageInfo.hpp>
@@ -25,6 +26,7 @@
 #include <Retina/Graphics/InstanceInfo.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/Pipeline.hpp>
 #include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/Queue.hpp>
 #include <Retina/Graphics/QueueInfo.hpp>

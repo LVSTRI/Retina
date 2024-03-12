@@ -14,7 +14,9 @@ namespace Retina::Graphics {
 
   CTimelineSemaphore::~CTimelineSemaphore() noexcept {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_INFO("Timeline semaphore ({}) destroyed", GetDebugName());
+    if (_handle) {
+      RETINA_GRAPHICS_INFO("Timeline semaphore ({}) destroyed", GetDebugName());
+    }
   }
 
   auto CTimelineSemaphore::Make(
