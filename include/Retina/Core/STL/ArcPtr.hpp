@@ -20,7 +20,7 @@ namespace Retina::Core {
     CArcPtr(std::nullptr_t) noexcept;
 
     RETINA_NODISCARD auto Get() const noexcept -> T*;
-    RETINA_NODISCARD auto Release() noexcept -> T*;
+    auto Release() noexcept -> T*;
     auto Reset() noexcept -> void;
 
     template <typename U>

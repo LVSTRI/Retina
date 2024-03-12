@@ -11,7 +11,12 @@ namespace Retina::Graphics {
     RETINA_NODISCARD static auto Make(
       const CDevice& device,
       const WSI::CWindow& window,
-      const SSwapchainCreateInfo& createInfo
+      const SSwapchainCreateInfo& createInfo,
+      CSwapchain* oldSwapchain = nullptr
+    ) noexcept -> Core::CArcPtr<CSwapchain>;
+
+    RETINA_NODISCARD static auto Recreate(
+      Core::CArcPtr<CSwapchain>&& oldSwapchain
     ) noexcept -> Core::CArcPtr<CSwapchain>;
 
     RETINA_NODISCARD auto GetHandle() const noexcept -> VkSwapchainKHR;

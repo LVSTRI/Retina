@@ -440,6 +440,7 @@ namespace Retina::Graphics {
   CDevice::~CDevice() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
+      _deletionQueue->Flush();
       _transferQueue.Reset();
       _computeQueue.Reset();
       _graphicsQueue.Reset();
@@ -498,6 +499,7 @@ namespace Retina::Graphics {
     self->_handle = deviceHandle;
     self->_physicalDevice = physicalDevice;
     self->_allocator = allocator;
+    self->_deletionQueue = CDeletionQueue::Make();
     self->_rayTracingProperties = deviceRayTracingProperties;
     self->_createInfo = createInfo;
     self->_instance = instance.ToArcPtr();
@@ -561,6 +563,11 @@ namespace Retina::Graphics {
     return *_transferQueue;
   }
 
+  auto CDevice::GetDeletionQueue() const noexcept -> CDeletionQueue& {
+    RETINA_PROFILE_SCOPED();
+    return *_deletionQueue;
+  }
+
   auto CDevice::GetCreateInfo() const noexcept -> const SDeviceCreateInfo& {
     RETINA_PROFILE_SCOPED();
     return _createInfo;
@@ -590,5 +597,10 @@ namespace Retina::Graphics {
   auto CDevice::WaitIdle() const noexcept -> void {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_VULKAN_CHECK(vkDeviceWaitIdle(_handle));
+  }
+
+  auto CDevice::Tick() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    _deletionQueue->Tick();
   }
 }

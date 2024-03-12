@@ -3,6 +3,8 @@
 #include <Retina/Graphics/CommandBufferInfo.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/CommandPoolInfo.hpp>
+#include <Retina/Graphics/DeletionQueue.hpp>
+#include <Retina/Graphics/DeletionQueueInfo.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/DeviceInfo.hpp>
 #include <Retina/Graphics/Enums.hpp>

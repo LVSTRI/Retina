@@ -9,7 +9,7 @@ namespace Retina::Entry {
       .Width = 1280,
       .Height = 720,
       .Features = {
-        .Resizable = false,
+        .Resizable = true,
         .Decorated = true,
         .Focused = true
       }
@@ -91,8 +91,24 @@ namespace Retina::Entry {
     }
   }
 
-  auto CApplication::OnWindowResize(const WSI::SWindowResizeEvent&) noexcept -> bool {
+  auto CApplication::OnWindowResize(const WSI::SWindowResizeEvent& windowResizeEvent) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
+    while (windowResizeEvent.Width == 0 || windowResizeEvent.Height == 0) {
+      WSI::WaitEvents();
+    }
+    _device->WaitIdle();
+    _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
+    _mainImage = Graphics::CImage::Make(*_device, {
+      .Name = "MainImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = _swapchain->GetFormat(),
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_TRANSFER_SRC,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    OnRender();
     return false;
   }
 
@@ -132,6 +148,7 @@ namespace Retina::Entry {
     if (!_swapchain->AcquireNextImage(*_imageAvailableSemaphores[frameIndex])) {
       return;
     }
+    _device->Tick();
 
     auto& commandBuffer = *_commandBuffers[frameIndex];
     commandBuffer.GetCommandPool().Reset();

@@ -4,6 +4,7 @@ target_sources(Retina.Graphics PRIVATE
   BinarySemaphore.cpp
   CommandBuffer.cpp
   CommandPool.cpp
+  DeletionQueue.cpp
   Device.cpp
   Fence.cpp
   HostDeviceTimeline.cpp

@@ -212,21 +212,29 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     if (_handle) {
       _images.clear();
       vkDestroySwapchainKHR(_device->GetHandle(), _handle, nullptr);
-      vkDestroySurfaceKHR(_device->GetInstance().GetHandle(), _surface, nullptr);
       RETINA_GRAPHICS_INFO("Swapchain ({}) destroyed", GetDebugName());
+    }
+    if (_surface) {
+      vkDestroySurfaceKHR(_device->GetInstance().GetHandle(), _surface, nullptr);
     }
   }
 
   auto CSwapchain::Make(
     const CDevice& device,
     const WSI::CWindow& window,
-    const SSwapchainCreateInfo& createInfo
+    const SSwapchainCreateInfo& createInfo,
+    CSwapchain* oldSwapchain
   ) noexcept -> Core::CArcPtr<CSwapchain> {
     RETINA_PROFILE_SCOPED();
     auto self = Core::CArcPtr(new CSwapchain(window));
-    auto surface = static_cast<VkSurfaceKHR>(createInfo.MakeSurface(device.GetInstance().GetHandle(), window.GetHandle()));
-    if (!surface) {
-      RETINA_GRAPHICS_PANIC_WITH("Failed to create surface for swapchain: {}", createInfo.Name);
+    auto surface = VkSurfaceKHR();
+    if (oldSwapchain) {
+      surface = oldSwapchain->_surface;
+    } else {
+      surface = static_cast<VkSurfaceKHR>(createInfo.MakeSurface(device.GetInstance().GetHandle(), window.GetHandle()));
+      if (!surface) {
+        RETINA_GRAPHICS_PANIC_WITH("Failed to create surface for swapchain: {}", createInfo.Name);
+      }
     }
     if (!Details::IsSurfaceSupported(device, EQueueDomain::E_GRAPHICS, surface)) {
       RETINA_GRAPHICS_PANIC_WITH("Surface not supported by graphics queue for swapchain: {}", createInfo.Name);
@@ -259,7 +267,9 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapchainCreateInfo.presentMode = surfacePresentMode;
     swapchainCreateInfo.clipped = true;
-    swapchainCreateInfo.oldSwapchain = {};
+    if (oldSwapchain) {
+      swapchainCreateInfo.oldSwapchain = oldSwapchain->_handle;
+    }
 
     auto swapchainHandle = VkSwapchainKHR();
     RETINA_GRAPHICS_VULKAN_CHECK(vkCreateSwapchainKHR(device.GetHandle(), &swapchainCreateInfo, nullptr, &swapchainHandle));
@@ -285,6 +295,22 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     });
     self->_images = std::move(swapchainImages);
 
+    return self;
+  }
+
+  auto CSwapchain::Recreate(Core::CArcPtr<CSwapchain>&& oldSwapchain) noexcept -> Core::CArcPtr<CSwapchain> {
+    RETINA_PROFILE_SCOPED();
+    const auto& device = oldSwapchain->GetDevice();
+    const auto& window = oldSwapchain->GetWindow();
+    const auto createInfo = oldSwapchain->GetCreateInfo();
+    auto self = Make(device, window, createInfo, oldSwapchain.Get());
+    device.GetDeletionQueue().Enqueue({
+      .TimeToLive = 4,
+      .Deletion = [oldSwapchain = std::move(oldSwapchain)] mutable noexcept {
+        // Don't delete the surface, we still need it
+        oldSwapchain->_surface = {};
+      }
+    });
     return self;
   }
 

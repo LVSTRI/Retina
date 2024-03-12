@@ -44,6 +44,11 @@ namespace Retina::Graphics {
     return _deviceTimeline->GetCounter();
   }
 
+  auto CHostDeviceTimeline::GetCurrentTimelineDifference() const noexcept -> uint64 {
+    RETINA_PROFILE_SCOPED();
+    return GetHostTimelineValue() - GetDeviceTimelineValue();
+  }
+
   auto CHostDeviceTimeline::WaitForNextHostTimelineValue() noexcept -> uint64 {
     RETINA_PROFILE_SCOPED();
     const auto target = static_cast<int64>(_hostTimelineValue) - static_cast<int64>(_maxTimelineDifference);

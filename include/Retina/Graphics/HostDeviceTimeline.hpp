@@ -23,6 +23,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetDevice() const noexcept -> const CDevice&;
 
     RETINA_NODISCARD auto GetDeviceTimelineValue() const noexcept -> uint64;
+    RETINA_NODISCARD auto GetCurrentTimelineDifference() const noexcept -> uint64;
 
     RETINA_NODISCARD auto WaitForNextHostTimelineValue() noexcept -> uint64;
 
