@@ -593,7 +593,7 @@ namespace Retina::Graphics {
 
   auto CDevice::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(_handle, _handle, VK_OBJECT_TYPE_DEVICE, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(_handle, _handle, VK_OBJECT_TYPE_DEVICE, name);
     _createInfo.Name = name;
   }
 

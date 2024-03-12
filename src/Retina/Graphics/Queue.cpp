@@ -80,7 +80,7 @@ namespace Retina::Graphics {
 
   auto CQueue::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_QUEUE, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_QUEUE, name);
     _createInfo.Name = name;
   }
 
@@ -109,6 +109,7 @@ namespace Retina::Graphics {
     for (auto& timeline : submitInfo.Timelines) {
       auto semaphoreInfo = VkSemaphoreSubmitInfo(VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO);
       semaphoreInfo.semaphore = timeline->GetDeviceTimeline().GetHandle();
+      // TODO: maybe make this a parameter?
       semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_NONE;
       semaphoreInfo.value = timeline->GetNextHostTimelineValue();
       signalSemaphoreInfos.emplace_back(semaphoreInfo);

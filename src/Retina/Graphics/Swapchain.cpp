@@ -373,7 +373,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
 
   auto CSwapchain::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SWAPCHAIN_KHR, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SWAPCHAIN_KHR, name);
     _createInfo.Name = name;
   }
 

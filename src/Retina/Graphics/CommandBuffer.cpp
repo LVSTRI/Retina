@@ -111,11 +111,9 @@ namespace Retina::Graphics {
     auto commandBuffers = std::vector<Core::CArcPtr<CCommandBuffer>>();
     commandBuffers.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
-      commandBuffers.push_back(Make(queue, {
-        .Name = std::format("{}{}", createInfo.Name, i),
-        .Level = createInfo.Level,
-        .PoolInfo = createInfo.PoolInfo
-      }));
+      auto currentCreateInfo = createInfo;
+      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      commandBuffers.emplace_back(Make(queue, currentCreateInfo));
     }
     return commandBuffers;
   }
@@ -160,11 +158,9 @@ namespace Retina::Graphics {
     auto commandBuffers = std::vector<Core::CArcPtr<CCommandBuffer>>();
     commandBuffers.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
-      commandBuffers.push_back(MakeWith(commandPool, {
-        .Name = std::format("{}{}", createInfo.Name, i),
-        .Level = createInfo.Level,
-        .PoolInfo = createInfo.PoolInfo
-      }));
+      auto currentCreateInfo = createInfo;
+      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      commandBuffers.emplace_back(MakeWith(commandPool, currentCreateInfo));
     }
     return commandBuffers;
   }
@@ -196,7 +192,7 @@ namespace Retina::Graphics {
 
   auto CCommandBuffer::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(GetQueue().GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_COMMAND_BUFFER, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(GetQueue().GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_COMMAND_BUFFER, name);
     _createInfo.Name = name;
   }
 
@@ -299,13 +295,13 @@ namespace Retina::Graphics {
     auto memoryBarriers = std::vector<VkMemoryBarrier2>();
     memoryBarriers.reserve(barrierInfo.MemoryBarriers.size());
     for (const auto& barrier : barrierInfo.MemoryBarriers) {
-      memoryBarriers.push_back(Details::MakeNativeMemoryBarrier(barrier));
+      memoryBarriers.emplace_back(Details::MakeNativeMemoryBarrier(barrier));
     }
 
     auto imageMemoryBarriers = std::vector<VkImageMemoryBarrier2>();
     imageMemoryBarriers.reserve(barrierInfo.ImageMemoryBarriers.size());
     for (const auto& barrier : barrierInfo.ImageMemoryBarriers) {
-      imageMemoryBarriers.push_back(Details::MakeNativeImageMemoryBarrier(barrier));
+      imageMemoryBarriers.emplace_back(Details::MakeNativeImageMemoryBarrier(barrier));
     }
 
     auto dependencyInfo = VkDependencyInfo(VK_STRUCTURE_TYPE_DEPENDENCY_INFO);

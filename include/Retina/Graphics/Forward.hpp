@@ -30,6 +30,19 @@ namespace Retina::Graphics {
   // <Retina/Graphics/CommandPoolInfo.hpp>
   struct SCommandPoolCreateInfo;
 
+  // <Retina/Graphics/DeletionQueue.hpp>
+  class CDeletionQueue;
+
+  // <Retina/Graphics/DeletionQueueInfo.hpp>
+  struct SDeletionQueuePacket;
+
+  // <Retina/Graphics/DescriptorPool.hpp>
+  class CDescriptorPool;
+
+  // <Retina/Graphics/DescriptorPoolInfo.hpp>
+  struct SDescriptorPoolSize;
+  struct SDescriptorPoolCreateInfo;
+
   // <Retina/Graphics/Device.hpp>
   class CDevice;
 
@@ -72,6 +85,26 @@ namespace Retina::Graphics {
   // <Retina/Graphics/InstanceInfo.hpp>
   struct SInstanceFeature;
   struct SInstanceCreateInfo;
+
+  // <Retina/Graphics/PipelineInfo.hpp>
+  enum class EPipelineType;
+  struct SViewport;
+  struct SScissor;
+  struct SPipelineStencilState;
+  struct SPipelineColorBlendAttachmentInfo;
+  struct SPipelineTessellationStateInfo;
+  struct SPipelineViewportStateInfo;
+  struct SPipelineRasterizationStateInfo;
+  struct SPipelineMultisampleStateInfo;
+  struct SPipelineDepthStencilStateInfo;
+  struct SPipelineColorBlendStateInfo;
+  struct SPipelineDynamicStateInfo;
+  struct SPipelineRenderingInfo;
+  struct SPipelinePushConstantInfo;
+  struct SPipelineLayout;
+  struct SComputePipelineCreateInfo;
+  struct SGraphicsPipelineCreateInfo;
+  struct SMeshShadingPipelineCreateInfo;
 
   // <Retina/Graphics/Queue.hpp>
   class CQueue;

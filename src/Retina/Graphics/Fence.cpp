@@ -67,7 +67,7 @@ namespace Retina::Graphics {
 
   auto CFence::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(_device->GetHandle(), _handle, VK_OBJECT_TYPE_FENCE, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(_device->GetHandle(), _handle, VK_OBJECT_TYPE_FENCE, name);
     _createInfo.Name = name;
   }
 

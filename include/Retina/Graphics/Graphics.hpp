@@ -19,6 +19,7 @@
 #include <Retina/Graphics/InstanceInfo.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/Queue.hpp>
 #include <Retina/Graphics/QueueInfo.hpp>
 #include <Retina/Graphics/Semaphore.hpp>

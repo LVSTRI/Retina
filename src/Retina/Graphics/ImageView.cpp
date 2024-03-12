@@ -116,7 +116,7 @@ namespace Retina::Graphics {
 
   auto CImageView::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(GetImage().GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_IMAGE_VIEW, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(GetImage().GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_IMAGE_VIEW, name);
     _createInfo.Name = name;
   }
 }

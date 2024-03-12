@@ -44,9 +44,9 @@ namespace Retina::Graphics {
     auto semaphores = std::vector<Core::CArcPtr<CBinarySemaphore>>();
     semaphores.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
-      semaphores.emplace_back(Make(device, {
-        .Name = fmt::format("{}{}", createInfo.Name, i)
-      }));
+      auto currentCreateInfo = createInfo;
+      currentCreateInfo.Name = std::format("{}{}", createInfo.Name, i);
+      semaphores.emplace_back(Make(device, currentCreateInfo));
     }
     return semaphores;
   }
@@ -63,7 +63,7 @@ namespace Retina::Graphics {
 
   auto CBinarySemaphore::SetDebugName(std::string_view name) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    RETINA_GRAPHICS_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
+    RETINA_GRAPHICS_SET_DEBUG_NAME(GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_SEMAPHORE, name);
     _createInfo.Name = name;
   }
 }
