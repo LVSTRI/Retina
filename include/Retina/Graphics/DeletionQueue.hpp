@@ -9,18 +9,20 @@
 namespace Retina::Graphics {
   class CDeletionQueue {
   public:
-    CDeletionQueue() noexcept = default;
+    CDeletionQueue(const CDevice& device) noexcept;
     ~CDeletionQueue() noexcept = default;
     RETINA_DELETE_COPY(CDeletionQueue);
     RETINA_DEFAULT_MOVE(CDeletionQueue);
 
-    RETINA_NODISCARD static auto Make() noexcept -> std::unique_ptr<CDeletionQueue>;
+    RETINA_NODISCARD static auto Make(const CDevice& device) noexcept -> std::unique_ptr<CDeletionQueue>;
 
-    auto Enqueue(SDeletionQueuePacket&& packet) noexcept -> void;
+    auto Enqueue(std::move_only_function<void()>&& packet) noexcept -> void;
     auto Tick() noexcept -> void;
     auto Flush() noexcept -> void;
 
   private:
     std::vector<SDeletionQueuePacket> _packets;
+
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

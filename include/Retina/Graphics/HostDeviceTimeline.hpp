@@ -10,7 +10,7 @@ namespace Retina::Graphics {
   class CHostDeviceTimeline {
   public:
     CHostDeviceTimeline(const CDevice& device) noexcept;
-    ~CHostDeviceTimeline() noexcept = default;
+    ~CHostDeviceTimeline() noexcept;
     RETINA_DELETE_COPY(CHostDeviceTimeline);
     RETINA_DEFAULT_MOVE(CHostDeviceTimeline);
 
@@ -27,7 +27,8 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetDeviceTimelineValue() const noexcept -> uint64;
     RETINA_NODISCARD auto GetCurrentTimelineDifference() const noexcept -> uint64;
 
-    RETINA_NODISCARD auto WaitForNextHostTimelineValue() noexcept -> uint64;
+    RETINA_NODISCARD auto GetNextHostTimelineValue() noexcept -> uint64;
+    RETINA_NODISCARD auto WaitForNextHostTimelineValue() const noexcept -> uint64;
 
   private:
     uint64 _maxTimelineDifference = 0;

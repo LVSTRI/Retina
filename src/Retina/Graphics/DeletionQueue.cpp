@@ -1,25 +1,33 @@
 #include <Retina/Graphics/DeletionQueue.hpp>
+#include <Retina/Graphics/Device.hpp>
+#include <Retina/Graphics/HostDeviceTimeline.hpp>
 
 namespace Retina::Graphics {
-  auto CDeletionQueue::Make() noexcept -> std::unique_ptr<CDeletionQueue> {
+  CDeletionQueue::CDeletionQueue(const CDevice& device) noexcept
+    : _device(device) {}
+
+  auto CDeletionQueue::Make(const CDevice& device) noexcept -> std::unique_ptr<CDeletionQueue> {
     RETINA_PROFILE_SCOPED();
-    return std::make_unique<CDeletionQueue>();
+    return std::make_unique<CDeletionQueue>(device);
   }
 
-  auto CDeletionQueue::Enqueue(SDeletionQueuePacket&& packet) noexcept -> void {
+  auto CDeletionQueue::Enqueue(std::move_only_function<void()>&& packet) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    _packets.emplace_back(std::move(packet));
+    const auto& mainTimeline = _device->GetMainTimeline();
+    _packets.emplace_back(mainTimeline.GetHostTimelineValue(), std::move(packet));
   }
 
   auto CDeletionQueue::Tick() noexcept -> void {
     RETINA_PROFILE_SCOPED();
+    const auto& mainTimeline = _device->GetMainTimeline();
+    const auto currentTimelineValue = mainTimeline.GetDeviceTimelineValue();
     for (auto& packet : _packets) {
-      if (--packet.TimeToLive == 0) {
+      if (packet.TimelineValue < currentTimelineValue) {
         packet.Deletion();
       }
     }
-    std::erase_if(_packets, [](const SDeletionQueuePacket& packet) {
-      return packet.TimeToLive == 0;
+    std::erase_if(_packets, [currentTimelineValue](const SDeletionQueuePacket& packet) {
+      return packet.TimelineValue < currentTimelineValue;
     });
   }
 

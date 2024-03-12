@@ -28,6 +28,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetComputeQueue() const noexcept -> CQueue&;
     RETINA_NODISCARD auto GetTransferQueue() const noexcept -> CQueue&;
 
+    RETINA_NODISCARD auto GetMainTimeline() const noexcept -> CHostDeviceTimeline&;
     RETINA_NODISCARD auto GetDeletionQueue() const noexcept -> CDeletionQueue&;
 
     template <typename T>
@@ -54,6 +55,7 @@ namespace Retina::Graphics {
     Core::CArcPtr<CQueue> _computeQueue;
     Core::CArcPtr<CQueue> _transferQueue;
 
+    std::unique_ptr<CHostDeviceTimeline> _mainTimeline;
     std::unique_ptr<CDeletionQueue> _deletionQueue;
 
     SDeviceRayTracingProperties _rayTracingProperties = {};

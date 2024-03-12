@@ -8,7 +8,7 @@
 #include <memory>
 #include <format>
 
-#if defined(RETINA_ENABLE_LOGGING)
+#if defined(RETINA_ENABLE_LOGGER)
   #define RETINA_LOGGER_TRACE(f, ...) f.Trace(__VA_ARGS__)
   #define RETINA_LOGGER_DEBUG(f, ...) f.Debug(__VA_ARGS__)
   #define RETINA_LOGGER_INFO(f, ...) f.Info(__VA_ARGS__)

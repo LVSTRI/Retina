@@ -31,6 +31,6 @@ namespace Retina::Graphics {
     std::vector<Core::CReferenceWrapper<const CCommandBuffer>> CommandBuffers;
     std::vector<SQueueSemaphoreSubmitInfo> WaitSemaphores;
     std::vector<SQueueSemaphoreSubmitInfo> SignalSemaphores;
-    const CHostDeviceTimeline* Timeline = nullptr;
+    std::vector<Core::CReferenceWrapper<CHostDeviceTimeline>> Timelines;
   };
 }

@@ -106,12 +106,11 @@ namespace Retina::Graphics {
       signalSemaphoreInfos.emplace_back(semaphoreSubmitInfo);
     }
 
-    if (submitInfo.Timeline) {
-      const auto& timeline = *submitInfo.Timeline;
+    for (auto& timeline : submitInfo.Timelines) {
       auto semaphoreInfo = VkSemaphoreSubmitInfo(VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO);
-      semaphoreInfo.semaphore = timeline.GetDeviceTimeline().GetHandle();
+      semaphoreInfo.semaphore = timeline->GetDeviceTimeline().GetHandle();
       semaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_NONE;
-      semaphoreInfo.value = timeline.GetHostTimelineValue();
+      semaphoreInfo.value = timeline->GetNextHostTimelineValue();
       signalSemaphoreInfos.emplace_back(semaphoreInfo);
     }
 

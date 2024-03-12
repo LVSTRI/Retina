@@ -6,7 +6,7 @@
 
 namespace Retina::Graphics {
   struct SDeletionQueuePacket {
-    uint64 TimeToLive = 0;
+    uint64 TimelineValue = 0;
     std::move_only_function<void()> Deletion;
   };
 }

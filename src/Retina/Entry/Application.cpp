@@ -50,7 +50,7 @@ namespace Retina::Entry {
       .Name = "PresentReadySemaphore",
     });
 
-    _mainTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
+    _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
     _mainImage = Graphics::CImage::Make(*_device, {
       .Name = "MainImage",
@@ -220,7 +220,10 @@ namespace Retina::Entry {
       .SignalSemaphores = {
         { *_presentReadySemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER },
       },
-      .Timeline = _mainTimeline.get(),
+      .Timelines = {
+        *_frameTimeline,
+        _device->GetMainTimeline(),
+      }
     });
 
     if (!_swapchain->Present({ { *_presentReadySemaphores[frameIndex] } })) {
@@ -230,6 +233,6 @@ namespace Retina::Entry {
 
   auto CApplication::WaitForNextFrameIndex() noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
-    return _mainTimeline->WaitForNextHostTimelineValue() % FRAMES_IN_FLIGHT;
+    return _frameTimeline->WaitForNextHostTimelineValue() % FRAMES_IN_FLIGHT;
   }
 }

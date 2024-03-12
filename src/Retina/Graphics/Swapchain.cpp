@@ -304,12 +304,9 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     const auto& window = oldSwapchain->GetWindow();
     const auto createInfo = oldSwapchain->GetCreateInfo();
     auto self = Make(device, window, createInfo, oldSwapchain.Get());
-    device.GetDeletionQueue().Enqueue({
-      .TimeToLive = 4,
-      .Deletion = [oldSwapchain = std::move(oldSwapchain)] mutable noexcept {
-        // Don't delete the surface, we still need it
-        oldSwapchain->_surface = {};
-      }
+    device.GetDeletionQueue().Enqueue([oldSwapchain = std::move(oldSwapchain)] mutable noexcept {
+      // Don't delete the surface, we still need it
+      oldSwapchain->_surface = {};
     });
     return self;
   }

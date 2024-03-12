@@ -9,6 +9,8 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
   }
 
+  CHostDeviceTimeline::~CHostDeviceTimeline() noexcept = default;
+
   auto CHostDeviceTimeline::Make(
     const CDevice& device,
     uint64 maxTimelineDifference
@@ -54,12 +56,17 @@ namespace Retina::Graphics {
     return GetHostTimelineValue() - GetDeviceTimelineValue();
   }
 
-  auto CHostDeviceTimeline::WaitForNextHostTimelineValue() noexcept -> uint64 {
+  auto CHostDeviceTimeline::GetNextHostTimelineValue() noexcept -> uint64 {
+    RETINA_PROFILE_SCOPED();
+    return ++_hostTimelineValue;
+  }
+
+  auto CHostDeviceTimeline::WaitForNextHostTimelineValue() const noexcept -> uint64 {
     RETINA_PROFILE_SCOPED();
     const auto target = static_cast<int64>(_hostTimelineValue) - static_cast<int64>(_maxTimelineDifference);
     const auto next = std::max<int64>(target + 1, 0);
     _deviceTimeline->Wait(next);
-    return _hostTimelineValue++;
+    return _hostTimelineValue;
   }
 }
 

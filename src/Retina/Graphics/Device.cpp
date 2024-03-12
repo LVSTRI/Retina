@@ -1,4 +1,5 @@
 #include <Retina/Graphics/Device.hpp>
+#include <Retina/Graphics/HostDeviceTimeline.hpp>
 #include <Retina/Graphics/Instance.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Queue.hpp>
@@ -441,6 +442,7 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
       _deletionQueue->Flush();
+      _mainTimeline.reset();
       _transferQueue.Reset();
       _computeQueue.Reset();
       _graphicsQueue.Reset();
@@ -499,7 +501,6 @@ namespace Retina::Graphics {
     self->_handle = deviceHandle;
     self->_physicalDevice = physicalDevice;
     self->_allocator = allocator;
-    self->_deletionQueue = CDeletionQueue::Make();
     self->_rayTracingProperties = deviceRayTracingProperties;
     self->_createInfo = createInfo;
     self->_instance = instance.ToArcPtr();
@@ -528,6 +529,8 @@ namespace Retina::Graphics {
         .QueueIndex = transferQueueFamily.Index,
       });
     }
+    self->_mainTimeline = CHostDeviceTimeline::Make(*self, -1);
+    self->_deletionQueue = CDeletionQueue::Make(*self);
     self->SetDebugName(createInfo.Name);
 
     return self;
@@ -561,6 +564,11 @@ namespace Retina::Graphics {
   auto CDevice::GetTransferQueue() const noexcept -> CQueue& {
     RETINA_PROFILE_SCOPED();
     return *_transferQueue;
+  }
+
+  auto CDevice::GetMainTimeline() const noexcept -> CHostDeviceTimeline& {
+    RETINA_PROFILE_SCOPED();
+    return *_mainTimeline;
   }
 
   auto CDevice::GetDeletionQueue() const noexcept -> CDeletionQueue& {
