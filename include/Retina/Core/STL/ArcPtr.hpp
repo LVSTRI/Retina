@@ -31,7 +31,7 @@ namespace Retina::Core {
     RETINA_NODISCARD RETINA_INLINE constexpr auto AsConst() const noexcept -> CArcPtr<C>;
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator !() const noexcept -> bool;
-    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CArcPtr&) const noexcept -> std::strong_ordering;
+    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CArcPtr&) const noexcept -> std::strong_ordering = default;
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator *() const noexcept -> T&;
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator ->() const noexcept -> T*;
@@ -138,9 +138,6 @@ namespace Retina::Core {
   constexpr auto CArcPtr<T>::operator !() const noexcept -> bool {
     return !_ptr;
   }
-
-  template <typename T>
-  constexpr auto CArcPtr<T>::operator <=>(const CArcPtr&) const noexcept -> std::strong_ordering = default;
 
   template <typename T>
   constexpr auto CArcPtr<T>::operator *() const noexcept -> T& {

@@ -202,6 +202,8 @@ namespace Retina::Entry {
     }
     _device->Tick();
 
+    const auto& viewBuffer = _viewBuffer[frameIndex];
+
     auto& commandBuffer = *_commandBuffers[frameIndex];
     commandBuffer.GetCommandPool().Reset();
     commandBuffer
@@ -230,7 +232,7 @@ namespace Retina::Entry {
       .SetScissor()
       .BindPipeline(*_mainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
-      .PushConstants(_viewBuffer[frameIndex].GetHandle())
+      .PushConstants(viewBuffer.GetHandle())
       .DrawMeshTasks(1)
       .EndRendering()
       .Barrier({
