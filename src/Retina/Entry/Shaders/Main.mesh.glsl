@@ -1,5 +1,7 @@
 #extension GL_EXT_mesh_shader : require
 
+#include <Retina/Retina.glsl>
+
 const vec3[] trianglePositions = vec3[](
   vec3( 0.0, -0.5, 0.0),
   vec3(-0.5,  0.5, 0.0),

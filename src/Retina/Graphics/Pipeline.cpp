@@ -26,8 +26,8 @@ namespace Retina::Graphics {
       CShaderIncludeResult(std::filesystem::path path) noexcept
         : ShadercIncludeResult(),
           _path(std::move(path)),
-          _filename(_path.filename().string()),
-          _file(_filename)
+          _filename(_path.filename().generic_string()),
+          _file(_path.generic_string())
       {
         RETINA_PROFILE_SCOPED();
         ShadercIncludeResult::content = _file.data();
