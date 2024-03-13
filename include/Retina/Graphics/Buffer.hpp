@@ -82,7 +82,7 @@ namespace Retina::Graphics {
 
   template <typename T>
   auto CBuffer::Write(std::span<const T> values, usize offset) noexcept -> void {
-    Write(values.data(), values.size_bytes(), offset * sizeof(T));
+    Write(values.data(), offset * sizeof(T), values.size_bytes());
   }
 
   template <typename T>

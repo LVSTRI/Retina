@@ -18,13 +18,24 @@ layout (location = 0) out SVertexData {
   vec3 Color;
 } o_vertexData[];
 
+RetinaDeclarePushConstant() {
+  uint u_ViewBufferIndex;
+};
+
+RetinaDeclareBuffer(restrict readonly, SViewInfoBuffer) {
+  mat4 Projection;
+  mat4 View;
+  mat4 ProjView;
+};
+RetinaBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferIndex);
+
 layout (local_size_x = 1) in;
 layout (triangles, max_vertices = 3, max_primitives = 1) out;
 void main() {
   SetMeshOutputsEXT(3, 1);
   for (uint i = 0; i < 3; i++) {
     o_vertexData[i].Color = triangleColors[i];
-    gl_MeshVerticesEXT[i].gl_Position = vec4(trianglePositions[i], 1.0);
+    gl_MeshVerticesEXT[i].gl_Position = g_ViewInfoBuffer.ProjView * vec4(trianglePositions[i], 1.0);
   }
 
   gl_PrimitiveTriangleIndicesEXT[0] = uvec3(0, 1, 2);

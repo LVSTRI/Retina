@@ -79,6 +79,8 @@ namespace Retina::WSI {
     glfwSetWindowUserPointer(windowHandle, self.get());
     glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* window, int32 width, int32 height) {
       auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+      self._createInfo.Width = width;
+      self._createInfo.Height = height;
       self.GetEventDispatcher().Fire<SWindowResizeEvent>(width, height);
     });
     glfwSetWindowCloseCallback(windowHandle, [](GLFWwindow* window) {

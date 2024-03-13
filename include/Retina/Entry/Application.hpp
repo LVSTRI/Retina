@@ -7,6 +7,8 @@
 #include <Retina/WSI/WSI.hpp>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <optional>
 
@@ -42,6 +44,7 @@ namespace Retina::Entry {
     auto OnRender() noexcept -> void;
 
     auto WaitForNextFrameIndex() noexcept -> uint32;
+    auto GetCurrentFrameIndex() noexcept -> uint32;
 
     bool _isRunning = true;
 

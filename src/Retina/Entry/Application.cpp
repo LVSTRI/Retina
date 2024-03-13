@@ -177,11 +177,27 @@ namespace Retina::Entry {
       WSI::WaitEvents();
     }
     WSI::PollEvents();
+
+    const auto frameIndex = WaitForNextFrameIndex();
+
+    auto& viewBuffer = _viewBuffer[frameIndex];
+    {
+      const auto aspectRatio = _window->GetWidth() / static_cast<float32>(_window->GetHeight());
+      const auto projection = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 100.0f);
+      const auto view = glm::lookAt(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+      const auto projView = projection * view;
+      viewBuffer->Write(SViewInfo {
+        .Projection = projection,
+        .View = view,
+        .ProjView = projView,
+      });
+    }
+
   }
 
   auto CApplication::OnRender() noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    const auto frameIndex = WaitForNextFrameIndex();
+    const auto frameIndex = GetCurrentFrameIndex();
     if (!_swapchain->AcquireNextImage(*_imageAvailableSemaphores[frameIndex])) {
       return;
     }
@@ -273,5 +289,10 @@ namespace Retina::Entry {
   auto CApplication::WaitForNextFrameIndex() noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
     return _frameTimeline->WaitForNextHostTimelineValue() % FRAMES_IN_FLIGHT;
+  }
+
+  auto CApplication::GetCurrentFrameIndex() noexcept -> uint32 {
+    RETINA_PROFILE_SCOPED();
+    return _frameTimeline->GetHostTimelineValue() % FRAMES_IN_FLIGHT;
   }
 }
