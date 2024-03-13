@@ -26,7 +26,6 @@ namespace Retina::Graphics {
 
     RETINA_NODISCARD RETINA_INLINE auto GetSize() const noexcept -> usize;
 
-    RETINA_NODISCARD RETINA_INLINE auto GetCapacity() const noexcept -> usize;
     RETINA_NODISCARD RETINA_INLINE auto GetData() const noexcept -> T*;
 
     RETINA_NODISCARD RETINA_INLINE auto GetDescriptor(usize offset = 0, usize size = WHOLE_SIZE) const noexcept -> SBufferDescriptor;
@@ -91,13 +90,7 @@ namespace Retina::Graphics {
   template <typename T>
   auto CTypedBuffer<T>::GetSize() const noexcept -> usize {
     RETINA_PROFILE_SCOPED();
-    return CBuffer::GetSize() / sizeof(T);
-  }
-
-  template <typename T>
-  auto CTypedBuffer<T>::GetCapacity() const noexcept -> usize {
-    RETINA_PROFILE_SCOPED();
-    return CBuffer::GetCapacity() / sizeof(T);
+    return CBuffer::GetSizeBytes() / sizeof(T);
   }
 
   template <typename T>

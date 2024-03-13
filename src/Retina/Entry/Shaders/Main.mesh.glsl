@@ -22,7 +22,7 @@ RetinaDeclarePushConstant() {
   uint u_ViewBufferIndex;
 };
 
-RetinaDeclareBuffer(restrict readonly, SViewInfoBuffer) {
+RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
   mat4 Projection;
   mat4 View;
   mat4 ProjView;

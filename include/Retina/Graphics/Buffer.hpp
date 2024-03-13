@@ -28,7 +28,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetAllocation() const noexcept -> VmaAllocation;
     RETINA_NODISCARD auto GetAllocationInfo() const noexcept -> VmaAllocationInfo;
 
-    RETINA_NODISCARD auto GetSize() const noexcept -> usize;
+    RETINA_NODISCARD auto GetSizeBytes() const noexcept -> usize;
     RETINA_NODISCARD auto GetAddress() const noexcept -> usize;
 
     RETINA_NODISCARD auto GetCreateInfo() const noexcept -> const SBufferCreateInfo&;

@@ -96,7 +96,7 @@ namespace Retina::Graphics {
     return _allocationInfo;
   }
 
-  auto CBuffer::GetSize() const noexcept -> usize {
+  auto CBuffer::GetSizeBytes() const noexcept -> usize {
     RETINA_PROFILE_SCOPED();
     return _size;
   }

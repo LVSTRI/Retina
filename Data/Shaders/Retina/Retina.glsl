@@ -46,7 +46,10 @@
 #define RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name) \
   RETINA_STORAGE_IMAGE_LAYOUT uniform type[] u_StorageImageTable_##name
 
-#define RETINA_DECLARE_BUFFER_TYPE(qualifier, name) \
+#define RETINA_DECLARE_BUFFER_TYPE(name) \
+  RETINA_BUFFER_POINTER_LAYOUT buffer SBufferPointerType_##name
+
+#define RETINA_DECLARE_QUALIFIED_BUFFER_TYPE(qualifier, name) \
   RETINA_BUFFER_POINTER_LAYOUT qualifier buffer SBufferPointerType_##name
 
 RETINA_DECLARE_SAMPLER_DESCRIPTOR();
@@ -65,7 +68,8 @@ restrict readonly buffer SAddressTable {
 #define RetinaDeclareStorageImage(type, name) RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name)
 #define RetinaGetStorageImage(name, id) u_StorageImageTable_##name[id]
 
-#define RetinaDeclareBuffer(qualifier, name) RETINA_DECLARE_BUFFER_TYPE(qualifier, name)
+#define RetinaDeclareBuffer(name) RETINA_DECLARE_BUFFER_TYPE(name)
+#define RetinaDeclareQualifiedBuffer(qualifier, name) RETINA_DECLARE_QUALIFIED_BUFFER_TYPE(qualifier, name)
 #define RetinaGetBufferType(name) SBufferPointerType_##name
 #define RetinaGetBufferPointer(name, id) RetinaGetBufferType(name)(b_AddressTable.Data[id])
 #define RetinaDeclareBufferPointer(type, name, id) RetinaGetBufferType(type) name = RetinaGetBufferPointer(type, id)
