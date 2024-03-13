@@ -77,6 +77,7 @@ namespace Retina::Graphics {
 
     auto Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer&;
     auto MemoryBarrier(const SMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
+    auto BufferMemoryBarrier(const SBufferMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
     auto ImageMemoryBarrier(const SImageMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
 
     auto CopyImage(const CImage& source, const CImage& dest, SImageCopyRegion copyRegion) noexcept -> CCommandBuffer&;

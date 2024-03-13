@@ -28,6 +28,11 @@ namespace Retina::Graphics {
     ),
   };
 
+  struct SBufferMemoryRange {
+    uint64 Offset = 0;
+    uint64 Size = 0;
+  };
+
   struct SBufferCreateInfo {
     std::string Name;
     EBufferCreateFlag Flags = {};

@@ -2,6 +2,7 @@
 
 #include <Retina/Core/Core.hpp>
 
+#include <Retina/Graphics/BufferInfo.hpp>
 #include <Retina/Graphics/CommandPoolInfo.hpp>
 #include <Retina/Graphics/ImageInfo.hpp>
 
@@ -43,6 +44,15 @@ namespace Retina::Graphics {
     EResourceAccessFlag DestAccess = EResourceAccessFlag::E_MEMORY_WRITE | EResourceAccessFlag::E_MEMORY_READ;
   };
 
+  struct SBufferMemoryBarrier {
+    Core::CReferenceWrapper<const CBuffer> Buffer;
+    EPipelineStageFlag SourceStage = EPipelineStageFlag::E_ALL_COMMANDS;
+    EPipelineStageFlag DestStage = EPipelineStageFlag::E_ALL_COMMANDS;
+    EResourceAccessFlag SourceAccess = EResourceAccessFlag::E_MEMORY_WRITE;
+    EResourceAccessFlag DestAccess = EResourceAccessFlag::E_MEMORY_WRITE | EResourceAccessFlag::E_MEMORY_READ;
+    SBufferMemoryRange MemoryRange = {};
+  };
+
   struct SImageMemoryBarrier {
     Core::CReferenceWrapper<const CImage> Image;
     EPipelineStageFlag SourceStage = EPipelineStageFlag::E_ALL_COMMANDS;
@@ -56,6 +66,7 @@ namespace Retina::Graphics {
 
   struct SMemoryBarrierInfo {
     std::vector<SMemoryBarrier> MemoryBarriers;
+    std::vector<SBufferMemoryBarrier> BufferMemoryBarriers;
     std::vector<SImageMemoryBarrier> ImageMemoryBarriers;
   };
 

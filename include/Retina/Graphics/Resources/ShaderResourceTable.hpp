@@ -7,11 +7,12 @@
 #include <Retina/Graphics/Forward.hpp>
 #include <Retina/Graphics/TypedBuffer.hpp>
 
+#include <array>
+
 namespace Retina::Graphics {
   constexpr static auto MAX_SAMPLER_RESOURCE_SLOTS = 1024_u32;
   constexpr static auto MAX_BUFFER_RESOURCE_SLOTS = 1048576_u32;
   constexpr static auto MAX_IMAGE_RESOURCE_SLOTS = 262144_u32;
-  constexpr static auto MAX_IMAGE_VIEW_RESOURCE_SLOTS = MAX_IMAGE_RESOURCE_SLOTS;
 
   class CShaderResourceTable {
   public:
@@ -37,11 +38,25 @@ namespace Retina::Graphics {
       const SBufferCreateInfo& createInfo
     ) noexcept -> std::vector<CShaderResource<CTypedBuffer<T>>>;
 
+    RETINA_NODISCARD auto MakeImage(
+      const SImageCreateInfo& createInfo,
+      EImageLayout layout = EImageLayout::E_GENERAL
+    ) noexcept -> CShaderResource<CImage>;
+
+    RETINA_NODISCARD auto MakeImageView(
+      const CImage& image,
+      const SImageViewCreateInfo& createInfo,
+      EImageLayout layout = EImageLayout::E_GENERAL
+    ) noexcept -> CShaderResource<CImageView>;
+
   private:
     // TODO: samplers
-    Core::CFixedSlotVector<Core::CArcPtr<CBuffer>, MAX_BUFFER_RESOURCE_SLOTS> _buffers;
-    Core::CFixedSlotVector<Core::CArcPtr<CImage>, MAX_IMAGE_RESOURCE_SLOTS> _images;
-    Core::CFixedSlotVector<Core::CArcPtr<CImageView>, MAX_IMAGE_VIEW_RESOURCE_SLOTS> _imageViews;
+    Core::CSlotAllocator<MAX_BUFFER_RESOURCE_SLOTS> _bufferSlots;
+    Core::CSlotAllocator<MAX_IMAGE_RESOURCE_SLOTS> _imageSlots;
+
+    std::array<Core::CArcPtr<CBuffer>, MAX_BUFFER_RESOURCE_SLOTS> _bufferStorage;
+    std::array<Core::CArcPtr<CImage>, MAX_IMAGE_RESOURCE_SLOTS> _imageStorage;
+    std::array<Core::CArcPtr<CImageView>, MAX_IMAGE_RESOURCE_SLOTS> _imageViewStorage;
 
     Core::CArcPtr<CDescriptorSet> _descriptorSet;
     Core::CArcPtr<CTypedBuffer<usize>> _addressBuffer;
@@ -55,7 +70,8 @@ namespace Retina::Graphics {
   ) noexcept -> CShaderResource<CTypedBuffer<T>> {
     RETINA_PROFILE_SCOPED();
     auto buffer = CTypedBuffer<T>::Make(_device, createInfo);
-    const auto slot = _buffers.Insert(buffer.template As<CBuffer>());
+    const auto slot = _bufferSlots.Allocate();
+    _bufferStorage[slot] = buffer.template As<CBuffer>();
     _addressBuffer->Write(buffer->GetAddress(), slot);
     return CShaderResource<CTypedBuffer<T>>::Make(*buffer, slot);
   }
@@ -70,7 +86,8 @@ namespace Retina::Graphics {
     auto resources = std::vector<CShaderResource<CTypedBuffer<T>>>();
     resources.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
-      const auto slot = _buffers.Insert(buffers[i].template As<CBuffer>());
+      const auto slot = _bufferSlots.Allocate();
+      _bufferStorage[slot] = buffers[i].template As<CBuffer>();
       _addressBuffer->Write(buffers[i]->GetAddress(), slot);
       resources.emplace_back(CShaderResource<CTypedBuffer<T>>::Make(*buffers[i], slot));
     }

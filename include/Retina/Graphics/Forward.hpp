@@ -16,6 +16,7 @@ namespace Retina::Graphics {
 
   // <Retina/Graphics/BufferInfo.hpp>
   enum class EHeapType;
+  struct SBufferMemoryRange;
   struct SBufferCreateInfo;
 
   // <Retina/Graphics/CommandBuffer.hpp>
@@ -27,6 +28,7 @@ namespace Retina::Graphics {
   struct SDrawMeshTasksIndirectCommand;
   struct SDispatchIndirectCommand;
   struct SMemoryBarrier;
+  struct SBufferMemoryBarrier;
   struct SImageMemoryBarrier;
   struct SMemoryBarrierInfo;
   struct SImageCopyRegion;

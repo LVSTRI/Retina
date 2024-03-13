@@ -10,6 +10,7 @@
 #include <Retina/Core/STL/FlatHashSet.hpp>
 #include <Retina/Core/STL/Hash.hpp>
 #include <Retina/Core/STL/ReferenceWrapper.hpp>
+#include <Retina/Core/STL/SlotAllocator.hpp>
 #include <Retina/Core/STL/SlotVector.hpp>
 #include <Retina/Core/Logger.hpp>
 #include <Retina/Core/Macros.hpp>

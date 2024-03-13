@@ -1,3 +1,4 @@
+#include <Retina/Graphics/DescriptorSetInfo.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/ImageView.hpp>
@@ -118,5 +119,12 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_SET_DEBUG_NAME(GetImage().GetDevice().GetHandle(), _handle, VK_OBJECT_TYPE_IMAGE_VIEW, name);
     _createInfo.Name = name;
+  }
+
+  auto CImageView::GetDescriptor(EImageLayout layout) const noexcept -> SImageDescriptor {
+    return {
+      .View = _handle,
+      .Layout = layout
+    };
   }
 }

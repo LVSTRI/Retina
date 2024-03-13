@@ -86,7 +86,7 @@ namespace Retina::Graphics {
       SDescriptorWriteInfo {
         .Slot = 0,
         .Type = EDescriptorType::E_STORAGE_BUFFER,
-        .Descriptors = std::vector<SBufferDescriptor> {
+        .Descriptors = std::vector {
           addressBuffer->GetDescriptor(),
         }
       }
@@ -111,5 +111,68 @@ namespace Retina::Graphics {
 
   auto CShaderResourceTable::GetDescriptorLayout() const noexcept -> const CDescriptorLayout& {
     return _descriptorSet->GetLayout();
+  }
+
+  auto CShaderResourceTable::MakeImage(
+    const SImageCreateInfo& createInfo,
+    EImageLayout layout
+  ) noexcept -> CShaderResource<CImage> {
+    RETINA_PROFILE_SCOPED();
+    auto image = CImage::Make(_device, createInfo);
+    const auto descriptor = image->GetDescriptor(layout);
+    const auto usage = image->GetUsage();
+    const auto slot = _imageSlots.Allocate();
+    _imageStorage[slot] = image;
+
+    auto descriptorWriteInfos = std::vector<SDescriptorWriteInfo>();
+    if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_SAMPLED)) {
+      auto info = SDescriptorWriteInfo();
+      info.Slot = slot;
+      info.Type = EDescriptorType::E_SAMPLED_IMAGE;
+      info.Descriptors = std::vector { descriptor };
+      descriptorWriteInfos.emplace_back(info);
+    }
+    if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_STORAGE)) {
+      auto info = SDescriptorWriteInfo();
+      info.Slot = slot;
+      info.Type = EDescriptorType::E_STORAGE_IMAGE;
+      info.Descriptors = std::vector { descriptor };
+      descriptorWriteInfos.emplace_back(info);
+    }
+    _descriptorSet->Write(descriptorWriteInfos);
+
+    return CShaderResource<CImage>::Make(*image, slot);
+  }
+
+  auto CShaderResourceTable::MakeImageView(
+    const CImage& image,
+    const SImageViewCreateInfo& createInfo,
+    EImageLayout layout
+  ) noexcept -> CShaderResource<CImageView> {
+    RETINA_PROFILE_SCOPED();
+    auto imageView = CImageView::Make(image, createInfo);
+    const auto descriptor = imageView->GetDescriptor(layout);
+    const auto usage = imageView->GetImage().GetUsage();
+    const auto slot = _imageSlots.Allocate();
+    _imageViewStorage[slot] = imageView;
+
+    auto descriptorWriteInfos = std::vector<SDescriptorWriteInfo>();
+    if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_SAMPLED)) {
+      auto info = SDescriptorWriteInfo();
+      info.Slot = slot;
+      info.Type = EDescriptorType::E_SAMPLED_IMAGE;
+      info.Descriptors = std::vector { descriptor };
+      descriptorWriteInfos.emplace_back(info);
+    }
+    if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_STORAGE)) {
+      auto info = SDescriptorWriteInfo();
+      info.Slot = slot;
+      info.Type = EDescriptorType::E_STORAGE_IMAGE;
+      info.Descriptors = std::vector { descriptor };
+      descriptorWriteInfos.emplace_back(info);
+    }
+    _descriptorSet->Write(descriptorWriteInfos);
+
+    return CShaderResource<CImageView>::Make(*imageView, slot);
   }
 }
