@@ -16,7 +16,7 @@ const vec3[] triangleColors = vec3[](
 
 layout (location = 0) out SVertexData {
   vec3 Color;
-} o_vertexData[];
+} o_VertexData[];
 
 RetinaDeclarePushConstant() {
   uint u_ViewBufferIndex;
@@ -34,7 +34,7 @@ layout (triangles, max_vertices = 3, max_primitives = 1) out;
 void main() {
   SetMeshOutputsEXT(3, 1);
   for (uint i = 0; i < 3; i++) {
-    o_vertexData[i].Color = triangleColors[i];
+    o_VertexData[i].Color = triangleColors[i];
     gl_MeshVerticesEXT[i].gl_Position = g_ViewInfoBuffer.ProjView * vec4(trianglePositions[i], 1.0);
   }
 

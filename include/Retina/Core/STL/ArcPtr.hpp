@@ -95,9 +95,7 @@ namespace Retina::Core {
 
   template <typename T>
   constexpr CArcPtr<T>::CArcPtr(std::nullptr_t) noexcept
-    : _ptr(nullptr)
-  {
-  }
+    : _ptr(nullptr) {}
 
   template <typename T>
   constexpr auto CArcPtr<T>::Get() const noexcept -> T* {

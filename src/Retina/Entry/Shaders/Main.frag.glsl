@@ -2,10 +2,10 @@
 
 layout (location = 0) in SVertexData {
   vec3 Color;
-} i_vertexData;
+} i_VertexData;
 
-layout (location = 0) out vec4 o_pixel;
+layout (location = 0) out vec4 o_Pixel;
 
 void main() {
-  o_pixel = vec4(i_vertexData.Color, 1.0);
+  o_Pixel = vec4(i_VertexData.Color, 1.0);
 }
