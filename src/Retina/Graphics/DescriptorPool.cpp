@@ -6,6 +6,12 @@
 #include <volk.h>
 
 namespace Retina::Graphics {
+  CDescriptorPool::CDescriptorPool(const CDevice& device) noexcept
+    : _device(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
+
   CDescriptorPool::~CDescriptorPool() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
@@ -19,7 +25,7 @@ namespace Retina::Graphics {
     const SDescriptorPoolCreateInfo& createInfo
   ) noexcept -> Core::CArcPtr<CDescriptorPool> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CDescriptorPool());
+    auto self = Core::CArcPtr(new CDescriptorPool(device));
 
     auto poolSizes = std::vector<VkDescriptorPoolSize>();
     poolSizes.reserve(createInfo.PoolSizes.size());
@@ -49,7 +55,6 @@ namespace Retina::Graphics {
 
     self->_handle = descriptorPoolHandle;
     self->_createInfo = createInfo;
-    self->_device = device.ToArcPtr();
     self->SetDebugName(createInfo.Name);
     return self;
   }

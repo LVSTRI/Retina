@@ -1,6 +1,13 @@
 #pragma once
 
 namespace Retina::Graphics {
+  // <Retina/Graphics/Resources/ShaderResource.hpp>
+  template <typename T>
+  class CShaderResource;
+
+  // <Retina/Graphics/Resources/ShaderResourceTable.hpp>
+  class CShaderResourceTable;
+
   // <Retina/Graphics/BinarySemaphore.hpp>
   class CBinarySemaphore;
 
@@ -8,6 +15,7 @@ namespace Retina::Graphics {
   class CBuffer;
 
   // <Retina/Graphics/BufferInfo.hpp>
+  enum class EHeapType;
   struct SBufferCreateInfo;
 
   // <Retina/Graphics/CommandBuffer.hpp>
@@ -64,6 +72,9 @@ namespace Retina::Graphics {
   struct SBufferDescriptor;
   struct SDescriptorWriteInfo;
   struct SDescriptorSetCreateInfo;
+
+  // <Retina/Graphics/DescriptorSet.hpp>
+  class CDescriptorSet;
 
   // <Retina/Graphics/Device.hpp>
   class CDevice;
@@ -161,4 +172,8 @@ namespace Retina::Graphics {
 
   // <Retina/Graphics/TimelineSemaphore.hpp>
   class CTimelineSemaphore;
+
+  // <Retina/Graphics/TypedBuffer.hpp>
+  template <typename T>
+  class CTypedBuffer;
 }

@@ -47,6 +47,12 @@ namespace Retina::Graphics {
     }
   }
 
+  CImage::CImage(const CDevice& device) noexcept
+    : _device(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
+
   CImage::~CImage() noexcept {
     RETINA_PROFILE_SCOPED();
     _view.Reset();
@@ -62,7 +68,7 @@ namespace Retina::Graphics {
 
   auto CImage::Make(const CDevice& device, const SImageCreateInfo& createInfo) noexcept -> Core::CArcPtr<CImage> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CImage());
+    auto self = Core::CArcPtr(new CImage(device));
     const auto sharingMode = createInfo.IsCrossDomain
       ? VK_SHARING_MODE_CONCURRENT
       : VK_SHARING_MODE_EXCLUSIVE;
@@ -158,7 +164,6 @@ namespace Retina::Graphics {
     self->_memoryRequirements = memoryRequirements;
     self->_sparseMemoryRequirements = sparseMemoryRequirement;
     self->_createInfo = createInfo;
-    self->_device = device.ToArcPtr();
     self->SetDebugName(createInfo.Name);
 
     if (createInfo.ViewInfo) {
@@ -186,9 +191,8 @@ namespace Retina::Graphics {
       auto currentImageCreateInfo = info;
       currentImageCreateInfo.Name += std::to_string(i);
 
-      auto self = Core::CArcPtr(new CImage());
+      auto self = Core::CArcPtr(new CImage(device));
       self->_handle = swapchainImage;
-      self->_device = device.ToArcPtr();
       self->SetDebugName(currentImageCreateInfo.Name);
 
       if (currentImageCreateInfo.ViewInfo) {

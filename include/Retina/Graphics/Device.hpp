@@ -2,7 +2,6 @@
 
 #include <Retina/Core/Core.hpp>
 
-#include <Retina/Graphics/DeletionQueue.hpp>
 #include <Retina/Graphics/DeviceInfo.hpp>
 #include <Retina/Graphics/Forward.hpp>
 
@@ -31,6 +30,8 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetMainTimeline() const noexcept -> CHostDeviceTimeline&;
     RETINA_NODISCARD auto GetDeletionQueue() const noexcept -> CDeletionQueue&;
 
+    RETINA_NODISCARD auto GetShaderResourceTable() const noexcept -> CShaderResourceTable&;
+
     template <typename T>
     RETINA_NODISCARD auto GetRayTracingProperty(T SDeviceRayTracingProperties::* property) const noexcept -> T;
 
@@ -57,6 +58,8 @@ namespace Retina::Graphics {
 
     std::unique_ptr<CHostDeviceTimeline> _mainTimeline;
     std::unique_ptr<CDeletionQueue> _deletionQueue;
+
+    std::unique_ptr<CShaderResourceTable> _shaderResourceTable;
 
     SDeviceRayTracingProperties _rayTracingProperties = {};
     SDeviceCreateInfo _createInfo = {};

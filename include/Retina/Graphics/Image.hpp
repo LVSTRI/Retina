@@ -9,7 +9,7 @@
 namespace Retina::Graphics {
   class CImage : public Core::IEnableIntrusiveReferenceCount<CImage> {
   public:
-    CImage() noexcept = default;
+    CImage(const CDevice& device) noexcept;
     ~CImage() noexcept;
 
     RETINA_NODISCARD static auto Make(
@@ -55,6 +55,6 @@ namespace Retina::Graphics {
     Core::CArcPtr<CImageView> _view;
 
     SImageCreateInfo _createInfo = {};
-    Core::CArcPtr<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

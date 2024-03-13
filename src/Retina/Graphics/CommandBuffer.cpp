@@ -1,5 +1,7 @@
+#include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
+#include <Retina/Graphics/DescriptorSet.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/ImageView.hpp>
@@ -342,6 +344,29 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     vkCmdBindPipeline(_handle, AsEnumCounterpart(pipeline.GetBindPoint()), pipeline.GetHandle());
     _currentState.Pipeline = &pipeline;
+    return *this;
+  }
+
+  auto CCommandBuffer::BindDescriptorSet(const CDescriptorSet& descriptorSet, uint32 firstSet) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    const auto& currentPipeline = *_currentState.Pipeline;
+    const auto& layout = currentPipeline.GetLayout();
+    const auto bindPoint = AsEnumCounterpart(currentPipeline.GetBindPoint());
+    const auto setHandle = descriptorSet.GetHandle();
+    vkCmdBindDescriptorSets(_handle, bindPoint, layout.Handle, firstSet, 1, &setHandle, 0, nullptr);
+    return *this;
+  }
+
+  auto CCommandBuffer::BindShaderResourceTable(const CShaderResourceTable& shaderResourceTable) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    return BindDescriptorSet(shaderResourceTable.GetDescriptorSet());
+  }
+
+  auto CCommandBuffer::PushConstants(uint32 offset, std::span<const uint8> values) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    const auto& currentPipeline = *_currentState.Pipeline;
+    const auto& layout = currentPipeline.GetLayout();
+    vkCmdPushConstants(_handle, layout.Handle, AsEnumCounterpart(currentPipeline.GetBindPoint()), offset, values.size_bytes(), values.data());
     return *this;
   }
 

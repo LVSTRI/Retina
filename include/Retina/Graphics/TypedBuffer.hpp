@@ -7,12 +7,12 @@ namespace Retina::Graphics {
   template <typename T>
   class CTypedBuffer : public CBuffer {
   public:
-    CTypedBuffer() noexcept = default;
+    CTypedBuffer(const CDevice& device) noexcept;
     ~CTypedBuffer() noexcept override = default;
 
     RETINA_NODISCARD RETINA_INLINE static auto Make(
       const CDevice& device,
-      const SBufferCreateInfo& createInfo
+      SBufferCreateInfo createInfo
     ) noexcept -> Core::CArcPtr<CTypedBuffer>;
 
     RETINA_NODISCARD RETINA_INLINE static auto Make(
@@ -41,13 +41,21 @@ namespace Retina::Graphics {
   };
 
   template <typename T>
+  CTypedBuffer<T>::CTypedBuffer(const CDevice& device) noexcept
+    : CBuffer(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
+
+  template <typename T>
   auto CTypedBuffer<T>::Make(
     const CDevice& device,
-    const SBufferCreateInfo& createInfo
+    SBufferCreateInfo createInfo
   ) noexcept -> Core::CArcPtr<CTypedBuffer> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CTypedBuffer());
-    Make(device, createInfo, self.get());
+    auto self = Core::CArcPtr(new CTypedBuffer(device));
+    createInfo.Capacity *= sizeof(T);
+    CBuffer::Make(device, createInfo, self.Get());
     return self;
   }
 

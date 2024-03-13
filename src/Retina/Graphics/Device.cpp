@@ -1,6 +1,12 @@
+#include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
+#include <Retina/Graphics/Buffer.hpp>
+#include <Retina/Graphics/DeletionQueue.hpp>
+#include <Retina/Graphics/DescriptorSet.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/HostDeviceTimeline.hpp>
 #include <Retina/Graphics/Instance.hpp>
+#include <Retina/Graphics/Image.hpp>
+#include <Retina/Graphics/ImageView.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Queue.hpp>
 #include <Retina/Graphics/Macros.hpp>
@@ -441,6 +447,7 @@ namespace Retina::Graphics {
   CDevice::~CDevice() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
+      _shaderResourceTable.reset();
       _deletionQueue->Flush();
       _mainTimeline.reset();
       _transferQueue.Reset();
@@ -531,6 +538,7 @@ namespace Retina::Graphics {
     }
     self->_mainTimeline = CHostDeviceTimeline::Make(*self, -1);
     self->_deletionQueue = CDeletionQueue::Make(*self);
+    self->_shaderResourceTable = CShaderResourceTable::Make(*self);
     self->SetDebugName(createInfo.Name);
 
     return self;
@@ -574,6 +582,11 @@ namespace Retina::Graphics {
   auto CDevice::GetDeletionQueue() const noexcept -> CDeletionQueue& {
     RETINA_PROFILE_SCOPED();
     return *_deletionQueue;
+  }
+
+  auto CDevice::GetShaderResourceTable() const noexcept -> CShaderResourceTable& {
+    RETINA_PROFILE_SCOPED();
+    return *_shaderResourceTable;
   }
 
   auto CDevice::GetCreateInfo() const noexcept -> const SDeviceCreateInfo& {

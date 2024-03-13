@@ -1,4 +1,5 @@
 #include <Retina/Graphics/BinarySemaphore.hpp>
+#include <Retina/Graphics/DeletionQueue.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/Instance.hpp>
 #include <Retina/Graphics/Image.hpp>

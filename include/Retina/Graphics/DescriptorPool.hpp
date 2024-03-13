@@ -7,7 +7,7 @@
 namespace Retina::Graphics {
   class CDescriptorPool : public Core::IEnableIntrusiveReferenceCount<CDescriptorPool> {
   public:
-    CDescriptorPool() noexcept = default;
+    CDescriptorPool(const CDevice& device) noexcept;
     ~CDescriptorPool() noexcept;
 
     RETINA_NODISCARD static auto Make(
@@ -34,6 +34,6 @@ namespace Retina::Graphics {
     VkDescriptorPool _handle = {};
 
     SDescriptorPoolCreateInfo _createInfo = {};
-    Core::CArcPtr<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 }

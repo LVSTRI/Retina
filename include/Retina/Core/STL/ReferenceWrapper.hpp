@@ -11,6 +11,7 @@ namespace Retina::Core {
   public:
     constexpr CReferenceWrapper() noexcept = default;
     constexpr ~CReferenceWrapper() noexcept = default;
+    RETINA_DEFAULT_COPY_MOVE(CReferenceWrapper, constexpr);
 
     template <typename U>
     RETINA_INLINE constexpr CReferenceWrapper(U&& ref) noexcept;

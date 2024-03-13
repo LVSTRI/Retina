@@ -13,8 +13,7 @@ namespace Retina::Core {
     constexpr ~CSlotVector() noexcept = default;
     RETINA_DEFAULT_COPY_MOVE(CSlotVector, constexpr);
 
-    RETINA_NODISCARD constexpr static auto Make() noexcept -> CSlotVector;
-    RETINA_NODISCARD constexpr static auto Make(usize capacity) noexcept -> CSlotVector;
+    RETINA_NODISCARD constexpr static auto Make(usize capacity = 1024) noexcept -> CSlotVector;
 
     template <typename... Args>
     RETINA_NODISCARD constexpr auto Insert(Args&&... args) noexcept -> S;
@@ -37,11 +36,6 @@ namespace Retina::Core {
     std::vector<T> _storage;
     std::vector<S> _free;
   };
-
-  template <typename T, typename S>
-  constexpr auto CSlotVector<T, S>::Make() noexcept -> CSlotVector {
-    return Make(1024);
-  }
 
   template <typename T, typename S>
   constexpr auto CSlotVector<T, S>::Make(usize capacity) noexcept -> CSlotVector {

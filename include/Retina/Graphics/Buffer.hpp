@@ -10,7 +10,7 @@
 namespace Retina::Graphics {
   class CBuffer : public Core::IEnableIntrusiveReferenceCount<CBuffer> {
   public:
-    CBuffer() noexcept = default;
+    CBuffer(const CDevice& device) noexcept;
     virtual ~CBuffer() noexcept;
 
     RETINA_NODISCARD static auto Make(
@@ -72,12 +72,12 @@ namespace Retina::Graphics {
     usize _address = 0;
 
     SBufferCreateInfo _createInfo = {};
-    Core::CArcPtr<const CDevice> _device;
+    Core::CReferenceWrapper<const CDevice> _device;
   };
 
   template <typename T>
   auto CBuffer::Write(const T& value, usize offset) noexcept -> void {
-    Write({ &value, 1 }, offset);
+    Write<T>({ &value, 1 }, offset);
   }
 
   template <typename T>

@@ -61,6 +61,12 @@ namespace Retina::Entry {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
+    _viewBuffer = _device->GetShaderResourceTable().MakeBuffer<SViewInfo>(FRAMES_IN_FLIGHT, {
+      .Name = "ViewBuffer",
+      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
+      .Capacity = 1,
+    });
+
     _mainImage = Graphics::CImage::Make(*_device, {
       .Name = "MainImage",
       .Width = _swapchain->GetWidth(),
@@ -76,6 +82,9 @@ namespace Retina::Entry {
       .Name = "MainPipeline",
       .MeshShader = Details::GetShaderPath("Main.mesh.glsl"),
       .FragmentShader = Details::GetShaderPath("Main.frag.glsl"),
+      .DescriptorLayouts = {
+        _device->GetShaderResourceTable().GetDescriptorLayout(),
+      },
       .DynamicState = { {
         Graphics::EDynamicState::E_VIEWPORT,
         Graphics::EDynamicState::E_SCISSOR,
@@ -205,6 +214,7 @@ namespace Retina::Entry {
       .SetViewport()
       .SetScissor()
       .BindPipeline(*_mainPipeline)
+      .BindShaderResourceTable(_device->GetShaderResourceTable())
       .DrawMeshTasks(1)
       .EndRendering()
       .Barrier({

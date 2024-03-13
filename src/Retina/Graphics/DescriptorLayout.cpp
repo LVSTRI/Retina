@@ -38,7 +38,7 @@ namespace Retina::Graphics {
     }
 
     const auto& descriptorPoolInfo = descriptorPool.GetCreateInfo();
-    auto descriptorLayoutBindingFlagInfo = VkDescriptorSetLayoutBindingFlagsCreateInfo();
+    auto descriptorLayoutBindingFlagInfo = VkDescriptorSetLayoutBindingFlagsCreateInfo(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO);
     descriptorLayoutBindingFlagInfo.bindingCount = descriptorLayoutBindingFlags.size();
     descriptorLayoutBindingFlagInfo.pBindingFlags = descriptorLayoutBindingFlags.data();
 

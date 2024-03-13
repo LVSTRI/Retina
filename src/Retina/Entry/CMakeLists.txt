@@ -15,4 +15,5 @@ target_link_libraries(Retina.Entry PRIVATE
 
 target_compile_definitions(Retina.Entry PRIVATE
   RETINA_ENTRY_SHADER_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/Shaders"
+  RETINA_ENTRY_ASSET_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/Assets"
 )

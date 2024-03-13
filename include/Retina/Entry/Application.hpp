@@ -6,9 +6,19 @@
 
 #include <Retina/WSI/WSI.hpp>
 
+#include <glm/glm.hpp>
+
+#include <optional>
+
 #define FRAMES_IN_FLIGHT 2
 
 namespace Retina::Entry {
+  struct SViewInfo {
+    glm::mat4 Projection;
+    glm::mat4 View;
+    glm::mat4 ProjView;
+  };
+
   class CApplication {
   public:
     CApplication() noexcept;
@@ -46,6 +56,8 @@ namespace Retina::Entry {
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _imageAvailableSemaphores;
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _presentReadySemaphores;
     std::unique_ptr<Graphics::CHostDeviceTimeline> _frameTimeline;
+
+    std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SViewInfo>>> _viewBuffer;
 
     Core::CArcPtr<Graphics::CImage> _mainImage;
     Core::CArcPtr<Graphics::CMeshShadingPipeline> _mainPipeline;

@@ -434,7 +434,7 @@ else:
         'backslash': '\\'
     })
     # write to file
-    with open('Enums.hpp', 'w') as f:
+    with open('Enum.hpp', 'w') as f:
         f.write(output)
 
     return

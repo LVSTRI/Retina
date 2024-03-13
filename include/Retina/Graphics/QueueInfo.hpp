@@ -2,7 +2,7 @@
 
 #include <Retina/Core/Core.hpp>
 
-#include <Retina/Graphics/Enums.hpp>
+#include <Retina/Graphics/Enum.hpp>
 #include <Retina/Graphics/Forward.hpp>
 
 #include <string>

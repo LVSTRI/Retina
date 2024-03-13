@@ -55,6 +55,16 @@ namespace Retina::Graphics {
     auto EndRendering() noexcept -> CCommandBuffer&;
 
     auto BindPipeline(const IPipeline& pipeline) noexcept -> CCommandBuffer&;
+    auto BindDescriptorSet(const CDescriptorSet& descriptorSet, uint32 firstSet = 0) noexcept -> CCommandBuffer&;
+    auto BindShaderResourceTable(const CShaderResourceTable& shaderResourceTable) noexcept -> CCommandBuffer&;
+
+    auto PushConstants(uint32 offset, std::span<const uint8> values) noexcept -> CCommandBuffer&;
+
+    template <typename... Args>
+    auto PushConstants(Args&&... args) noexcept -> CCommandBuffer&;
+
+    template <typename... Args>
+    auto PushConstants(uint32 offset, Args&&... args) noexcept -> CCommandBuffer&;
 
     auto Draw(
       uint32 vertexCount,
@@ -89,4 +99,16 @@ namespace Retina::Graphics {
     Core::CArcPtr<CCommandPool> _commandPool;
     Core::CArcPtr<const CQueue> _queue;
   };
+
+  template <typename... Args>
+  auto CCommandBuffer::PushConstants(Args&&... args) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    return PushConstants(0_u32, std::span<const uint8>(Core::MakeByteArray(std::forward<Args>(args)...)));
+  }
+
+  template <typename... Args>
+  auto CCommandBuffer::PushConstants(uint32 offset, Args&&... args) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    return PushConstants(offset, std::span<const uint8>(Core::MakeByteArray(std::forward<Args>(args)...)));
+  }
 }

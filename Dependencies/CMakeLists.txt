@@ -53,6 +53,23 @@ FetchContent_MakeAvailable(spdlog)
 target_compile_options(spdlog PRIVATE -w)
 target_link_libraries(spdlog PUBLIC fmt)
 
+# glm
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm
+  GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glm)
+target_compile_definitions(glm INTERFACE
+  GLM_FORCE_DEPTH_ZERO_TO_ONE
+  GLM_FORCE_RADIANS
+  GLM_FORCE_AVX2
+)
+target_compile_options(glm INTERFACE -w)
+
 # tracy
 FetchContent_Declare(
   tracy
@@ -146,6 +163,7 @@ add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
   debugbreak
+  glm
   mio
   spdlog
   TracyClient

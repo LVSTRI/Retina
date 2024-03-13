@@ -38,6 +38,12 @@ namespace Retina::Graphics {
     }
   }
 
+  CBuffer::CBuffer(const CDevice& device) noexcept
+    : _device(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
+
   CBuffer::~CBuffer() noexcept {
     RETINA_PROFILE_SCOPED();
     const auto isSparse = Core::IsFlagEnabled(_createInfo.Flags, EBufferCreateFlag::E_SPARSE_BINDING);
@@ -54,7 +60,7 @@ namespace Retina::Graphics {
 
   auto CBuffer::Make(const CDevice& device, const SBufferCreateInfo& createInfo) noexcept -> Core::CArcPtr<CBuffer> {
     RETINA_PROFILE_SCOPED();
-    auto self = Core::CArcPtr(new CBuffer());
+    auto self = Core::CArcPtr(new CBuffer(device));
     Make(device, createInfo, self.Get());
     return self;
   }
@@ -195,29 +201,26 @@ namespace Retina::Graphics {
     bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices.data();
 
     const auto allocationFlags = [&] -> VmaAllocationCreateFlags {
-      const auto isDeviceLocal = Core::IsFlagEnabled(createInfo.Memory, EMemoryPropertyFlag::E_DEVICE_LOCAL);
-      const auto isHostVisible = Core::IsFlagEnabled(createInfo.Memory, EMemoryPropertyFlag::E_HOST_VISIBLE);
-      const auto isHostCoherent = Core::IsFlagEnabled(createInfo.Memory, EMemoryPropertyFlag::E_HOST_COHERENT);
-      const auto isHostCached = Core::IsFlagEnabled(createInfo.Memory, EMemoryPropertyFlag::E_HOST_CACHED);
-      auto flags = VmaAllocationCreateFlags();
-      if (isDeviceLocal) {
-        if (isHostVisible) {
-          flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
-          if (isHostCoherent) {
-            flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-          } else if (isHostCached) {
-            flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-          }
-        }
+      switch (createInfo.Heap) {
+        case EHeapType::E_DEVICE_ONLY:
+          return {};
+        case EHeapType::E_DEVICE_MAPPABLE: RETINA_FALLTHROUGH;
+        case EHeapType::E_HOST_ONLY_COHERENT:
+          return
+            VMA_ALLOCATION_CREATE_MAPPED_BIT |
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        case EHeapType::E_HOST_ONLY_CACHED:
+          return
+            VMA_ALLOCATION_CREATE_MAPPED_BIT |
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
       }
-      return flags;
     }();
 
     // TODO: Handle sparse buffers
     auto allocationCreateInfo = VmaAllocationCreateInfo();
     allocationCreateInfo.flags = allocationFlags;
     allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    allocationCreateInfo.requiredFlags = AsEnumCounterpart(createInfo.Memory);
+    allocationCreateInfo.requiredFlags = static_cast<VkMemoryPropertyFlags>(createInfo.Heap);
     allocationCreateInfo.preferredFlags = {};
     allocationCreateInfo.memoryTypeBits = 0;
     allocationCreateInfo.pool = {};
@@ -260,7 +263,6 @@ namespace Retina::Graphics {
     self->_size = size;
     self->_address = address;
     self->_createInfo = createInfo;
-    self->_device = device.ToArcPtr();
     self->SetDebugName(createInfo.Name);
   }
 }

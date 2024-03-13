@@ -1,3 +1,5 @@
+#include <Retina/Graphics/Resources/ShaderResource.hpp>
+#include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/BinarySemaphore.hpp>
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/BufferInfo.hpp>
@@ -16,7 +18,7 @@
 #include <Retina/Graphics/DeletionQueueInfo.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/DeviceInfo.hpp>
-#include <Retina/Graphics/Enums.hpp>
+#include <Retina/Graphics/Enum.hpp>
 #include <Retina/Graphics/Fence.hpp>
 #include <Retina/Graphics/FenceInfo.hpp>
 #include <Retina/Graphics/Forward.hpp>
