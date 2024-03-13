@@ -68,7 +68,7 @@ restrict readonly buffer SAddressTable {
 #define RetinaDeclareBuffer(qualifier, name) RETINA_DECLARE_BUFFER_TYPE(qualifier, name)
 #define RetinaGetBufferType(name) SBufferPointerType_##name
 #define RetinaGetBufferPointer(name, id) RetinaGetBufferType(name)(b_AddressTable.Data[id])
-#define RetinaBufferPointer(type, name, id) RetinaGetBufferType(type) name = RetinaGetBufferPointer(type, id)
+#define RetinaDeclareBufferPointer(type, name, id) RetinaGetBufferType(type) name = RetinaGetBufferPointer(type, id)
 
 #define RetinaDeclarePushConstant() layout (push_constant) readonly uniform SPushConstant
 

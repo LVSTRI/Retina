@@ -27,7 +27,7 @@ RetinaDeclareBuffer(restrict readonly, SViewInfoBuffer) {
   mat4 View;
   mat4 ProjView;
 };
-RetinaBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferIndex);
+RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferIndex);
 
 layout (local_size_x = 1) in;
 layout (triangles, max_vertices = 3, max_primitives = 1) out;

@@ -182,7 +182,7 @@ namespace Retina::Entry {
 
     auto& viewBuffer = _viewBuffer[frameIndex];
     {
-      const auto aspectRatio = _window->GetWidth() / static_cast<float32>(_window->GetHeight());
+      const auto aspectRatio = _swapchain->GetWidth() / static_cast<float32>(_swapchain->GetHeight());
       const auto projection = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 100.0f);
       const auto view = glm::lookAt(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
       const auto projView = projection * view;
@@ -192,7 +192,6 @@ namespace Retina::Entry {
         .ProjView = projView,
       });
     }
-
   }
 
   auto CApplication::OnRender() noexcept -> void {
@@ -231,6 +230,7 @@ namespace Retina::Entry {
       .SetScissor()
       .BindPipeline(*_mainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
+      .PushConstants(_viewBuffer[frameIndex].GetHandle())
       .DrawMeshTasks(1)
       .EndRendering()
       .Barrier({
