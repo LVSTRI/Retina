@@ -2,7 +2,6 @@
 #include <Retina/Graphics/DescriptorPool.hpp>
 #include <Retina/Graphics/DescriptorSet.hpp>
 #include <Retina/Graphics/Device.hpp>
-#include <Retina/Graphics/ImageView.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
 
@@ -16,19 +15,22 @@ namespace Retina::Graphics {
       RETINA_PROFILE_SCOPED();
       auto result = std::vector<VkDescriptorImageInfo>();
       result.reserve(descriptors.size());
-      for (const auto& [view, layout] : descriptors) {
-        result.emplace_back(VK_NULL_HANDLE, view->GetHandle(), AsEnumCounterpart(layout));
+      for (const auto& descriptor : descriptors) {
+        result.emplace_back(descriptor.Sampler, descriptor.View, AsEnumCounterpart(descriptor.Layout));
       }
       return result;
     }
 
     RETINA_NODISCARD RETINA_INLINE auto GetNativeBufferDescriptors(
-      std::span<const SBufferDescriptor>
+      std::span<const SBufferDescriptor> descriptors
     ) noexcept -> std::vector<VkDescriptorBufferInfo> {
       RETINA_PROFILE_SCOPED();
-      // TODO: Implement
-      RETINA_GRAPHICS_PANIC_WITH("Buffer descriptors are not yet implemented");
-      return {};
+      auto result = std::vector<VkDescriptorBufferInfo>();
+      result.reserve(descriptors.size());
+      for (const auto& descriptor : descriptors) {
+        result.emplace_back(descriptor.Handle, descriptor.Offset, descriptor.Size);
+      }
+      return result;
     }
   }
 
@@ -63,8 +65,8 @@ namespace Retina::Graphics {
     auto descriptorSetHandle = VkDescriptorSet();
     RETINA_GRAPHICS_VULKAN_CHECK(vkAllocateDescriptorSets(device.GetHandle(), &descriptorSetAllocateInfo, &descriptorSetHandle));
     RETINA_GRAPHICS_INFO("Descriptor set ({}) initialized with:", createInfo.Name);
-    RETINA_GRAPHICS_INFO("  - Descriptor pool: {}", descriptorPool.GetDebugName());
-    RETINA_GRAPHICS_INFO("  - Descriptor layout: {}", layout.GetDebugName());
+    RETINA_GRAPHICS_INFO(" - Descriptor pool: {}", descriptorPool.GetDebugName());
+    RETINA_GRAPHICS_INFO(" - Descriptor layout: {}", layout.GetDebugName());
 
     self->_handle = descriptorSetHandle;
     self->_createInfo = createInfo;

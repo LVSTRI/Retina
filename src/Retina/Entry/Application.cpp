@@ -7,7 +7,6 @@ namespace Retina::Entry {
     RETINA_NODISCARD RETINA_INLINE auto GetShaderPath(const std::filesystem::path& path) noexcept -> std::filesystem::path {
       RETINA_PROFILE_SCOPED();
       return std::filesystem::path(RETINA_ENTRY_SHADER_DIRECTORY) / path;
-
     }
   }
 
@@ -127,7 +126,7 @@ namespace Retina::Entry {
       .Name = "MainImage",
       .Width = _swapchain->GetWidth(),
       .Height = _swapchain->GetHeight(),
-      .Format = _swapchain->GetFormat(),
+      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
         Graphics::EImageUsageFlag::E_TRANSFER_SRC,

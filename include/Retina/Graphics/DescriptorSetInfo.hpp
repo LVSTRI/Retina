@@ -5,21 +5,30 @@
 #include <Retina/Graphics/Forward.hpp>
 #include <Retina/Graphics/Enums.hpp>
 
+#include <vulkan/vulkan.h>
+
 #include <compare>
 #include <variant>
 #include <vector>
 
 namespace Retina::Graphics {
   struct SImageDescriptor {
-    // TODO: Samplers
-    Core::CReferenceWrapper<const CImageView> View;
+    VkSampler Sampler = {};
+    VkImageView View = {};
     EImageLayout Layout;
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const SImageDescriptor&) const noexcept -> std::strong_ordering = default;
   };
 
-  // TODO: Add support for buffer descriptors
-  struct SBufferDescriptor {};
+  struct SBufferDescriptor {
+    VkBuffer Handle = {};
+    VkDeviceMemory Memory = {};
+    usize Offset = 0;
+    usize Size = 0;
+    usize Address = 0;
+
+    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const SBufferDescriptor&) const noexcept -> std::strong_ordering = default;
+  };
 
   struct SDescriptorWriteInfo {
     uint32 Slot = 0;

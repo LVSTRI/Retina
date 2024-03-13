@@ -115,7 +115,7 @@ namespace Retina::Graphics {
       Core::IsFlagEnabled(createInfo.Usage, EImageUsageFlag::E_INPUT_ATTACHMENT);
 
     auto imageHandle = VkImage();
-    auto allocation = VmaAllocation();
+    auto allocationHandle = VmaAllocation();
     auto allocationInfo = VmaAllocationInfo();
     auto memoryRequirements = VkMemoryRequirements();
     auto sparseMemoryRequirement = VkSparseImageMemoryRequirements();
@@ -134,24 +134,26 @@ namespace Retina::Graphics {
     } else {
       auto allocationCreateInfo = VmaAllocationCreateInfo();
       allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_STRATEGY_MIN_MEMORY_BIT;
+      allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+      allocationCreateInfo.priority = 1.0f;
+
       if (isAttachment || createInfo.IsDedicated) {
         allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
       }
-      allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-      allocationCreateInfo.priority = 1.0f;
+
       vmaCreateImage(
         device.GetAllocator(),
         &imageCreateInfo,
         &allocationCreateInfo,
         &imageHandle,
-        &allocation,
+        &allocationHandle,
         &allocationInfo
       );
       memoryRequirements = Details::GetImageMemoryRequirements(device, imageHandle);
     }
 
     self->_handle = imageHandle;
-    self->_allocation = allocation;
+    self->_allocation = allocationHandle;
     self->_allocationInfo = allocationInfo;
     self->_memoryRequirements = memoryRequirements;
     self->_sparseMemoryRequirements = sparseMemoryRequirement;

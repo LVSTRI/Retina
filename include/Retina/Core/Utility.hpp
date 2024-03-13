@@ -125,4 +125,14 @@ namespace Retina::Core {
   RETINA_NODISCARD constexpr auto IsFlagEnabled(const E& value, const E& flag) noexcept -> bool {
     return (value & flag) == flag;
   }
+
+  RETINA_NODISCARD constexpr auto MultiByteToWideString(std::string_view input) noexcept -> std::wstring {
+    auto output = std::wstring(input.size(), L'\0');
+    const auto size = std::mbstowcs(output.data(), input.data(), input.size());
+    if (size == -1_usize) {
+      return {};
+    }
+    output.resize(size);
+    return output;
+  }
 }

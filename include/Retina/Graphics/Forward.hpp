@@ -4,6 +4,12 @@ namespace Retina::Graphics {
   // <Retina/Graphics/BinarySemaphore.hpp>
   class CBinarySemaphore;
 
+  // <Retina/Graphics/Buffer.hpp>
+  class CBuffer;
+
+  // <Retina/Graphics/BufferInfo.hpp>
+  struct SBufferCreateInfo;
+
   // <Retina/Graphics/CommandBuffer.hpp>
   class CCommandBuffer;
 

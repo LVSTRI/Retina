@@ -1,4 +1,6 @@
 #include <Retina/Graphics/BinarySemaphore.hpp>
+#include <Retina/Graphics/Buffer.hpp>
+#include <Retina/Graphics/BufferInfo.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
 #include <Retina/Graphics/CommandBufferInfo.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
@@ -37,3 +39,4 @@
 #include <Retina/Graphics/Swapchain.hpp>
 #include <Retina/Graphics/SwapchainInfo.hpp>
 #include <Retina/Graphics/TimelineSemaphore.hpp>
+#include <Retina/Graphics/TypedBuffer.hpp>

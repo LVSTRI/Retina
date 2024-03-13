@@ -2,6 +2,7 @@ add_library(Retina.Graphics STATIC)
 
 target_sources(Retina.Graphics PRIVATE
   BinarySemaphore.cpp
+  Buffer.cpp
   CommandBuffer.cpp
   CommandPool.cpp
   ComputePipeline.cpp
