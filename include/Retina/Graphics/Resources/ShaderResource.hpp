@@ -12,10 +12,10 @@ namespace Retina::Graphics {
     CShaderResource() noexcept = default;
     ~CShaderResource() noexcept = default;
 
-    RETINA_NODISCARD RETINA_INLINE static auto Make(T& resource, usize handle) noexcept -> CShaderResource;
+    RETINA_NODISCARD RETINA_INLINE static auto Make(T& resource, uint32 handle) noexcept -> CShaderResource;
 
     RETINA_NODISCARD RETINA_INLINE auto GetResource() const noexcept -> const T&;
-    RETINA_NODISCARD RETINA_INLINE auto GetHandle() const noexcept -> usize;
+    RETINA_NODISCARD RETINA_INLINE auto GetHandle() const noexcept -> uint32;
 
     RETINA_NODISCARD RETINA_INLINE auto IsValid() const noexcept -> bool;
 
@@ -26,11 +26,11 @@ namespace Retina::Graphics {
 
   private:
     T* _resource = nullptr;
-    usize _handle = -1_usize;
+    uint32 _handle = -1_u32;
   };
 
   template <typename T>
-  auto CShaderResource<T>::Make(T& resource, usize handle) noexcept -> CShaderResource {
+  auto CShaderResource<T>::Make(T& resource, uint32 handle) noexcept -> CShaderResource {
     RETINA_PROFILE_SCOPED();
     auto self = CShaderResource();
     self._resource = &resource;
@@ -39,7 +39,7 @@ namespace Retina::Graphics {
   }
 
   template <typename T>
-  auto CShaderResource<T>::GetHandle() const noexcept -> usize {
+  auto CShaderResource<T>::GetHandle() const noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
     return _handle;
   }

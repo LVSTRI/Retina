@@ -18,7 +18,7 @@ namespace Retina::Core {
 
   template <typename... Ts>
   RETINA_NODISCARD consteval auto GetSizeBytesFromPack() noexcept -> usize {
-    return (sizeof(Ts) + ...);
+    return (sizeof(Ts) + ... + 0);
   }
 
   template <typename T>

@@ -383,7 +383,7 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     const auto& currentPipeline = *_currentState.Pipeline;
     const auto& layout = currentPipeline.GetLayout();
-    vkCmdPushConstants(_handle, layout.Handle, AsEnumCounterpart(currentPipeline.GetBindPoint()), offset, values.size_bytes(), values.data());
+    vkCmdPushConstants(_handle, layout.Handle, AsEnumCounterpart(layout.PushConstant.Stages), offset, values.size_bytes(), values.data());
     return *this;
   }
 
