@@ -3,6 +3,7 @@
 #include <Retina/Core/Core.hpp>
 
 #include <Retina/WSI/Forward.hpp>
+#include <Retina/WSI/Input.hpp>
 #include <Retina/WSI/WindowInfo.hpp>
 
 #include <memory>
@@ -19,6 +20,7 @@ namespace Retina::WSI {
       SWindowMouseScrollEvent
     >;
 
+  public:
     CWindow() noexcept = default;
     ~CWindow() noexcept;
     RETINA_DELETE_COPY(CWindow);
@@ -28,6 +30,8 @@ namespace Retina::WSI {
 
     RETINA_NODISCARD auto GetHandle() const noexcept -> WindowHandle;
     RETINA_NODISCARD auto GetEventDispatcher() noexcept -> EventDispatcher&;
+    RETINA_NODISCARD auto GetInput() noexcept -> CInput&;
+    RETINA_NODISCARD auto GetInput() const noexcept -> const CInput&;
     RETINA_NODISCARD auto GetCreateInfo() const noexcept -> const SWindowCreateInfo&;
 
     RETINA_NODISCARD auto GetTitle() const noexcept -> std::string_view;
@@ -41,6 +45,7 @@ namespace Retina::WSI {
   private:
     WindowHandle _handle = nullptr;
     EventDispatcher _dispatcher;
+    std::optional<CInput> _input;
 
     SWindowCreateInfo _createInfo = {};
   };

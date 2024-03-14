@@ -62,7 +62,8 @@ namespace Retina::Core {
 
   template <typename T>
   constexpr CArcPtr<T>::CArcPtr(const CArcPtr& other) noexcept
-    : CArcPtr(other._ptr) {}
+    : CArcPtr(other._ptr)
+  {}
 
   template <typename T>
   constexpr auto CArcPtr<T>::operator =(const CArcPtr& other) noexcept -> CArcPtr& {
@@ -74,7 +75,8 @@ namespace Retina::Core {
 
   template <typename T>
   constexpr CArcPtr<T>::CArcPtr(CArcPtr&& other) noexcept
-    : _ptr(std::exchange(other._ptr, nullptr)) {}
+    : _ptr(std::exchange(other._ptr, nullptr))
+  {}
 
   template <typename T>
   constexpr auto CArcPtr<T>::operator =(CArcPtr&& other) noexcept -> CArcPtr& {
@@ -95,7 +97,8 @@ namespace Retina::Core {
 
   template <typename T>
   constexpr CArcPtr<T>::CArcPtr(std::nullptr_t) noexcept
-    : _ptr(nullptr) {}
+    : _ptr(nullptr)
+  {}
 
   template <typename T>
   constexpr auto CArcPtr<T>::Get() const noexcept -> T* {

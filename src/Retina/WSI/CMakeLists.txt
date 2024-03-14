@@ -1,6 +1,7 @@
 add_library(Retina.WSI STATIC)
 
 target_sources(Retina.WSI PRIVATE
+  Input.cpp
   Logger.cpp
   Platform.cpp
   Window.cpp

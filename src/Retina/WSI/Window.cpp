@@ -55,6 +55,7 @@ namespace Retina::WSI {
   CWindow::CWindow(CWindow&& other) noexcept
     : _handle(std::exchange(other._handle, {})),
       _dispatcher(std::exchange(other._dispatcher, {})),
+      _input(std::exchange(other._input, { *this })),
       _createInfo(std::exchange(other._createInfo, {}))
   {
     RETINA_PROFILE_SCOPED();
@@ -72,6 +73,7 @@ namespace Retina::WSI {
     RETINA_PROFILE_SCOPED();
     auto self = std::make_unique<CWindow>();
     auto dispatcher = EventDispatcher::Make();
+    auto input = CInput::Make(*self);
     auto* windowHandle = Details::MakePlatformWindow(createInfo);
     glfwSetWindowUserPointer(windowHandle, self.get());
     glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* window, int32 width, int32 height) {
@@ -117,6 +119,7 @@ namespace Retina::WSI {
     });
     self->_handle = windowHandle;
     self->_dispatcher = std::move(dispatcher);
+    self->_input = std::move(input);
     self->_createInfo = createInfo;
 
     RETINA_WSI_INFO("Initialized Window: {{ {}, {}, {} }}", createInfo.Title, createInfo.Width, createInfo.Height);
@@ -135,6 +138,16 @@ namespace Retina::WSI {
   auto CWindow::GetEventDispatcher() noexcept -> EventDispatcher& {
     RETINA_PROFILE_SCOPED();
     return _dispatcher;
+  }
+
+  auto CWindow::GetInput() noexcept -> CInput& {
+    RETINA_PROFILE_SCOPED();
+    return *_input;
+  }
+
+  auto CWindow::GetInput() const noexcept -> const CInput& {
+    RETINA_PROFILE_SCOPED();
+    return *_input;
   }
 
   auto CWindow::GetCreateInfo() const noexcept -> const SWindowCreateInfo& {

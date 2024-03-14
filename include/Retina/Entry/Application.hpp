@@ -2,6 +2,10 @@
 
 #include <Retina/Core/Core.hpp>
 
+#include <Retina/Entry/Camera.hpp>
+#include <Retina/Entry/FrameCounter.hpp>
+#include <Retina/Entry/FrameTimer.hpp>
+
 #include <Retina/Graphics/Graphics.hpp>
 
 #include <Retina/WSI/WSI.hpp>
@@ -34,7 +38,7 @@ namespace Retina::Entry {
 
   private:
     auto OnWindowResize(const WSI::SWindowResizeEvent& event) noexcept -> bool;
-    auto OnWindowClose(const WSI::SWindowCloseEvent&) noexcept -> bool;
+    auto OnWindowClose(const WSI::SWindowCloseEvent& event) noexcept -> bool;
     auto OnWindowKeyboard(const WSI::SWindowKeyboardEvent& event) noexcept -> bool;
     auto OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> bool;
     auto OnWindowMousePosition(const WSI::SWindowMousePositionEvent& event) noexcept -> bool;
@@ -46,7 +50,12 @@ namespace Retina::Entry {
     auto WaitForNextFrameIndex() noexcept -> uint32;
     auto GetCurrentFrameIndex() noexcept -> uint32;
 
+  private:
     bool _isRunning = true;
+
+    CFrameTimer _timer = {};
+
+    std::unique_ptr<CCamera> _camera;
 
     std::unique_ptr<WSI::CWindow> _window;
 
@@ -63,6 +72,7 @@ namespace Retina::Entry {
     std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SViewInfo>>> _viewBuffer;
 
     Core::CArcPtr<Graphics::CImage> _mainImage;
+    Core::CArcPtr<Graphics::CImage> _mainImageDepth;
     Core::CArcPtr<Graphics::CMeshShadingPipeline> _mainPipeline;
   };
 }

@@ -255,15 +255,32 @@ namespace Retina::Graphics {
       layerCount = subresource.LayerCount;
     }
 
-    auto depthStencilAttachment = VkRenderingAttachmentInfo();
-    if (renderingInfo.DepthStencilAttachment) {
-      const auto& attachmentInfo = *renderingInfo.DepthStencilAttachment;
+    auto depthAttachment = VkRenderingAttachmentInfo();
+    if (renderingInfo.DepthAttachment) {
+      const auto& attachmentInfo = *renderingInfo.DepthAttachment;
       const auto& imageView = *attachmentInfo.ImageView;
       const auto& image = imageView.GetImage();
       const auto subresource = imageView.GetSubresourceRange();
-      depthStencilAttachment = Details::MakeNativeRenderingAttachmentInfo(
-        attachmentInfo, EImageLayout::E_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-      );
+      const auto isDepthStencil = Core::IsFlagEnabled(imageView.GetAspectMask(), EImageAspectFlag::E_STENCIL);
+      const auto imageLayout = isDepthStencil
+        ? EImageLayout::E_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        : EImageLayout::E_DEPTH_ATTACHMENT_OPTIMAL;
+      depthAttachment = Details::MakeNativeRenderingAttachmentInfo(attachmentInfo, imageLayout);
+      attachmentSize = { image.GetWidth(), image.GetHeight() };
+      layerCount = subresource.LayerCount;
+    }
+
+    auto stencilAttachment = VkRenderingAttachmentInfo();
+    if (renderingInfo.StencilAttachment) {
+      const auto& attachmentInfo = *renderingInfo.StencilAttachment;
+      const auto& imageView = *attachmentInfo.ImageView;
+      const auto& image = imageView.GetImage();
+      const auto subresource = imageView.GetSubresourceRange();
+      const auto isDepthStencil = Core::IsFlagEnabled(imageView.GetAspectMask(), EImageAspectFlag::E_STENCIL);
+      const auto imageLayout = isDepthStencil
+        ? EImageLayout::E_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        : EImageLayout::E_STENCIL_ATTACHMENT_OPTIMAL;
+      depthAttachment = Details::MakeNativeRenderingAttachmentInfo(attachmentInfo, imageLayout);
       attachmentSize = { image.GetWidth(), image.GetHeight() };
       layerCount = subresource.LayerCount;
     }
@@ -284,9 +301,11 @@ namespace Retina::Graphics {
     commandRenderingInfo.viewMask = renderingInfo.ViewMask;
     commandRenderingInfo.colorAttachmentCount = colorAttachments.size();
     commandRenderingInfo.pColorAttachments = colorAttachments.data();
-    if (renderingInfo.DepthStencilAttachment) {
-      commandRenderingInfo.pDepthAttachment = &depthStencilAttachment;
-      commandRenderingInfo.pStencilAttachment = &depthStencilAttachment;
+    if (renderingInfo.DepthAttachment) {
+      commandRenderingInfo.pDepthAttachment = &depthAttachment;
+    }
+    if (renderingInfo.StencilAttachment) {
+      commandRenderingInfo.pStencilAttachment = &stencilAttachment;
     }
 
     vkCmdBeginRendering(_handle, &commandRenderingInfo);

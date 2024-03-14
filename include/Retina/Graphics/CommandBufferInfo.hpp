@@ -115,7 +115,8 @@ namespace Retina::Graphics {
     uint32 LayerCount = -1_u32;
     uint32 ViewMask = 0;
     std::vector<SAttachmentInfo> ColorAttachments;
-    std::optional<SAttachmentInfo> DepthStencilAttachment = std::nullopt;
+    std::optional<SAttachmentInfo> DepthAttachment = std::nullopt;
+    std::optional<SAttachmentInfo> StencilAttachment = std::nullopt;
   };
 
   struct SCommandBufferCreateInfo {
@@ -124,7 +125,7 @@ namespace Retina::Graphics {
     std::optional<SCommandPoolCreateInfo> PoolInfo = std::nullopt;
   };
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeClearColorValue(const float32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const float32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
     return {
       .Color = {
         .Float32 = {
@@ -137,7 +138,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeClearColorValue(const int32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const int32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
     return {
       .Color = {
         .Int32 = {
@@ -150,7 +151,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeClearColorValue(const uint32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const uint32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
     return {
       .Color = {
         .Uint32 = {

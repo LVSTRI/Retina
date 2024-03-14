@@ -4,7 +4,10 @@
 
 namespace Retina::Graphics {
   CDeletionQueue::CDeletionQueue(const CDevice& device) noexcept
-    : _device(device) {}
+    : _device(device)
+  {
+    RETINA_PROFILE_SCOPED();
+  }
 
   auto CDeletionQueue::Make(const CDevice& device) noexcept -> std::unique_ptr<CDeletionQueue> {
     RETINA_PROFILE_SCOPED();

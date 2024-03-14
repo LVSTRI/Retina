@@ -172,6 +172,12 @@ namespace Retina::WSI {
     E_MENU = 348,
   };
 
+  enum class EInputCursorMode {
+    E_NORMAL = 0x00034001,
+    E_HIDDEN = 0x00034002,
+    E_DISABLED = 0x00034003,
+  };
+
   struct SWindowResizeEvent {
     int32 Width = 0;
     int32 Height = 0;
@@ -198,6 +204,15 @@ namespace Retina::WSI {
   };
 
   struct SWindowMouseScrollEvent {
+    float64 X = 0.0;
+    float64 Y = 0.0;
+  };
+
+  struct SInputCursorModeEvent {
+    EInputCursorMode Mode = {};
+  };
+
+  struct SInputCursorPosition {
     float64 X = 0.0;
     float64 Y = 0.0;
   };

@@ -6,7 +6,7 @@ namespace Retina::Entry {
   namespace Details {
     RETINA_NODISCARD RETINA_INLINE auto GetShaderPath(const std::filesystem::path& path) noexcept -> std::filesystem::path {
       RETINA_PROFILE_SCOPED();
-      return std::filesystem::path(RETINA_ENTRY_SHADER_DIRECTORY) / path;
+      return std::filesystem::path(RETINA_SHADER_DIRECTORY) / path;
     }
   }
 
@@ -23,6 +23,8 @@ namespace Retina::Entry {
         .Focused = true
       }
     });
+
+    _camera = CCamera::Make(_window->GetInput());
 
     _instance = Graphics::CInstance::Make({
       .GetSurfaceExtensionNames = WSI::GetSurfaceExtensionNames,
@@ -78,12 +80,27 @@ namespace Retina::Entry {
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
 
+    _mainImageDepth = Graphics::CImage::Make(*_device, {
+      .Name = "MainImageDepth",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+
     _mainPipeline = Graphics::CMeshShadingPipeline::Make(*_device, {
       .Name = "MainPipeline",
       .MeshShader = Details::GetShaderPath("Main.mesh.glsl"),
       .FragmentShader = Details::GetShaderPath("Main.frag.glsl"),
       .DescriptorLayouts = {
         _device->GetShaderResourceTable().GetDescriptorLayout(),
+      },
+      .DepthStencilState = {
+        .DepthTestEnable = true,
+        .DepthWriteEnable = true,
+        .DepthCompareOperator = Graphics::ECompareOperator::E_GREATER,
       },
       .DynamicState = { {
         Graphics::EDynamicState::E_VIEWPORT,
@@ -92,6 +109,7 @@ namespace Retina::Entry {
       .RenderingInfo = {
         {
           .ColorAttachmentFormats = { _mainImage->GetFormat() },
+          .DepthAttachmentFormat = _mainImageDepth->GetFormat(),
         }
       },
     });
@@ -117,8 +135,11 @@ namespace Retina::Entry {
   auto CApplication::Run() noexcept -> void {
     RETINA_PROFILE_SCOPED();
     while (_isRunning) {
-      OnUpdate();
-      OnRender();
+      {
+        RETINA_SCOPED_TIMER(_timer);
+        OnUpdate();
+        OnRender();
+      }
       RETINA_MARK_FRAME();
     }
   }
@@ -141,6 +162,17 @@ namespace Retina::Entry {
         Graphics::EImageUsageFlag::E_TRANSFER_SRC,
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
+    _mainImageDepth = Graphics::CImage::Make(*_device, {
+      .Name = "MainImageDepth",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+
+    OnUpdate();
     OnRender();
     return false;
   }
@@ -148,27 +180,33 @@ namespace Retina::Entry {
   auto CApplication::OnWindowClose(const WSI::SWindowCloseEvent&) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
     _isRunning = false;
-    return false;
+    return true;
   }
 
   auto CApplication::OnWindowKeyboard(const WSI::SWindowKeyboardEvent&) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    return false;
+    return true;
   }
 
-  auto CApplication::OnWindowMouseButton(const WSI::SWindowMouseButtonEvent&) noexcept -> bool {
+  auto CApplication::OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    return false;
+    if (event.Action == WSI::EInputAction::E_PRESS && event.Button == WSI::EInputMouse::E_BUTTON_RIGHT) {
+      _window->GetInput().SetCursorMode(WSI::EInputCursorMode::E_DISABLED);
+    }
+    if (event.Action == WSI::EInputAction::E_RELEASE && event.Button == WSI::EInputMouse::E_BUTTON_RIGHT) {
+      _window->GetInput().SetCursorMode(WSI::EInputCursorMode::E_NORMAL);
+    }
+    return true;
   }
 
-  auto CApplication::OnWindowMousePosition(const WSI::SWindowMousePositionEvent&) noexcept -> bool {
+  auto CApplication::OnWindowMousePosition(const WSI::SWindowMousePositionEvent& event) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    return false;
+    return true;
   }
 
   auto CApplication::OnWindowMouseScroll(const WSI::SWindowMouseScrollEvent&) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    return false;
+    return true;
   }
 
   auto CApplication::OnUpdate() noexcept -> void {
@@ -178,13 +216,15 @@ namespace Retina::Entry {
     }
     WSI::PollEvents();
 
+    _camera->Update(_timer.GetDeltaTime());
+
     const auto frameIndex = WaitForNextFrameIndex();
 
     auto& viewBuffer = _viewBuffer[frameIndex];
     {
       const auto aspectRatio = _swapchain->GetWidth() / static_cast<float32>(_swapchain->GetHeight());
-      const auto projection = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 100.0f);
-      const auto view = glm::lookAt(glm::vec3(0.0f, 0.0f, -3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+      const auto projection = MakeInfiniteReversePerspective(60.0f, aspectRatio, 0.1f);
+      const auto view = _camera->GetViewMatrix();
       const auto projView = projection * view;
       viewBuffer->Write(SViewInfo {
         .Projection = projection,
@@ -208,14 +248,27 @@ namespace Retina::Entry {
     commandBuffer.GetCommandPool().Reset();
     commandBuffer
       .Begin()
-      .ImageMemoryBarrier({
-        .Image = *_mainImage,
-        .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-        .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-        .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-        .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-        .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
-        .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+      .Barrier({
+        .ImageMemoryBarriers = {
+          {
+            .Image = *_mainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          },
+          {
+            .Image = *_mainImageDepth,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_EARLY_FRAGMENT_TESTS,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_DEPTH_STENCIL_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+          }
+        }
       })
       .BeginRendering({
         .Name = "MainPass",
@@ -224,9 +277,15 @@ namespace Retina::Entry {
             .ImageView = _mainImage->GetView(),
             .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
             .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
-            .ClearValue = Graphics::MakeClearColorValue({ 0.025f, 0.025f, 0.025f, 1.0f }),
+            .ClearValue = Graphics::MakeColorClearValue({ 0.025f, 0.025f, 0.025f, 1.0f }),
           }
-        }
+        },
+        .DepthAttachment = { {
+          .ImageView = _mainImageDepth->GetView(),
+          .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
+          .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          .ClearValue = Graphics::MakeDepthStencilClearValue(0.0f, 0),
+        } },
       })
       .SetViewport()
       .SetScissor()

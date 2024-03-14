@@ -112,7 +112,8 @@ namespace Retina::Graphics {
   struct SPipelineRenderingInfo {
     uint32 ViewMask = 0;
     std::vector<EResourceFormat> ColorAttachmentFormats;
-    std::optional<EResourceFormat> DepthStencilAttachmentFormat = std::nullopt;
+    std::optional<EResourceFormat> DepthAttachmentFormat = std::nullopt;
+    std::optional<EResourceFormat> StencilAttachmentFormat = std::nullopt;
   };
 
   struct SPipelinePushConstantInfo {

@@ -18,7 +18,8 @@ namespace Retina::Core {
 
   template <typename F>
   constexpr CDefer<F>::CDefer(F&& function) noexcept
-    : _function(std::forward<F>(function)) {}
+    : _function(std::forward<F>(function))
+  {}
 
   template <typename F>
   constexpr CDefer<F>::~CDefer() noexcept {

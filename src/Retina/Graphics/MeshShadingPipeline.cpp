@@ -222,7 +222,8 @@ namespace Retina::Graphics {
     dynamicStateCreateInfo.pDynamicStates = dynamicStates.data();
 
     auto renderingColorAttachmentFormats = std::vector<VkFormat>();
-    auto renderingDepthStencilAttachmentFormat = VkFormat();
+    auto renderingDepthAttachmentFormat = VkFormat();
+    auto renderingStencilAttachmentFormat = VkFormat();
     auto pipelineRenderingCreateInfo = VkPipelineRenderingCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO);
     if (createInfo.RenderingInfo) {
       const auto& renderingInfo = *createInfo.RenderingInfo;
@@ -230,16 +231,18 @@ namespace Retina::Graphics {
       for (const auto& colorAttachmentFormat : renderingInfo.ColorAttachmentFormats) {
         renderingColorAttachmentFormats.emplace_back(AsEnumCounterpart(colorAttachmentFormat));
       }
-
-      if (renderingInfo.DepthStencilAttachmentFormat) {
-        renderingDepthStencilAttachmentFormat = AsEnumCounterpart(*renderingInfo.DepthStencilAttachmentFormat);
+      if (renderingInfo.DepthAttachmentFormat) {
+        renderingDepthAttachmentFormat = AsEnumCounterpart(*renderingInfo.DepthAttachmentFormat);
+      }
+      if (renderingInfo.StencilAttachmentFormat) {
+        renderingStencilAttachmentFormat = AsEnumCounterpart(*renderingInfo.StencilAttachmentFormat);
       }
 
       pipelineRenderingCreateInfo.viewMask = renderingInfo.ViewMask;
       pipelineRenderingCreateInfo.colorAttachmentCount = renderingColorAttachmentFormats.size();
       pipelineRenderingCreateInfo.pColorAttachmentFormats = renderingColorAttachmentFormats.data();
-      pipelineRenderingCreateInfo.depthAttachmentFormat = renderingDepthStencilAttachmentFormat;
-      pipelineRenderingCreateInfo.stencilAttachmentFormat = renderingDepthStencilAttachmentFormat;
+      pipelineRenderingCreateInfo.depthAttachmentFormat = renderingDepthAttachmentFormat;
+      pipelineRenderingCreateInfo.stencilAttachmentFormat = renderingStencilAttachmentFormat;
     }
 
     const auto descriptorLayoutHandles = Details::MakeDescriptorLayoutHandles(createInfo.DescriptorLayouts);
