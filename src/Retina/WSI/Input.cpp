@@ -87,7 +87,8 @@ namespace Retina::WSI {
 
   auto CInput::GetCursorPosition() const noexcept -> SInputCursorPosition {
     RETINA_PROFILE_SCOPED();
-    double x, y;
+    auto x = 0.0_f64;
+    auto y = 0.0_f64;
     glfwGetCursorPos(
       static_cast<GLFWwindow*>(_window->GetHandle()),
       &x,
@@ -103,11 +104,6 @@ namespace Retina::WSI {
       GLFW_CURSOR,
       static_cast<int32>(mode)
     );
-    if (mode == EInputCursorMode::E_DISABLED) {
-      if (glfwRawMouseMotionSupported()) {
-        glfwSetInputMode(static_cast<GLFWwindow*>(_window->GetHandle()), GLFW_RAW_MOUSE_MOTION, true);
-      }
-    }
     _dispatcher.Fire<SInputCursorModeEvent>(mode);
   }
 }

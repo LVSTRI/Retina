@@ -166,9 +166,11 @@ target_link_libraries(Retina.Dependencies INTERFACE
   glm
   mio
   spdlog
-  TracyClient
   unordered_dense
 )
+if (RETINA_ENABLE_PROFILER)
+  target_link_libraries(Retina.Dependencies INTERFACE TracyClient)
+endif ()
 
 add_library(Retina.WSI.Dependencies INTERFACE)
 

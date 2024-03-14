@@ -75,7 +75,6 @@ namespace Retina::Entry {
 
   auto CCamera::Update(float32 deltaTime) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    const auto dtViewSensitivity = _viewSensitivity * deltaTime;
     const auto dtMovementSpeed = _movementSpeed * deltaTime;
 
     const auto [cursorX, cursorY] = _input->GetCursorPosition();
@@ -87,8 +86,9 @@ namespace Retina::Entry {
     const auto cursorDeltaY = _lastCursorPosition.Y - _cursorPosition.Y;
 
     if (_isCaptured) {
-      _yaw += cursorDeltaX * dtViewSensitivity;
-      _pitch += cursorDeltaY * dtViewSensitivity;
+      RETINA_CORE_DEBUG("Cursor Delta: ({}, {})", cursorDeltaX, cursorDeltaY);
+      _yaw += cursorDeltaX * _viewSensitivity;
+      _pitch += cursorDeltaY * _viewSensitivity;
     }
     _pitch = glm::clamp(_pitch, -89.9f, 89.9f);
 
@@ -133,6 +133,7 @@ namespace Retina::Entry {
   }
 
   auto CCamera::OnInputCursorMode(const WSI::SInputCursorModeEvent& event) noexcept -> bool {
+    RETINA_PROFILE_SCOPED();
     const auto [cursorX, cursorY] = _input->GetCursorPosition();
     _lastCursorPosition.X = static_cast<float32>(cursorX);
     _lastCursorPosition.Y = static_cast<float32>(cursorY);
@@ -144,12 +145,12 @@ namespace Retina::Entry {
   auto MakeInfiniteReversePerspective(float32 fov, float32 aspect, float32 near) noexcept -> glm::mat4 {
     RETINA_PROFILE_SCOPED();
     const auto cotHalfFov = 1.0f / glm::tan(glm::radians(fov) / 2.0f);
-    auto projection = glm::mat4 {
+    auto projection = glm::mat4(
       cotHalfFov / aspect, 0.0f, 0.0f, 0.0f,
       0.0f, cotHalfFov, 0.0f, 0.0f,
       0.0f, 0.0f, 0.0f, -1.0f,
       0.0f, 0.0f, near, 0.0f
-    };
+    );
     projection[1][1] *= -1;
     return projection;
   }

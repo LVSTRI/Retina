@@ -76,6 +76,9 @@ namespace Retina::WSI {
     auto input = CInput::Make(*self);
     auto* windowHandle = Details::MakePlatformWindow(createInfo);
     glfwSetWindowUserPointer(windowHandle, self.get());
+    if (glfwRawMouseMotionSupported()) {
+      glfwSetInputMode(windowHandle, GLFW_RAW_MOUSE_MOTION, true);
+    }
     glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* window, int32 width, int32 height) {
       auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
       self._createInfo.Width = width;
