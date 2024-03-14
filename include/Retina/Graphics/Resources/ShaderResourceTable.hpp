@@ -49,6 +49,8 @@ namespace Retina::Graphics {
       EImageLayout layout = EImageLayout::E_GENERAL
     ) noexcept -> CShaderResource<CImageView>;
 
+    // TODO: free resources (use nullptr/dummy images)
+
   private:
     // TODO: samplers
     Core::CSlotAllocator<MAX_BUFFER_RESOURCE_SLOTS> _bufferSlots;
@@ -59,7 +61,7 @@ namespace Retina::Graphics {
     std::array<Core::CArcPtr<CImageView>, MAX_IMAGE_RESOURCE_SLOTS> _imageViewStorage;
 
     Core::CArcPtr<CDescriptorSet> _descriptorSet;
-    Core::CArcPtr<CTypedBuffer<usize>> _addressBuffer;
+    Core::CArcPtr<CTypedBuffer<uint64>> _addressBuffer;
 
     Core::CReferenceWrapper<const CDevice> _device;
   };
@@ -77,7 +79,7 @@ namespace Retina::Graphics {
   }
 
   template <typename T>
-  RETINA_INLINE auto CShaderResourceTable::MakeBuffer(
+  auto CShaderResourceTable::MakeBuffer(
     uint32 count,
     const SBufferCreateInfo& createInfo
   ) noexcept -> std::vector<CShaderResource<CTypedBuffer<T>>> {

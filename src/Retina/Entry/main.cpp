@@ -1,6 +1,6 @@
 #include <Retina/Entry/Application.hpp>
 
 int main() {
-  Retina::Entry::CApplication::Make().Run();
+  Retina::Entry::IApplication::Make()->Run();
   return 0;
 }

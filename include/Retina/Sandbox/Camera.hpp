@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   class CCamera {
   private:
     struct SCursorPosition {
@@ -52,7 +52,7 @@ namespace Retina::Entry {
     float32 _yaw = 0.0f;
     float32 _pitch = 0.0f;
 
-    float32 _viewSensitivity = 15.0f;
+    float32 _viewSensitivity = 0.1f;
     float32 _movementSpeed = 5.0f;
 
     SCursorPosition _lastCursorPosition = {};

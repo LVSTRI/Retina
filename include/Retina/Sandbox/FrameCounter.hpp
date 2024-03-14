@@ -2,7 +2,7 @@
 
 #include <Retina/Core/Core.hpp>
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   class CFrameCounter {
   public:
     CFrameCounter() noexcept = default;

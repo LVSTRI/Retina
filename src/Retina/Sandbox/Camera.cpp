@@ -1,11 +1,12 @@
-#include <Retina/Entry/Camera.hpp>
+#include <Retina/Sandbox/Camera.hpp>
 
 #include <Retina/WSI/Input.hpp>
 #include <Retina/WSI/WindowInfo.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/reciprocal.hpp>
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   CCamera::CCamera(WSI::CInput& input) noexcept
     : _input(input)
   {
@@ -86,7 +87,6 @@ namespace Retina::Entry {
     const auto cursorDeltaY = _lastCursorPosition.Y - _cursorPosition.Y;
 
     if (_isCaptured) {
-      RETINA_CORE_DEBUG("Cursor Delta: ({}, {})", cursorDeltaX, cursorDeltaY);
       _yaw += cursorDeltaX * _viewSensitivity;
       _pitch += cursorDeltaY * _viewSensitivity;
     }
@@ -144,7 +144,7 @@ namespace Retina::Entry {
 
   auto MakeInfiniteReversePerspective(float32 fov, float32 aspect, float32 near) noexcept -> glm::mat4 {
     RETINA_PROFILE_SCOPED();
-    const auto cotHalfFov = 1.0f / glm::tan(glm::radians(fov) / 2.0f);
+    const auto cotHalfFov = glm::cot(glm::radians(fov) / 2.0f);
     auto projection = glm::mat4(
       cotHalfFov / aspect, 0.0f, 0.0f, 0.0f,
       0.0f, cotHalfFov, 0.0f, 0.0f,

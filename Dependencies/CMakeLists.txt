@@ -159,6 +159,38 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(unordered_dense)
 
+# cgltf
+FetchContent_Declare(
+  CGLTF
+  GIT_REPOSITORY https://github.com/jkuhlmann/cgltf
+  GIT_TAG de399881c65c438a635627c749440eeea7e05599
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+FetchContent_GetProperties(cgltf)
+if (NOT cgltf_POPULATED)
+  FetchContent_Populate(cgltf)
+  add_library(cgltf STATIC)
+  target_sources(cgltf PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/cgltf/Implementation.c
+  )
+  target_include_directories(cgltf PUBLIC
+    ${cgltf_SOURCE_DIR}
+  )
+  target_compile_options(cgltf PRIVATE -w)
+endif ()
+
+# meshoptimizer
+FetchContent_Declare(
+  meshoptimizer
+  GIT_REPOSITORY https://github.com/zeux/meshoptimizer
+  GIT_TAG 1b34f94ff4a322ed38673d84c9f76b86524f90b3
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+set(MESHOPT_BUILD_GLTFPACK ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(meshoptimizer)
+
 add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
@@ -171,12 +203,6 @@ target_link_libraries(Retina.Dependencies INTERFACE
 if (RETINA_ENABLE_PROFILER)
   target_link_libraries(Retina.Dependencies INTERFACE TracyClient)
 endif ()
-
-add_library(Retina.WSI.Dependencies INTERFACE)
-
-target_link_libraries(Retina.WSI.Dependencies INTERFACE
-  glfw
-)
 
 add_library(Retina.Graphics.Dependencies INTERFACE)
 
@@ -191,3 +217,16 @@ add_library(Retina.Graphics.Vulkan INTERFACE)
 target_include_directories(Retina.Graphics.Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_compile_definitions(Retina.Graphics.Vulkan INTERFACE VK_NO_PROTOTYPES)
 target_link_libraries(Retina.Graphics.Vulkan INTERFACE vma)
+
+add_library(Retina.Sandbox.Dependencies INTERFACE)
+
+target_link_libraries(Retina.Sandbox.Dependencies INTERFACE
+  meshoptimizer
+  cgltf
+)
+
+add_library(Retina.WSI.Dependencies INTERFACE)
+
+target_link_libraries(Retina.WSI.Dependencies INTERFACE
+  glfw
+)

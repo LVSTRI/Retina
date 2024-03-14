@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Retina/Entry/FrameTimer.hpp>
+#include <Retina/Sandbox/FrameTimer.hpp>
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   auto CFrameTimer::Make() noexcept -> CFrameTimer {
     RETINA_PROFILE_SCOPED();
     return {};

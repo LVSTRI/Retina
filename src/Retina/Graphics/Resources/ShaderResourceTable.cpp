@@ -76,7 +76,7 @@ namespace Retina::Graphics {
       .Name = "ShaderResourceTable_DescriptorSet",
     });
 
-    auto addressBuffer = CTypedBuffer<usize>::Make(device, {
+    auto addressBuffer = CTypedBuffer<uint64>::Make(device, {
       .Name = "ShaderResourceTable_AddressBuffer",
       .Heap = EHeapType::E_DEVICE_MAPPABLE,
       .Capacity = MAX_BUFFER_RESOURCE_SLOTS,
@@ -110,6 +110,7 @@ namespace Retina::Graphics {
   }
 
   auto CShaderResourceTable::GetDescriptorLayout() const noexcept -> const CDescriptorLayout& {
+    RETINA_PROFILE_SCOPED();
     return _descriptorSet->GetLayout();
   }
 
@@ -125,6 +126,7 @@ namespace Retina::Graphics {
     _imageStorage[slot] = image;
 
     auto descriptorWriteInfos = std::vector<SDescriptorWriteInfo>();
+    descriptorWriteInfos.reserve(2);
     if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_SAMPLED)) {
       auto info = SDescriptorWriteInfo();
       info.Slot = slot;
@@ -157,6 +159,7 @@ namespace Retina::Graphics {
     _imageViewStorage[slot] = imageView;
 
     auto descriptorWriteInfos = std::vector<SDescriptorWriteInfo>();
+    descriptorWriteInfos.reserve(2);
     if (Core::IsFlagEnabled(usage, EImageUsageFlag::E_SAMPLED)) {
       auto info = SDescriptorWriteInfo();
       info.Slot = slot;

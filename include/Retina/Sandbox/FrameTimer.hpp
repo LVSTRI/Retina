@@ -7,7 +7,7 @@
 #define RETINA_SCOPED_TIMER_IMPL(x, l) auto _timer##l = x.Start()
 #define RETINA_SCOPED_TIMER(x) RETINA_SCOPED_TIMER_IMPL(x, __COUNTER__)
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   class CFrameTimerProxy;
 
   class CFrameTimer {

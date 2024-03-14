@@ -1,6 +1,6 @@
-#include <Retina/Entry/FrameCounter.hpp>
+#include <Retina/Sandbox/FrameCounter.hpp>
 
-namespace Retina::Entry {
+namespace Retina::Sandbox {
   auto CFrameCounter::Make(uint64 current) noexcept -> CFrameCounter {
     RETINA_PROFILE_SCOPED();
     auto self = CFrameCounter();
