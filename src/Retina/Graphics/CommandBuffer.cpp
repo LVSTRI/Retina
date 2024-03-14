@@ -1,4 +1,5 @@
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
+#include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
 #include <Retina/Graphics/CommandPool.hpp>
 #include <Retina/Graphics/DescriptorSet.hpp>
@@ -488,7 +489,31 @@ namespace Retina::Graphics {
     return *this;
   }
 
-  auto CCommandBuffer::CopyImage(const CImage& source, const CImage& dest, SImageCopyRegion copyRegion) noexcept -> CCommandBuffer& {
+  auto CCommandBuffer::CopyBuffer(
+    const CBuffer& source,
+    const CBuffer& dest,
+    const SBufferCopyRegion& copyRegion
+  ) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    auto region = VkBufferCopy2(VK_STRUCTURE_TYPE_BUFFER_COPY_2);
+    region.srcOffset = copyRegion.SourceOffset;
+    region.dstOffset = copyRegion.DestOffset;
+    region.size = copyRegion.Size;
+
+    if (region.size == WHOLE_SIZE) {
+      region.size = source.GetSizeBytes();
+    }
+
+    auto copy = VkCopyBufferInfo2(VK_STRUCTURE_TYPE_COPY_BUFFER_INFO_2);
+    copy.srcBuffer = source.GetHandle();
+    copy.dstBuffer = dest.GetHandle();
+    copy.regionCount = 1;
+    copy.pRegions = &region;
+    vkCmdCopyBuffer2(_handle, &copy);
+    return *this;
+  }
+
+  auto CCommandBuffer::CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     const auto sourceSubresource = MakeNativeImageSubresourceLayers(source, copyRegion.SourceSubresource);
     const auto destSubresource = MakeNativeImageSubresourceLayers(dest, copyRegion.DestSubresource);
@@ -512,7 +537,7 @@ namespace Retina::Graphics {
     return *this;
   }
 
-  auto CCommandBuffer::BlitImage(const CImage& source, const CImage& dest, SImageBlitRegion blitRegion) noexcept -> CCommandBuffer& {
+  auto CCommandBuffer::BlitImage(const CImage& source, const CImage& dest, const SImageBlitRegion& blitRegion) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     const auto sourceSubresource = MakeNativeImageSubresourceLayers(source, blitRegion.SourceSubresource);
     const auto destSubresource = MakeNativeImageSubresourceLayers(dest, blitRegion.DestSubresource);

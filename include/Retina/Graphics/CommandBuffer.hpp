@@ -77,8 +77,10 @@ namespace Retina::Graphics {
     auto BufferMemoryBarrier(const SBufferMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
     auto ImageMemoryBarrier(const SImageMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
 
-    auto CopyImage(const CImage& source, const CImage& dest, SImageCopyRegion copyRegion) noexcept -> CCommandBuffer&;
-    auto BlitImage(const CImage& source, const CImage& dest, SImageBlitRegion blitRegion) noexcept -> CCommandBuffer&;
+    auto CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
+
+    auto CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
+    auto BlitImage(const CImage& source, const CImage& dest, const SImageBlitRegion& blitRegion) noexcept -> CCommandBuffer&;
 
     auto BeginNamedRegion(std::string_view name) noexcept -> CCommandBuffer&;
     auto EndNamedRegion() noexcept -> CCommandBuffer&;

@@ -1,25 +1,25 @@
 #extension GL_EXT_mesh_shader : require
 
 #include <Retina/Retina.glsl>
+#include <Meshlet.glsl>
 
-const vec3[] trianglePositions = vec3[](
-  vec3( 0.0, -0.5, 0.0),
-  vec3(-0.5,  0.5, 0.0),
-  vec3( 0.5,  0.5, 0.0)
-);
-
-const vec3[] triangleColors = vec3[](
-  vec3(1.0, 0.0, 0.0),
-  vec3(0.0, 1.0, 0.0),
-  vec3(0.0, 0.0, 1.0)
-);
+#define WORK_GROUP_SIZE 32
+#define MAX_INDICES_PER_THREAD ((MESHLET_INDEX_COUNT + WORK_GROUP_SIZE - 1) / WORK_GROUP_SIZE)
+#define MAX_PRIMITIVES_PER_THREAD ((MESHLET_PRIMITIVE_COUNT + WORK_GROUP_SIZE - 1) / WORK_GROUP_SIZE)
 
 layout (location = 0) out SVertexData {
-  vec3 Color;
+  flat uint MeshletInstanceIndex;
 } o_VertexData[];
 
 RetinaDeclarePushConstant() {
-  uint u_ViewBufferIndex;
+  uint u_MeshletBufferId;
+  uint u_MeshletInstanceBufferId;
+  uint u_TransformBufferId;
+  uint u_PositionBufferId;
+  uint u_VertexBufferId;
+  uint u_IndexBufferId;
+  uint u_PrimitiveBufferId;
+  uint u_ViewBufferId;
 };
 
 RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
@@ -27,17 +27,72 @@ RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
   mat4 View;
   mat4 ProjView;
 };
-RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferIndex);
+RetinaDeclareQualifiedBuffer(restrict readonly, SMeshletBuffer) {
+  SMeshlet[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SMeshletInstanceBuffer) {
+  SMeshletInstance[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, STransformBuffer) {
+  mat4[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SPositionBuffer) {
+  vec3[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SVertexBuffer) {
+  vec3[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SIndexBuffer) {
+  uint[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SPrimitiveBuffer) {
+  uint8_t[] Data;
+};
 
-layout (local_size_x = 1) in;
-layout (triangles, max_vertices = 3, max_primitives = 1) out;
+RetinaDeclareBufferPointer(SMeshletBuffer, g_MeshletBuffer, u_MeshletBufferId);
+RetinaDeclareBufferPointer(SMeshletInstanceBuffer, g_MeshletInstanceBuffer, u_MeshletInstanceBufferId);
+RetinaDeclareBufferPointer(STransformBuffer, g_TransformBuffer, u_TransformBufferId);
+RetinaDeclareBufferPointer(SPositionBuffer, g_PositionBuffer, u_PositionBufferId);
+RetinaDeclareBufferPointer(SVertexBuffer, g_VertexBuffer, u_VertexBufferId);
+RetinaDeclareBufferPointer(SIndexBuffer, g_IndexBuffer, u_IndexBufferId);
+RetinaDeclareBufferPointer(SPrimitiveBuffer, g_PrimitiveBuffer, u_PrimitiveBufferId);
+RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferId);
+
+shared vec3 sh_ClipVertices[MESHLET_INDEX_COUNT];
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+layout (triangles, max_vertices = MESHLET_INDEX_COUNT, max_primitives = MESHLET_PRIMITIVE_COUNT) out;
 void main() {
-  SetMeshOutputsEXT(3, 1);
-  for (uint i = 0; i < 3; i++) {
-    o_VertexData[i].Color = triangleColors[i];
-    gl_MeshVerticesEXT[i].gl_Position = g_ViewInfoBuffer.ProjView * vec4(trianglePositions[i], 1.0);
-  }
+  const uint meshletInstanceIndex = gl_WorkGroupID.x;
+  const SMeshletInstance meshletInstance = g_MeshletInstanceBuffer.Data[meshletInstanceIndex];
+  const SMeshlet meshlet = g_MeshletBuffer.Data[meshletInstance.MeshletIndex];
+  const mat4 transform = g_TransformBuffer.Data[meshletInstance.TransformIndex];
 
-  gl_PrimitiveTriangleIndicesEXT[0] = uvec3(0, 1, 2);
-  gl_MeshPrimitivesEXT[0].gl_PrimitiveID = 0;
+  SetMeshOutputsEXT(meshlet.IndexCount, meshlet.PrimitiveCount);
+  for (uint i = 0; i < MAX_INDICES_PER_THREAD; i++) {
+    const uint id = min(gl_LocalInvocationID.x + i * WORK_GROUP_SIZE, meshlet.IndexCount - 1);
+    const uint index = g_IndexBuffer.Data[meshlet.IndexOffset + id];
+    const vec3 position = g_PositionBuffer.Data[meshlet.VertexOffset + index];
+    const vec4 clip = g_ViewInfoBuffer.ProjView * transform * vec4(position, 1.0);
+    o_VertexData[id].MeshletInstanceIndex = meshletInstanceIndex;
+    sh_ClipVertices[id] = vec3(clip.xyw);
+    gl_MeshVerticesEXT[id].gl_Position = clip;
+  }
+  barrier();
+
+  for (uint i = 0; i < MAX_PRIMITIVES_PER_THREAD; i++) {
+    const uint id = min(gl_LocalInvocationID.x + i * WORK_GROUP_SIZE, meshlet.PrimitiveCount - 1);
+    const uvec3 indices = uvec3(
+      uint(g_PrimitiveBuffer.Data[meshlet.PrimitiveOffset + id * 3 + 0]),
+      uint(g_PrimitiveBuffer.Data[meshlet.PrimitiveOffset + id * 3 + 1]),
+      uint(g_PrimitiveBuffer.Data[meshlet.PrimitiveOffset + id * 3 + 2])
+    );
+    const vec3 v0 = sh_ClipVertices[indices.x];
+    const vec3 v1 = sh_ClipVertices[indices.y];
+    const vec3 v2 = sh_ClipVertices[indices.z];
+    const float det = determinant(mat3(v0, v1, v2));
+    gl_PrimitiveTriangleIndicesEXT[id] = indices;
+    gl_MeshPrimitivesEXT[id].gl_PrimitiveID = int(id);
+    gl_MeshPrimitivesEXT[id].gl_CullPrimitiveEXT = det > 0.0;
+  }
 }

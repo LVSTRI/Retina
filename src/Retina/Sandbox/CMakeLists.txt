@@ -4,6 +4,8 @@ target_sources(Retina.Sandbox PRIVATE
   Camera.cpp
   FrameCounter.cpp
   FrameTimer.cpp
+  Logger.cpp
+  MeshletModel.cpp
   Model.cpp
   SandboxApplication.cpp
 )

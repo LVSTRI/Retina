@@ -31,6 +31,7 @@ namespace Retina::Graphics {
     auto SetDebugName(std::string_view name) noexcept -> void;
 
     auto Submit(const SQueueSubmitInfo& submitInfo, const CFence* fence = nullptr) noexcept -> void;
+    auto Submit(std::move_only_function<void(CCommandBuffer&)>&& submission) noexcept -> void;
 
     auto WaitIdle() const noexcept -> void;
     auto Lock() noexcept -> void;

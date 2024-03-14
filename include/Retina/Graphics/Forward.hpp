@@ -31,6 +31,7 @@ namespace Retina::Graphics {
   struct SBufferMemoryBarrier;
   struct SImageMemoryBarrier;
   struct SMemoryBarrierInfo;
+  struct SBufferCopyRegion;
   struct SImageCopyRegion;
   struct SImageBlitRegion;
   union SColorClearValue;

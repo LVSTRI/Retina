@@ -5,6 +5,7 @@
 #include <Retina/Sandbox/Camera.hpp>
 #include <Retina/Sandbox/FrameCounter.hpp>
 #include <Retina/Sandbox/FrameTimer.hpp>
+#include <Retina/Sandbox/MeshletModel.hpp>
 #include <Retina/Sandbox/Model.hpp>
 
 #include <Retina/Entry/Application.hpp>
@@ -54,7 +55,7 @@ namespace Retina::Sandbox {
 
     CFrameTimer _timer = {};
 
-    std::optional<CModel> _model = {};
+    std::optional<CMeshletModel> _model = {};
 
     std::unique_ptr<CCamera> _camera;
 
@@ -71,6 +72,14 @@ namespace Retina::Sandbox {
     std::unique_ptr<Graphics::CHostDeviceTimeline> _frameTimeline;
 
     std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SViewInfo>>> _viewBuffer;
+
+    Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshlet>> _meshletBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshletInstance>> _meshletInstanceBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<glm::mat4>> _transformBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<glm::vec3>> _positionBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshletVertex>> _vertexBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<uint32>> _indexBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
 
     Core::CArcPtr<Graphics::CImage> _mainImage;
     Core::CArcPtr<Graphics::CImage> _mainImageDepth;

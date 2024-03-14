@@ -264,7 +264,6 @@ namespace Retina::Graphics {
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.imageCubeArray);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.independentBlend);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.sampleRateShading);
-      RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.geometryShader);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.multiDrawIndirect);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.depthClamp);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.depthBiasClamp);

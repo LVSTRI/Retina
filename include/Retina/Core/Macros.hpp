@@ -124,6 +124,30 @@
     RETINA_PANIC();                                       \
   } while (false)
 
+#define RETINA_EXPECT(x) ({                         \
+  auto _x = (x);                                    \
+  if (!_x) {                                        \
+    return std::unexpected(std::move(_x.error()));  \
+  }                                                 \
+  std::move(_x.value());                            \
+})
+
+#define RETINA_EXPECT_TRANSFORM(x, f) ({  \
+  auto _x = (x);                          \
+  if (!_x) {                              \
+    return std::move(_x).transform(f);    \
+  }                                       \
+  std::move(_x.value());                  \
+})
+
+#define RETINA_EXPECT_TRANSFORM_ERROR(x, f) ({ \
+  auto _x = (x);                               \
+  if (!_x) {                                   \
+    return std::move(_x).transform_error(f);   \
+  }                                            \
+  std::move(_x.value());                       \
+})
+
 #if defined(RETINA_ENABLE_PROFILER)
   #ifndef TRACY_ENABLE
     #define TRACY_ENABLE

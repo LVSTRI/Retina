@@ -1,3 +1,4 @@
+#include <Retina/Sandbox/Logger.hpp>
 #include <Retina/Sandbox/Model.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -130,7 +131,7 @@ namespace Retina::Sandbox {
             }
 
             if (primitive.Positions.empty()) {
-              RETINA_CORE_WARN("Primitive has no positions, skipping");
+              RETINA_SANDBOX_WARN("Primitive has no positions, skipping");
               continue;
             }
 
@@ -167,7 +168,7 @@ namespace Retina::Sandbox {
               }
 
               if (!count) {
-                RETINA_CORE_WARN("Primitive has no indices, generating temporary indices");
+                RETINA_SANDBOX_WARN("Primitive has no indices, generating temporary indices");
                 auto indices = std::vector<uint32>(primitive.Positions.size());
                 std::iota(indices.begin(), indices.end(), 0);
                 primitive.Indices = std::span(indices);
@@ -191,7 +192,7 @@ namespace Retina::Sandbox {
       for (auto i = 0_u32; i < gltf->nodes_count; ++i) {
         const auto& currentNode = gltf->nodes[i];
         if (!currentNode.mesh) {
-          RETINA_CORE_WARN("Node has no mesh, skipping");
+          RETINA_SANDBOX_WARN("Node has no mesh, skipping");
           continue;
         }
         const auto meshIndex = cgltf_mesh_index(gltf, currentNode.mesh);
@@ -203,12 +204,12 @@ namespace Retina::Sandbox {
         nodes.emplace_back(node);
       }
 
-      RETINA_CORE_INFO("Loaded glTF file: {}", path.generic_string());
-      RETINA_CORE_INFO("- Meshes: {}", meshes.size());
-      RETINA_CORE_INFO("- Primitives: {}", primitives.size());
-      RETINA_CORE_INFO("- Nodes: {}", nodes.size());
-      RETINA_CORE_INFO("I/O Info:");
-      RETINA_CORE_INFO("- Files: {}", self._files.size());
+      RETINA_SANDBOX_INFO("Loaded glTF file: {}", path.generic_string());
+      RETINA_SANDBOX_INFO("- Meshes: {}", meshes.size());
+      RETINA_SANDBOX_INFO("- Primitives: {}", primitives.size());
+      RETINA_SANDBOX_INFO("- Nodes: {}", nodes.size());
+      RETINA_SANDBOX_INFO("I/O Info:");
+      RETINA_SANDBOX_INFO("- Files: {}", self._files.size());
 
       self._meshes = std::move(meshes);
       self._primitives = std::move(primitives);
@@ -216,5 +217,20 @@ namespace Retina::Sandbox {
       self._data = gltf;
       return self;
     }
+  }
+
+  auto CModel::GetMeshes() const noexcept -> std::span<const SMesh> {
+    RETINA_PROFILE_SCOPED();
+    return _meshes;
+  }
+
+  auto CModel::GetPrimitives() const noexcept -> std::span<const SPrimitive> {
+    RETINA_PROFILE_SCOPED();
+    return _primitives;
+  }
+
+  auto CModel::GetNodes() const noexcept -> std::span<const SNode> {
+    RETINA_PROFILE_SCOPED();
+    return _nodes;
   }
 }

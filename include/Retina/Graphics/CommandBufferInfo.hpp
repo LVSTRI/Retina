@@ -70,6 +70,12 @@ namespace Retina::Graphics {
     std::vector<SImageMemoryBarrier> ImageMemoryBarriers;
   };
 
+  struct SBufferCopyRegion {
+    usize SourceOffset = 0;
+    usize DestOffset = 0;
+    usize Size = WHOLE_SIZE;
+  };
+
   struct SImageCopyRegion {
     SOffset3D SourceOffset = {};
     SOffset3D DestOffset = {};

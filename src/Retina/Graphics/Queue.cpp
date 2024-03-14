@@ -136,6 +136,24 @@ namespace Retina::Graphics {
     RETINA_GRAPHICS_VULKAN_CHECK(vkQueueSubmit2(_handle, 1, &queueSubmitInfo, fenceHandle));
   }
 
+  auto CQueue::Submit(std::move_only_function<void(CCommandBuffer&)>&& submission) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    auto commandBuffer = CCommandBuffer::Make(*this, {
+      .Name = "TransientCommandBuffer",
+      .PoolInfo = { {
+        .Flags = ECommandPoolCreateFlag::E_TRANSIENT,
+      } },
+    });
+
+    commandBuffer->Begin();
+    submission(*commandBuffer);
+    commandBuffer->End();
+
+    auto fence = CFence::Make(GetDevice(), { .Name = "ImmediateSubmissionFence" });
+    Submit({ .CommandBuffers = { *commandBuffer } }, fence.Get());
+    fence->Wait();
+  }
+
   auto CQueue::WaitIdle() const noexcept -> void {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_VULKAN_CHECK(vkQueueWaitIdle(_handle));

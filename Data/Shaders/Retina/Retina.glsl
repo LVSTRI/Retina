@@ -33,7 +33,6 @@
 #define RETINA_SAMPLER_LAYOUT layout (set = 0, binding = RETINA_SAMPLER_DESCRIPTOR_BINDING)
 #define RETINA_SAMPLED_IMAGE_LAYOUT layout (set = 0, binding = RETINA_SAMPLED_IMAGE_BINDING)
 #define RETINA_STORAGE_IMAGE_LAYOUT layout (set = 0, binding = RETINA_STORAGE_IMAGE_BINDING)
-#define RETINA_STORAGE_BUFFER_LAYOUT 
 #define RETINA_BUFFER_POINTER_LAYOUT layout (scalar, buffer_reference)
 
 #define RETINA_DECLARE_SAMPLER_DESCRIPTOR()                           \

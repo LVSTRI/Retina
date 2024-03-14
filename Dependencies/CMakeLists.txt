@@ -1,7 +1,10 @@
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 include(FetchContent)
 
-find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
+find_package(Vulkan REQUIRED COMPONENTS
+  SPIRV-Tools
+  shaderc_combined
+)
 
 # debugbreak
 FetchContent_Declare(
@@ -209,6 +212,7 @@ add_library(Retina.Graphics.Dependencies INTERFACE)
 target_link_libraries(Retina.Graphics.Dependencies INTERFACE
   spirv-cross-glsl
   volk
+  Vulkan::SPIRV-Tools
   Vulkan::shaderc_combined
 )
 

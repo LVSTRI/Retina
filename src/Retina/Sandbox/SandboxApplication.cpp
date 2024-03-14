@@ -18,6 +18,32 @@ namespace Retina::Sandbox {
       RETINA_PROFILE_SCOPED();
       return std::filesystem::path(RETINA_ASSET_DIRECTORY) / path;
     }
+
+    template <typename T>
+    RETINA_NODISCARD RETINA_INLINE auto UploadBufferAsResource(
+      const Graphics::CDevice& device,
+      std::span<const T> data,
+      std::string_view name = ""
+    ) noexcept -> Graphics::CShaderResource<Graphics::CTypedBuffer<T>> {
+      RETINA_PROFILE_SCOPED();
+      auto buffer = Graphics::CTypedBuffer<T>::Make(device, {
+        .Name = "StagingBuffer",
+        .Heap = Graphics::EHeapType::E_HOST_ONLY_COHERENT,
+        .Capacity = data.size(),
+      });
+      buffer->Write(data);
+      auto resource = device
+        .GetShaderResourceTable()
+        .MakeBuffer<T>({
+          .Name = name.data(),
+          .Heap = Graphics::EHeapType::E_DEVICE_ONLY,
+          .Capacity = data.size(),
+        });
+      device.GetTransferQueue().Submit([&](Graphics::CCommandBuffer& commands) noexcept {
+        commands.CopyBuffer(*buffer, *resource, {});
+      });
+      return resource;
+    }
   }
 
   CSandboxApplication::CSandboxApplication() noexcept {
@@ -95,8 +121,7 @@ namespace Retina::Sandbox {
       .Width = _swapchain->GetWidth(),
       .Height = _swapchain->GetHeight(),
       .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
-      .Usage =
-        Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
+      .Usage = Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
 
@@ -104,6 +129,7 @@ namespace Retina::Sandbox {
       .Name = "MainPipeline",
       .MeshShader = Details::WithShaderPath("Main.mesh.glsl"),
       .FragmentShader = Details::WithShaderPath("Main.frag.glsl"),
+      .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
       .DescriptorLayouts = {
         _device->GetShaderResourceTable().GetDescriptorLayout(),
       },
@@ -124,16 +150,26 @@ namespace Retina::Sandbox {
       },
     });
 
-    _model = CModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
-      .or_else([](const auto& error) -> std::expected<CModel, CModel::EError> {
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
+      .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_CORE_ERROR("Failed to load model");
         return std::unexpected(error);
       })
-      .transform([](auto&& model) -> std::optional<CModel> {
+      .transform([](auto&& model) -> std::optional<CMeshletModel> {
         RETINA_CORE_INFO("Loaded model");
         return model;
       })
       .value_or(std::nullopt);
+
+    if (_model) {
+      _meshletBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshlets(), "MeshletBuffer");
+      _meshletInstanceBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshletInstances(), "MeshletInstanceBuffer");
+      _transformBuffer = Details::UploadBufferAsResource(*_device, _model->GetTransforms(), "TransformBuffer");
+      _positionBuffer = Details::UploadBufferAsResource(*_device, _model->GetPositions(), "PositionBuffer");
+      _vertexBuffer = Details::UploadBufferAsResource(*_device, _model->GetVertices(), "VertexBuffer");
+      _indexBuffer = Details::UploadBufferAsResource(*_device, _model->GetIndices(), "IndexBuffer");
+      _primitiveBuffer = Details::UploadBufferAsResource(*_device, _model->GetPrimitives(), "PrimitiveBuffer");
+    }
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
@@ -306,8 +342,17 @@ namespace Retina::Sandbox {
       .SetScissor()
       .BindPipeline(*_mainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
-      .PushConstants(viewBuffer.GetHandle())
-      .DrawMeshTasks(1)
+      .PushConstants(
+        _meshletBuffer.GetHandle(),
+        _meshletInstanceBuffer.GetHandle(),
+        _transformBuffer.GetHandle(),
+        _positionBuffer.GetHandle(),
+        _vertexBuffer.GetHandle(),
+        _indexBuffer.GetHandle(),
+        _primitiveBuffer.GetHandle(),
+        viewBuffer.GetHandle()
+      )
+      .DrawMeshTasks(_meshletInstanceBuffer->GetSize())
       .EndRendering()
       .Barrier({
         .ImageMemoryBarriers = {
