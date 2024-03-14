@@ -170,6 +170,45 @@ namespace Retina::Graphics {
     };
   }
 
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(float32 value) noexcept -> SAttachmentClearValue {
+    return {
+      .Color = {
+        .Float32 = {
+          value,
+          value,
+          value,
+          value
+        }
+      }
+    };
+  }
+
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(int32 value) noexcept -> SAttachmentClearValue {
+    return {
+      .Color = {
+        .Int32 = {
+          value,
+          value,
+          value,
+          value
+        }
+      }
+    };
+  }
+
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(uint32 value) noexcept -> SAttachmentClearValue {
+    return {
+      .Color = {
+        .Uint32 = {
+          value,
+          value,
+          value,
+          value
+        }
+      }
+    };
+  }
+
   RETINA_NODISCARD RETINA_INLINE constexpr auto MakeDepthStencilClearValue(float32 depth = 0.0f, uint32 stencil = 0) noexcept -> SAttachmentClearValue {
     return {
       .DepthStencil = {

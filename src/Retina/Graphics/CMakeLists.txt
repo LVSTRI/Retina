@@ -23,6 +23,7 @@ target_sources(Retina.Graphics PRIVATE
   MeshShadingPipeline.cpp
   Pipeline.cpp
   Queue.cpp
+  Sampler.cpp
   Semaphore.cpp
   Swapchain.cpp
   TimelineSemaphore.cpp

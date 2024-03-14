@@ -36,6 +36,8 @@
 #include <Retina/Graphics/PipelineInfo.hpp>
 #include <Retina/Graphics/Queue.hpp>
 #include <Retina/Graphics/QueueInfo.hpp>
+#include <Retina/Graphics/Sampler.hpp>
+#include <Retina/Graphics/SamplerInfo.hpp>
 #include <Retina/Graphics/Semaphore.hpp>
 #include <Retina/Graphics/SemaphoreInfo.hpp>
 #include <Retina/Graphics/Swapchain.hpp>

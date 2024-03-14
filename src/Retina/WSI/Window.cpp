@@ -126,9 +126,9 @@ namespace Retina::WSI {
     self->_createInfo = createInfo;
 
     RETINA_WSI_INFO("Initialized Window: {{ {}, {}, {} }}", createInfo.Title, createInfo.Width, createInfo.Height);
-    RETINA_WSI_INFO("- Resizable: {}", createInfo.Features.Resizable);
-    RETINA_WSI_INFO("- Decorated: {}", createInfo.Features.Decorated);
-    RETINA_WSI_INFO("- Focused: {}", createInfo.Features.Focused);
+    RETINA_WSI_INFO(" - Resizable: {}", createInfo.Features.Resizable);
+    RETINA_WSI_INFO(" - Decorated: {}", createInfo.Features.Decorated);
+    RETINA_WSI_INFO(" - Focused: {}", createInfo.Features.Focused);
 
     return self;
   }

@@ -48,7 +48,7 @@ namespace Retina::Sandbox {
       }
 
       std::transform(
-        std::execution::par_unseq,
+        std::execution::par,
         normals.begin(),
         normals.end(),
         normals.begin(),
@@ -182,7 +182,7 @@ namespace Retina::Sandbox {
         [](const auto& indices) -> std::vector<uint32> {
           auto result = std::vector<uint32>(indices.size());
           std::transform(
-            std::execution::par_unseq,
+            std::execution::par,
             indices.begin(),
             indices.end(),
             result.begin(),
@@ -240,7 +240,7 @@ namespace Retina::Sandbox {
 
       modelMeshlets.resize(modelMeshlets.size() + meshlets.size());
       std::transform(
-        std::execution::par_unseq,
+        std::execution::par,
         meshlets.begin(),
         meshlets.end(),
         modelMeshlets.begin() + currentMeshletOffset,
@@ -257,7 +257,7 @@ namespace Retina::Sandbox {
       
       modelPositions.resize(modelPositions.size() + optimizedVertices.size());
       std::transform(
-        std::execution::par_unseq,
+        std::execution::par,
         optimizedVertices.begin(),
         optimizedVertices.end(),
         modelPositions.begin() + currentVertexOffset,
@@ -268,7 +268,7 @@ namespace Retina::Sandbox {
       
       modelVertices.resize(modelVertices.size() + optimizedVertices.size());
       std::transform(
-        std::execution::par_unseq,
+        std::execution::par,
         optimizedVertices.begin(),
         optimizedVertices.end(),
         modelVertices.begin() + currentVertexOffset,
@@ -283,7 +283,7 @@ namespace Retina::Sandbox {
       
       modelIndices.resize(modelIndices.size() + meshletIndices.size());
       std::copy(
-        std::execution::par_unseq,
+        std::execution::par,
         meshletIndices.begin(),
         meshletIndices.end(),
         modelIndices.begin() + currentIndexOffset
@@ -291,7 +291,7 @@ namespace Retina::Sandbox {
 
       modelPrimitives.resize(modelPrimitives.size() + meshletPrimitives.size());
       std::copy(
-        std::execution::par_unseq,
+        std::execution::par,
         meshletPrimitives.begin(),
         meshletPrimitives.end(),
         modelPrimitives.begin() + currentPrimitiveOffset

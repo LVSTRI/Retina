@@ -8,8 +8,9 @@
 #include <Retina/Graphics/Image.hpp>
 #include <Retina/Graphics/ImageView.hpp>
 #include <Retina/Graphics/Logger.hpp>
-#include <Retina/Graphics/Queue.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/Queue.hpp>
+#include <Retina/Graphics/Sampler.hpp>
 
 #include <volk.h>
 
@@ -263,6 +264,7 @@ namespace Retina::Graphics {
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.fullDrawIndexUint32);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.imageCubeArray);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.independentBlend);
+      RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.geometryShader);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.sampleRateShading);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.multiDrawIndirect);
       RETINA_ENABLE_FEATURE_OR_PANIC(Features.features.depthClamp);

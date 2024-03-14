@@ -20,7 +20,7 @@ namespace Retina::Sandbox {
     }
 
     template <typename T>
-    RETINA_NODISCARD RETINA_INLINE auto UploadBufferAsResource(
+    RETINA_NODISCARD auto UploadBufferAsResource(
       const Graphics::CDevice& device,
       std::span<const T> data,
       std::string_view name = ""
@@ -56,7 +56,7 @@ namespace Retina::Sandbox {
       .Features = {
         .Resizable = true,
         .Decorated = true,
-        .Focused = true
+        .Focused = true,
       }
     });
 
@@ -99,58 +99,7 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _viewBuffer = _device->GetShaderResourceTable().MakeBuffer<SViewInfo>(FRAMES_IN_FLIGHT, {
-      .Name = "ViewBuffer",
-      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
-      .Capacity = 1,
-    });
-
-    _mainImage = Graphics::CImage::Make(*_device, {
-      .Name = "MainImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
-      .Usage =
-        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
-        Graphics::EImageUsageFlag::E_TRANSFER_SRC,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-
-    _mainImageDepth = Graphics::CImage::Make(*_device, {
-      .Name = "MainImageDepth",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
-      .Usage = Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-
-    _mainPipeline = Graphics::CMeshShadingPipeline::Make(*_device, {
-      .Name = "MainPipeline",
-      .MeshShader = Details::WithShaderPath("Main.mesh.glsl"),
-      .FragmentShader = Details::WithShaderPath("Main.frag.glsl"),
-      .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
-      .DescriptorLayouts = {
-        _device->GetShaderResourceTable().GetDescriptorLayout(),
-      },
-      .DepthStencilState = {
-        .DepthTestEnable = true,
-        .DepthWriteEnable = true,
-        .DepthCompareOperator = Graphics::ECompareOperator::E_GREATER,
-      },
-      .DynamicState = { {
-        Graphics::EDynamicState::E_VIEWPORT,
-        Graphics::EDynamicState::E_SCISSOR,
-      } },
-      .RenderingInfo = {
-        {
-          .ColorAttachmentFormats = { _mainImage->GetFormat() },
-          .DepthAttachmentFormat = _mainImageDepth->GetFormat(),
-        }
-      },
-    });
-
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Sponza/Sponza.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_CORE_ERROR("Failed to load model");
         return std::unexpected(error);
@@ -161,6 +110,12 @@ namespace Retina::Sandbox {
       })
       .value_or(std::nullopt);
 
+    _viewBuffer = _device->GetShaderResourceTable().MakeBuffer<SViewInfo>(FRAMES_IN_FLIGHT, {
+      .Name = "ViewBuffer",
+      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
+      .Capacity = 1,
+    });
+
     if (_model) {
       _meshletBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshlets(), "MeshletBuffer");
       _meshletInstanceBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshletInstances(), "MeshletInstanceBuffer");
@@ -170,6 +125,10 @@ namespace Retina::Sandbox {
       _indexBuffer = Details::UploadBufferAsResource(*_device, _model->GetIndices(), "IndexBuffer");
       _primitiveBuffer = Details::UploadBufferAsResource(*_device, _model->GetPrimitives(), "PrimitiveBuffer");
     }
+
+    InitializeVisbufferPass();
+    InitializeVisbufferResolvePass();
+    InitializeTonemapPass();
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
@@ -195,7 +154,7 @@ namespace Retina::Sandbox {
       RETINA_MARK_FRAME();
     }
   }
-  
+
   auto CSandboxApplication::OnWindowResize(const WSI::SWindowResizeEvent& windowResizeEvent) noexcept -> bool {
     RETINA_PROFILE_SCOPED();
     if (windowResizeEvent.Width == 0 || windowResizeEvent.Height == 0) {
@@ -204,24 +163,9 @@ namespace Retina::Sandbox {
     _device->WaitIdle();
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
-    _mainImage = Graphics::CImage::Make(*_device, {
-      .Name = "MainImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
-      .Usage =
-        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
-        Graphics::EImageUsageFlag::E_TRANSFER_SRC,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-    _mainImageDepth = Graphics::CImage::Make(*_device, {
-      .Name = "MainImageDepth",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
-      .Usage = Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
+    InitializeVisbufferPass();
+    InitializeVisbufferResolvePass();
+    InitializeTonemapPass();
 
     OnUpdate();
     OnRender();
@@ -302,7 +246,7 @@ namespace Retina::Sandbox {
       .Barrier({
         .ImageMemoryBarriers = {
           {
-            .Image = *_mainImage,
+            .Image = *_visbuffer.MainImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
             .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
@@ -311,7 +255,7 @@ namespace Retina::Sandbox {
             .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
           },
           {
-            .Image = *_mainImageDepth,
+            .Image = *_visbuffer.DepthImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
             .DestStage = Graphics::EPipelineStageFlag::E_EARLY_FRAGMENT_TESTS,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
@@ -322,17 +266,17 @@ namespace Retina::Sandbox {
         }
       })
       .BeginRendering({
-        .Name = "MainPass",
+        .Name = "VisbufferMainRaster",
         .ColorAttachments = {
           {
-            .ImageView = _mainImage->GetView(),
+            .ImageView = _visbuffer.MainImage->GetView(),
             .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
             .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
-            .ClearValue = Graphics::MakeColorClearValue({ 0.025f, 0.025f, 0.025f, 1.0f }),
+            .ClearValue = Graphics::MakeColorClearValue(-1_u32),
           }
         },
         .DepthAttachment = { {
-          .ImageView = _mainImageDepth->GetView(),
+          .ImageView = _visbuffer.DepthImage->GetView(),
           .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
           .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
           .ClearValue = Graphics::MakeDepthStencilClearValue(0.0f, 0),
@@ -340,7 +284,7 @@ namespace Retina::Sandbox {
       })
       .SetViewport()
       .SetScissor()
-      .BindPipeline(*_mainPipeline)
+      .BindPipeline(*_visbuffer.MainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
       .PushConstants(
         _meshletBuffer.GetHandle(),
@@ -357,7 +301,89 @@ namespace Retina::Sandbox {
       .Barrier({
         .ImageMemoryBarriers = {
           {
-            .Image = *_mainImage,
+            .Image = *_visbuffer.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
+            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+          },
+          {
+            .Image = *_visbufferResolve.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          },
+        },
+      })
+      .BeginRendering({
+        .Name = "VisbufferResolve",
+        .ColorAttachments = {
+          {
+            .ImageView = _visbufferResolve.MainImage->GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          }
+        },
+      })
+      .SetViewport()
+      .SetScissor()
+      .BindPipeline(*_visbufferResolve.MainPipeline)
+      .BindShaderResourceTable(_device->GetShaderResourceTable())
+      .PushConstants(
+        _visbuffer.MainImage.GetHandle()
+      )
+      .Draw(3)
+      .EndRendering()
+      .Barrier({
+        .ImageMemoryBarriers = {
+          {
+            .Image = *_visbufferResolve.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
+            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+          },
+          {
+            .Image = *_tonemap.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          },
+        },
+      })
+      .BeginRendering({
+        .Name = "Tonemap",
+        .ColorAttachments = {
+          {
+            .ImageView = _tonemap.MainImage->GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          }
+        },
+      })
+      .SetViewport()
+      .SetScissor()
+      .BindPipeline(*_tonemap.MainPipeline)
+      .BindShaderResourceTable(_device->GetShaderResourceTable())
+      .PushConstants(
+        _visbufferResolve.MainImage.GetHandle()
+      )
+      .Draw(3)
+      .EndRendering()
+      .Barrier({
+        .ImageMemoryBarriers = {
+          {
+            .Image = *_tonemap.MainImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
             .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
@@ -373,10 +399,10 @@ namespace Retina::Sandbox {
             .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
             .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
             .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
-          }
-        }
+          },
+        },
       })
-      .BlitImage(*_mainImage, _swapchain->GetCurrentImage(), {})
+      .BlitImage(*_tonemap.MainImage, _swapchain->GetCurrentImage(), {})
       .ImageMemoryBarrier({
         .Image = _swapchain->GetCurrentImage(),
         .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
@@ -415,5 +441,132 @@ namespace Retina::Sandbox {
   auto CSandboxApplication::GetCurrentFrameIndex() noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
     return _frameTimeline->GetHostTimelineValue() % FRAMES_IN_FLIGHT;
+  }
+
+  auto CSandboxApplication::InitializeVisbufferPass() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+
+    _device->GetShaderResourceTable().Destroy(_visbuffer.MainImage);
+    _visbuffer.MainImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferMainImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_R32_UINT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+
+    _device->GetShaderResourceTable().Destroy(_visbuffer.DepthImage);
+    _visbuffer.DepthImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferDepthImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    if (!_visbuffer.IsInitialized) {
+      _visbuffer.MainPipeline = Graphics::CMeshShadingPipeline::Make(*_device, {
+        .Name = "VisbufferMainPipeline",
+        .MeshShader = Details::WithShaderPath("Visbuffer.mesh.glsl"),
+        .FragmentShader = Details::WithShaderPath("Visbuffer.frag.glsl"),
+        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
+        .DescriptorLayouts = {
+          _device->GetShaderResourceTable().GetDescriptorLayout(),
+        },
+        .DepthStencilState = {
+          .DepthTestEnable = true,
+          .DepthWriteEnable = true,
+          .DepthCompareOperator = Graphics::ECompareOperator::E_GREATER,
+        },
+        .DynamicState = { {
+          Graphics::EDynamicState::E_VIEWPORT,
+          Graphics::EDynamicState::E_SCISSOR,
+        } },
+        .RenderingInfo = {
+          {
+            .ColorAttachmentFormats = { _visbuffer.MainImage->GetFormat() },
+            .DepthAttachmentFormat = _visbuffer.DepthImage->GetFormat(),
+          }
+        },
+      });
+      _visbuffer.IsInitialized = true;
+    }
+  }
+
+  auto CSandboxApplication::InitializeVisbufferResolvePass() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    _device->GetShaderResourceTable().Destroy(_visbufferResolve.MainImage);
+    _visbufferResolve.MainImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferResolveMainImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_R32G32B32A32_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    if (!_visbufferResolve.IsInitialized) {
+      _visbufferResolve.MainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+        .Name = "VisbufferResolveMainPipeline",
+        .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
+        .FragmentShader = Details::WithShaderPath("VisbufferResolve.frag.glsl"),
+        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
+        .DescriptorLayouts = {
+          _device->GetShaderResourceTable().GetDescriptorLayout(),
+        },
+        .DynamicState = { {
+          Graphics::EDynamicState::E_VIEWPORT,
+          Graphics::EDynamicState::E_SCISSOR,
+        } },
+        .RenderingInfo = {
+          {
+            .ColorAttachmentFormats = { _visbufferResolve.MainImage->GetFormat() },
+          }
+        },
+      });
+      _visbufferResolve.IsInitialized = true;
+    }
+  }
+
+  auto CSandboxApplication::InitializeTonemapPass() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    _device->GetShaderResourceTable().Destroy(_tonemap.MainImage);
+    _tonemap.MainImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferResolveMainImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_TRANSFER_SRC,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    if (!_tonemap.IsInitialized) {
+      _tonemap.MainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+        .Name = "TonemapPipeline",
+        .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
+        .FragmentShader = Details::WithShaderPath("Tonemap.frag.glsl"),
+        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
+        .DescriptorLayouts = {
+          _device->GetShaderResourceTable().GetDescriptorLayout(),
+        },
+        .DynamicState = { {
+          Graphics::EDynamicState::E_VIEWPORT,
+          Graphics::EDynamicState::E_SCISSOR,
+        } },
+        .RenderingInfo = {
+          {
+            .ColorAttachmentFormats = { _tonemap.MainImage->GetFormat() },
+          }
+        },
+      });
+      _tonemap.IsInitialized = true;
+    }
   }
 }

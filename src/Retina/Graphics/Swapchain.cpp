@@ -129,7 +129,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
       const auto minImageCount = capabilities.minImageCount ? capabilities.minImageCount : targetImageCount;
       const auto maxImageCount = capabilities.maxImageCount ? capabilities.maxImageCount : targetImageCount;
       const auto imageCount = std::clamp(targetImageCount, minImageCount, maxImageCount);
-      RETINA_GRAPHICS_INFO("- Selected image count: {}", imageCount);
+      RETINA_GRAPHICS_INFO(" - Selected image count: {}", imageCount);
       return imageCount;
     }
 
@@ -138,7 +138,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     ) noexcept -> VkColorSpaceKHR {
       for (const auto& format : formats) {
         if (format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-          RETINA_GRAPHICS_INFO("- Selected color space: {}", ToString(format.colorSpace));
+          RETINA_GRAPHICS_INFO(" - Selected color space: {}", ToString(format.colorSpace));
           return format.colorSpace;
         }
       }
@@ -157,7 +157,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
           return format.format == targetFormat;
         });
         if (isAvailable) {
-          RETINA_GRAPHICS_INFO("- Selected format: {}", ToString(targetFormat));
+          RETINA_GRAPHICS_INFO(" - Selected format: {}", ToString(targetFormat));
           return targetFormat;
         }
       }
@@ -173,7 +173,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
         : VK_PRESENT_MODE_MAILBOX_KHR;
       for (const auto presentMode : presentModes) {
         if (presentMode == targetPresentMode) {
-          RETINA_GRAPHICS_INFO("- Selected present mode: {}", ToString(presentMode));
+          RETINA_GRAPHICS_INFO(" - Selected present mode: {}", ToString(presentMode));
           return presentMode;
         }
       }
@@ -188,7 +188,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
       const auto& minImageExtent = capabilities.minImageExtent;
       const auto& maxImageExtent = capabilities.maxImageExtent;
       if (currentExtent.width != -1_u32 && currentExtent.height != -1_u32) {
-        RETINA_GRAPHICS_INFO("- Selected extent: {{ Width: {}, Height: {} }}", currentExtent.width, currentExtent.height);
+        RETINA_GRAPHICS_INFO(" - Selected extent: {{ Width: {}, Height: {} }}", currentExtent.width, currentExtent.height);
         return currentExtent;
       }
       const auto minExtent = VkExtent2D(
@@ -197,7 +197,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
       );
       const auto width = std::clamp(window.GetWidth(), minExtent.width, maxImageExtent.width);
       const auto height = std::clamp(window.GetHeight(), minExtent.height, maxImageExtent.height);
-      RETINA_GRAPHICS_INFO("- Selected extent: {{ Width: {}, Height: {} }}", width, height);
+      RETINA_GRAPHICS_INFO(" - Selected extent: {{ Width: {}, Height: {} }}", width, height);
       return VkExtent2D(width, height);
     }
   }

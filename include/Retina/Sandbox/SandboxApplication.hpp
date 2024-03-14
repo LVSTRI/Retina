@@ -50,6 +50,10 @@ namespace Retina::Sandbox {
     auto WaitForNextFrameIndex() noexcept -> uint32;
     auto GetCurrentFrameIndex() noexcept -> uint32;
 
+    auto InitializeVisbufferPass() noexcept -> void;
+    auto InitializeVisbufferResolvePass() noexcept -> void;
+    auto InitializeTonemapPass() noexcept -> void;
+
   private:
     bool _isRunning = true;
 
@@ -81,8 +85,23 @@ namespace Retina::Sandbox {
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint32>> _indexBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
 
-    Core::CArcPtr<Graphics::CImage> _mainImage;
-    Core::CArcPtr<Graphics::CImage> _mainImageDepth;
-    Core::CArcPtr<Graphics::CMeshShadingPipeline> _mainPipeline;
+    struct {
+      bool IsInitialized = false;
+      Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Graphics::CShaderResource<Graphics::CImage> DepthImage;
+      Core::CArcPtr<Graphics::CMeshShadingPipeline> MainPipeline;
+    } _visbuffer;
+
+    struct {
+      bool IsInitialized = false;
+      Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
+    } _visbufferResolve;
+
+    struct {
+      bool IsInitialized = false;
+      Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
+    } _tonemap;
   };
 }

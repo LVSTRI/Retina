@@ -38,6 +38,10 @@ namespace Retina::Graphics {
       const SBufferCreateInfo& createInfo
     ) noexcept -> std::vector<CShaderResource<CTypedBuffer<T>>>;
 
+    RETINA_NODISCARD auto MakeSampler(
+      const SSamplerCreateInfo& createInfo
+    ) noexcept -> CShaderResource<CSampler>;
+
     RETINA_NODISCARD auto MakeImage(
       const SImageCreateInfo& createInfo,
       EImageLayout layout = EImageLayout::E_GENERAL
@@ -49,13 +53,18 @@ namespace Retina::Graphics {
       EImageLayout layout = EImageLayout::E_GENERAL
     ) noexcept -> CShaderResource<CImageView>;
 
-    // TODO: free resources (use nullptr/dummy images)
+    auto Destroy(CShaderResource<CSampler> handle) noexcept -> void;
+    template <typename T>
+    auto Destroy(CShaderResource<CTypedBuffer<T>> resource) noexcept -> void;
+    auto Destroy(CShaderResource<CImage> handle) noexcept -> void;
+    auto Destroy(CShaderResource<CImageView> handle) noexcept -> void;
 
   private:
-    // TODO: samplers
+    Core::CSlotAllocator<MAX_SAMPLER_RESOURCE_SLOTS> _samplerSlots;
     Core::CSlotAllocator<MAX_BUFFER_RESOURCE_SLOTS> _bufferSlots;
     Core::CSlotAllocator<MAX_IMAGE_RESOURCE_SLOTS> _imageSlots;
 
+    std::array<Core::CArcPtr<CSampler>, MAX_SAMPLER_RESOURCE_SLOTS> _samplerStorage;
     std::array<Core::CArcPtr<CBuffer>, MAX_BUFFER_RESOURCE_SLOTS> _bufferStorage;
     std::array<Core::CArcPtr<CImage>, MAX_IMAGE_RESOURCE_SLOTS> _imageStorage;
     std::array<Core::CArcPtr<CImageView>, MAX_IMAGE_RESOURCE_SLOTS> _imageViewStorage;
@@ -94,5 +103,14 @@ namespace Retina::Graphics {
       resources.emplace_back(CShaderResource<CTypedBuffer<T>>::Make(*buffers[i], slot));
     }
     return resources;
+  }
+
+  template <typename T>
+  auto CShaderResourceTable::Destroy(CShaderResource<CTypedBuffer<T>> resource) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    if (resource.IsValid()) {
+      _bufferSlots.Free(resource.GetHandle());
+      _bufferStorage[resource.GetHandle()] = {};
+    }
   }
 }

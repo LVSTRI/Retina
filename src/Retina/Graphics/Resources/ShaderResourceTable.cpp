@@ -8,6 +8,7 @@
 #include <Retina/Graphics/ImageView.hpp>
 #include <Retina/Graphics/Logger.hpp>
 #include <Retina/Graphics/Macros.hpp>
+#include <Retina/Graphics/Sampler.hpp>
 
 namespace Retina::Graphics {
   CShaderResourceTable::CShaderResourceTable(const CDevice& device) noexcept
@@ -114,6 +115,26 @@ namespace Retina::Graphics {
     return _descriptorSet->GetLayout();
   }
 
+  auto CShaderResourceTable::MakeSampler(const SSamplerCreateInfo& createInfo) noexcept -> CShaderResource<CSampler> {
+    RETINA_PROFILE_SCOPED();
+    auto sampler = CSampler::Make(_device, createInfo);
+    const auto descriptor = sampler->GetDescriptor();
+    const auto slot = _samplerSlots.Allocate();
+    _samplerStorage[slot] = sampler;
+
+    _descriptorSet->Write(
+      std::to_array<SDescriptorWriteInfo>({
+        {
+          .Slot = static_cast<uint32>(slot),
+          .Type = EDescriptorType::E_SAMPLER,
+          .Descriptors = std::vector { descriptor },
+        }
+      })
+    );
+
+    return CShaderResource<CSampler>::Make(*sampler, slot);
+  }
+
   auto CShaderResourceTable::MakeImage(
     const SImageCreateInfo& createInfo,
     EImageLayout layout
@@ -177,5 +198,29 @@ namespace Retina::Graphics {
     _descriptorSet->Write(descriptorWriteInfos);
 
     return CShaderResource<CImageView>::Make(*imageView, slot);
+  }
+
+  auto CShaderResourceTable::Destroy(CShaderResource<CSampler> handle) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    if (handle.IsValid()) {
+      _samplerSlots.Free(handle.GetHandle());
+      _samplerStorage[handle.GetHandle()] = {};
+    }
+  }
+
+  auto CShaderResourceTable::Destroy(CShaderResource<CImage> handle) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    if (handle.IsValid()) {
+      _imageSlots.Free(handle.GetHandle());
+      _imageStorage[handle.GetHandle()] = {};
+    }
+  }
+
+  auto CShaderResourceTable::Destroy(CShaderResource<CImageView> handle) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    if (handle.IsValid()) {
+      _imageSlots.Free(handle.GetHandle());
+      _imageViewStorage[handle.GetHandle()] = {};
+    }
   }
 }

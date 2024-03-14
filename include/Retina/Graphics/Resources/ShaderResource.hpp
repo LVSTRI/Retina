@@ -53,7 +53,7 @@ namespace Retina::Graphics {
   template <typename T>
   auto CShaderResource<T>::IsValid() const noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    return _handle != -1_usize;
+    return _handle != -1_u32;
   }
 
   template <typename T>

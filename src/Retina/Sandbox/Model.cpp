@@ -205,11 +205,11 @@ namespace Retina::Sandbox {
       }
 
       RETINA_SANDBOX_INFO("Loaded glTF file: {}", path.generic_string());
-      RETINA_SANDBOX_INFO("- Meshes: {}", meshes.size());
-      RETINA_SANDBOX_INFO("- Primitives: {}", primitives.size());
-      RETINA_SANDBOX_INFO("- Nodes: {}", nodes.size());
+      RETINA_SANDBOX_INFO(" - Meshes: {}", meshes.size());
+      RETINA_SANDBOX_INFO(" - Primitives: {}", primitives.size());
+      RETINA_SANDBOX_INFO(" - Nodes: {}", nodes.size());
       RETINA_SANDBOX_INFO("I/O Info:");
-      RETINA_SANDBOX_INFO("- Files: {}", self._files.size());
+      RETINA_SANDBOX_INFO(" - Files: {}", self._files.size());
 
       self._meshes = std::move(meshes);
       self._primitives = std::move(primitives);

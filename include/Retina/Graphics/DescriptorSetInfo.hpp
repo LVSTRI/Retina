@@ -15,7 +15,7 @@ namespace Retina::Graphics {
   struct SImageDescriptor {
     VkSampler Sampler = {};
     VkImageView View = {};
-    EImageLayout Layout;
+    EImageLayout Layout = {};
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const SImageDescriptor&) const noexcept -> std::strong_ordering = default;
   };

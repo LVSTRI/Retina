@@ -158,6 +158,14 @@ namespace Retina::Graphics {
   struct SQueueCreateInfo;
   struct SQueueSemaphoreSubmitInfo;
 
+  // <Retina/Graphics/Sampler.hpp>
+  class CSampler;
+
+  // <Retina/Graphics/SamplerInfo.hpp>
+  struct SSamplerFilterInfo;
+  struct SSamplerAddressModeInfo;
+  struct SSamplerCreateInfo;
+
   // <Retina/Graphics/Semaphore.hpp>
   class ISemaphore;
 
