@@ -5,6 +5,7 @@
 #include <Retina/Sandbox/Camera.hpp>
 #include <Retina/Sandbox/FrameCounter.hpp>
 #include <Retina/Sandbox/FrameTimer.hpp>
+#include <Retina/Sandbox/Logger.hpp>
 #include <Retina/Sandbox/MeshletModel.hpp>
 #include <Retina/Sandbox/Model.hpp>
 
@@ -21,12 +22,27 @@
 #include <optional>
 
 #define FRAMES_IN_FLIGHT 2
+#define SHADOW_CASCADE_COUNT 24
+#define SHADOW_CASCADE_RESOLUTION 4096
+#define SHADOW_CASCADE_NEAR_PLANE 0.01f
+#define SHADOW_CASCADE_FAR_PLANE 4096.0f
 
 namespace Retina::Sandbox {
   struct SViewInfo {
-    glm::mat4 Projection;
-    glm::mat4 View;
-    glm::mat4 ProjView;
+    glm::mat4 Projection = {};
+    glm::mat4 FiniteProjection = {};
+    glm::mat4 View = {};
+    glm::mat4 ProjView = {};
+  };
+
+  struct SShadowCascadeInfo {
+    glm::mat4 Projection = {};
+    glm::mat4 View = {};
+    glm::mat4 ProjView = {};
+    glm::mat4 Global = {};
+    glm::vec4 Scale = {};
+    glm::vec4 Offset = {};
+    // TODO: frustum planes
   };
 
   class CSandboxApplication : public Entry::IApplication {
@@ -76,6 +92,7 @@ namespace Retina::Sandbox {
     std::unique_ptr<Graphics::CHostDeviceTimeline> _frameTimeline;
 
     std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SViewInfo>>> _viewBuffer;
+    std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SShadowCascadeInfo>>> _shadowCascadeBuffer;
 
     Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshlet>> _meshletBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshletInstance>> _meshletInstanceBuffer;

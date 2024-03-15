@@ -16,16 +16,13 @@ RetinaDeclarePushConstant() {
   uint u_MeshletInstanceBufferId;
   uint u_TransformBufferId;
   uint u_PositionBufferId;
-  uint u_VertexBufferId;
   uint u_IndexBufferId;
   uint u_PrimitiveBufferId;
   uint u_ViewBufferId;
 };
 
 RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
-  mat4 Projection;
-  mat4 View;
-  mat4 ProjView;
+  SViewInfo[] Data;
 };
 RetinaDeclareQualifiedBuffer(restrict readonly, SMeshletBuffer) {
   SMeshlet[] Data;
@@ -39,9 +36,6 @@ RetinaDeclareQualifiedBuffer(restrict readonly, STransformBuffer) {
 RetinaDeclareQualifiedBuffer(restrict readonly, SPositionBuffer) {
   vec3[] Data;
 };
-RetinaDeclareQualifiedBuffer(restrict readonly, SVertexBuffer) {
-  vec3[] Data;
-};
 RetinaDeclareQualifiedBuffer(restrict readonly, SIndexBuffer) {
   uint[] Data;
 };
@@ -53,7 +47,6 @@ RetinaDeclareBufferPointer(SMeshletBuffer, g_MeshletBuffer, u_MeshletBufferId);
 RetinaDeclareBufferPointer(SMeshletInstanceBuffer, g_MeshletInstanceBuffer, u_MeshletInstanceBufferId);
 RetinaDeclareBufferPointer(STransformBuffer, g_TransformBuffer, u_TransformBufferId);
 RetinaDeclareBufferPointer(SPositionBuffer, g_PositionBuffer, u_PositionBufferId);
-RetinaDeclareBufferPointer(SVertexBuffer, g_VertexBuffer, u_VertexBufferId);
 RetinaDeclareBufferPointer(SIndexBuffer, g_IndexBuffer, u_IndexBufferId);
 RetinaDeclareBufferPointer(SPrimitiveBuffer, g_PrimitiveBuffer, u_PrimitiveBufferId);
 RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferId);
@@ -66,6 +59,7 @@ void main() {
   const uint meshletInstanceIndex = gl_WorkGroupID.x;
   const SMeshletInstance meshletInstance = g_MeshletInstanceBuffer.Data[meshletInstanceIndex];
   const SMeshlet meshlet = g_MeshletBuffer.Data[meshletInstance.MeshletIndex];
+  const SViewInfo mainView = g_ViewInfoBuffer.Data[0];
   const mat4 transform = g_TransformBuffer.Data[meshletInstance.TransformIndex];
 
   SetMeshOutputsEXT(meshlet.IndexCount, meshlet.PrimitiveCount);
@@ -73,7 +67,7 @@ void main() {
     const uint id = min(gl_LocalInvocationID.x + i * WORK_GROUP_SIZE, meshlet.IndexCount - 1);
     const uint index = g_IndexBuffer.Data[meshlet.IndexOffset + id];
     const vec3 position = g_PositionBuffer.Data[meshlet.VertexOffset + index];
-    const vec4 clip = g_ViewInfoBuffer.ProjView * transform * vec4(position, 1.0);
+    const vec4 clip = mainView.ProjView * transform * vec4(position, 1.0);
     o_VertexData[id].MeshletInstanceIndex = meshletInstanceIndex;
     sh_ClipVertices[id] = vec3(clip.xyw);
     gl_MeshVerticesEXT[id].gl_Position = clip;
