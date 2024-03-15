@@ -175,7 +175,7 @@ if (NOT cgltf_POPULATED)
   FetchContent_Populate(cgltf)
   add_library(cgltf STATIC)
   target_sources(cgltf PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/cgltf/Implementation.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/CGLTF/Implementation.c
   )
   target_include_directories(cgltf PUBLIC
     ${cgltf_SOURCE_DIR}

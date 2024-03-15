@@ -105,7 +105,7 @@ namespace Retina::Sandbox {
 
       auto cascadeSplits = std::array<float32, SHADOW_CASCADE_COUNT>();
       {
-        constexpr static auto lambda = 0.95f;
+        constexpr static auto lambda = 0.975f;
         constexpr static auto clipRange = farPlane - nearPlane;
         constexpr static auto minZ = nearPlane;
         constexpr static auto maxZ = nearPlane + clipRange;
@@ -113,9 +113,9 @@ namespace Retina::Sandbox {
         constexpr static auto ratio = maxZ / minZ;
         for (auto i = 0_u32; i < SHADOW_CASCADE_COUNT; ++i) {
           const auto power = static_cast<float32>(i + 1) / static_cast<float32>(SHADOW_CASCADE_COUNT);
-          const auto splitLog = minZ * glm::pow(glm::abs(ratio), power);
+          const auto splitLog = minZ * glm::pow(ratio, power);
           const auto splitUniform = minZ + range * power;
-          const auto distance = lambda * (splitLog - splitUniform) + splitUniform;
+          const auto distance = splitUniform + lambda * (splitLog - splitUniform);
           cascadeSplits[i] = (distance - nearPlane) / clipRange;
         }
       }
@@ -270,7 +270,7 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Sponza/Sponza.gltf"))
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_SANDBOX_ERROR("Failed to load model");
         return std::unexpected(error);
