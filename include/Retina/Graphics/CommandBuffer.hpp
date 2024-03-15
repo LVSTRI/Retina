@@ -72,13 +72,17 @@ namespace Retina::Graphics {
 
     auto DrawMeshTasks(uint32 x = 1, uint32 y = 1, uint32 z = 1) noexcept -> CCommandBuffer&;
 
+    auto Dispatch(uint32 x = 1, uint32 y = 1, uint32 z = 1) noexcept -> CCommandBuffer&;
+
     auto Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer&;
     auto MemoryBarrier(const SMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
     auto BufferMemoryBarrier(const SBufferMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
     auto ImageMemoryBarrier(const SImageMemoryBarrier& barrier) noexcept -> CCommandBuffer&;
 
+    auto ClearBuffer(const CBuffer& buffer, uint32 value = 0, const SBufferMemoryRange& range = {}) noexcept -> CCommandBuffer&;
     auto CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
 
+    auto ClearImage(const CImageView& imageView, const SClearValue& clearValue) noexcept -> CCommandBuffer&;
     auto CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
     auto BlitImage(const CImage& source, const CImage& dest, const SImageBlitRegion& blitRegion) noexcept -> CCommandBuffer&;
 

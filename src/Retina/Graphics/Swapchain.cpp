@@ -283,6 +283,7 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
     self->_isValid = true;
     self->_createInfo = createInfo;
     self->_device = device.ToArcPtr();
+    self->SetDebugName(createInfo.Name);
 
     auto swapchainImages = CImage::FromSwapchain(device, *self, {
       .Name = "SwapchainImage",

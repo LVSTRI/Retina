@@ -36,7 +36,7 @@ namespace Retina::Graphics {
   struct SImageBlitRegion;
   union SColorClearValue;
   struct SDepthStencilClearValue;
-  union SAttachmentClearValue;
+  union SClearValue;
   struct SAttachmentInfo;
   struct SRenderingInfo;
   struct SCommandBufferCreateInfo;

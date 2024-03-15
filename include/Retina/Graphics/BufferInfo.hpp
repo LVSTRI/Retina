@@ -30,7 +30,7 @@ namespace Retina::Graphics {
 
   struct SBufferMemoryRange {
     uint64 Offset = 0;
-    uint64 Size = 0;
+    uint64 Size = WHOLE_SIZE;
   };
 
   struct SBufferCreateInfo {

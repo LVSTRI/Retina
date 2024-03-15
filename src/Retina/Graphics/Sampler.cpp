@@ -16,7 +16,7 @@ namespace Retina::Graphics {
   CSampler::~CSampler() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
-      RETINA_GRAPHICS_INFO("Sampler ({}) destroyed", _createInfo.Name);
+      RETINA_GRAPHICS_INFO("Sampler ({}) destroyed", GetDebugName());
       vkDestroySampler(_device->GetHandle(), _handle, nullptr);
     }
   }

@@ -18,6 +18,32 @@ namespace Retina::Sandbox {
       RETINA_PROFILE_SCOPED();
       return std::filesystem::path(RETINA_ASSET_DIRECTORY) / path;
     }
+    
+    template <typename T>
+    RETINA_NODISCARD constexpr auto NextPowerTwo(T value) noexcept -> T {
+        auto result = static_cast<T>(1);
+        while (result < value) {
+            result <<= 1;
+        }
+        return result;
+    }
+    
+    template <typename T>
+    RETINA_NODISCARD constexpr auto DivideRoundUp(T dividend, T divisor) noexcept -> T {
+        return (dividend + divisor - 1) / divisor;
+    }
+    
+    template <typename T>
+    RETINA_NODISCARD constexpr auto DivideRoundDown(T dividend, T divisor) noexcept -> T {
+        return dividend / divisor;
+    }
+    
+    template <typename T>
+    RETINA_NODISCARD constexpr auto DivideRoundNearest(T dividend, T divisor) noexcept -> T {
+        return (dividend >= 0)
+            ? (dividend + divisor / 2) / divisor
+            : (dividend - divisor / 2 + 1) / divisor;
+    }
 
     template <typename T>
     RETINA_NODISCARD auto UploadBufferAsResource(
@@ -43,177 +69,6 @@ namespace Retina::Sandbox {
         commands.CopyBuffer(*buffer, *resource, {});
       });
       return resource;
-    }
-
-    RETINA_NODISCARD RETINA_INLINE auto MakeGlobalShadowProjView(const glm::mat4& invProjView, const glm::vec3& lightDirection) noexcept -> glm::mat4 {
-      RETINA_PROFILE_SCOPED();
-      auto frustumCorners = std::to_array<glm::vec3>({
-        { -1.0, -1.0, 0.0 },
-        {  1.0, -1.0, 0.0 },
-        { -1.0,  1.0, 0.0 },
-        {  1.0,  1.0, 0.0 },
-        { -1.0, -1.0, 1.0 },
-        {  1.0, -1.0, 1.0 },
-        { -1.0,  1.0, 1.0 },
-        {  1.0,  1.0, 1.0 },
-      });
-      auto frustumCenter = glm::vec3(0.0f);
-      for (auto i = 0_u32; i < 8; ++i) {
-        const auto corner = invProjView * glm::vec4(frustumCorners[i], 1.0f);
-        frustumCorners[i] = glm::vec3(corner / corner.w);
-        frustumCenter += frustumCorners[i];
-      }
-      frustumCenter /= 8.0f;
-
-      auto minFrustumExtent = glm::vec3(std::numeric_limits<float32>::max());
-      auto maxFrustumExtent = glm::vec3(std::numeric_limits<float32>::lowest());
-      for (auto i = 0_u32; i < 8; ++i) {
-        minFrustumExtent = glm::vec3(glm::min(minFrustumExtent.x, frustumCorners[i].x));
-        minFrustumExtent = glm::vec3(glm::min(minFrustumExtent.y, frustumCorners[i].y));
-        minFrustumExtent = glm::vec3(glm::min(minFrustumExtent.z, frustumCorners[i].z));
-        maxFrustumExtent = glm::vec3(glm::max(maxFrustumExtent.x, frustumCorners[i].x));
-        maxFrustumExtent = glm::vec3(glm::max(maxFrustumExtent.y, frustumCorners[i].y));
-        maxFrustumExtent = glm::vec3(glm::max(maxFrustumExtent.z, frustumCorners[i].z));
-      }
-
-      const auto globalProjection = glm::ortho(
-        minFrustumExtent.x,
-        maxFrustumExtent.x,
-        minFrustumExtent.y,
-        maxFrustumExtent.y,
-        0.0f,
-        1.0f
-      );
-      const auto globalView = glm::lookAt(frustumCenter + lightDirection * 0.5f, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-      return globalProjection * globalView;
-    }
-
-    RETINA_NODISCARD RETINA_INLINE auto MakeShadowCascadeViews(
-      const SViewInfo& mainView,
-      const glm::vec3& lightDirection
-    ) noexcept -> std::vector<SShadowCascadeInfo> {
-      RETINA_PROFILE_SCOPED();
-      auto result = std::vector<SShadowCascadeInfo>(SHADOW_CASCADE_COUNT);
-      constexpr static auto nearPlane = SHADOW_CASCADE_NEAR_PLANE;
-      constexpr static auto farPlane = SHADOW_CASCADE_FAR_PLANE;
-      const auto uvScaleMatrix = glm::mat4(
-        0.5f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.5f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.0f, 1.0f
-      );
-
-      auto cascadeSplits = std::array<float32, SHADOW_CASCADE_COUNT>();
-      {
-        constexpr static auto lambda = 0.975f;
-        constexpr static auto clipRange = farPlane - nearPlane;
-        constexpr static auto minZ = nearPlane;
-        constexpr static auto maxZ = nearPlane + clipRange;
-        constexpr static auto range = maxZ - minZ;
-        constexpr static auto ratio = maxZ / minZ;
-        for (auto i = 0_u32; i < SHADOW_CASCADE_COUNT; ++i) {
-          const auto power = static_cast<float32>(i + 1) / static_cast<float32>(SHADOW_CASCADE_COUNT);
-          const auto splitLog = minZ * glm::pow(ratio, power);
-          const auto splitUniform = minZ + range * power;
-          const auto distance = splitUniform + lambda * (splitLog - splitUniform);
-          cascadeSplits[i] = (distance - nearPlane) / clipRange;
-        }
-      }
-
-      const auto mainProjView = mainView.FiniteProjection * mainView.View;
-      const auto invMainProjView = glm::inverse(mainProjView);
-
-      for (auto i = 0_u32; i < SHADOW_CASCADE_COUNT; ++i) {
-        const auto previousSplit = i == 0 ? nearPlane : cascadeSplits[i - 1];
-        const auto currentSplit = cascadeSplits[i];
-
-        auto frustumCenter = glm::vec3(0.0f);
-        auto frustumSphereRadius = 0.0f;
-        {
-          auto frustumCorners = std::to_array<glm::vec3>({
-            { -1.0, -1.0, 0.0 },
-            {  1.0, -1.0, 0.0 },
-            { -1.0,  1.0, 0.0 },
-            {  1.0,  1.0, 0.0 },
-            { -1.0, -1.0, 1.0 },
-            {  1.0, -1.0, 1.0 },
-            { -1.0,  1.0, 1.0 },
-            {  1.0,  1.0, 1.0 },
-          });
-          for (auto j = 0_u32; j < 8; ++j) {
-            const auto corner = invMainProjView * glm::vec4(frustumCorners[j], 1.0f);
-            frustumCorners[j] = glm::vec3(corner / corner.w);
-          }
-          for (auto j = 0_u32; j < 4; ++j) {
-            const auto cornerRay = frustumCorners[j + 4] - frustumCorners[j];
-            const auto nearCornerRay = cornerRay * previousSplit;
-            const auto farCornerRay = cornerRay * currentSplit;
-            frustumCorners[j + 4] = frustumCorners[j] + farCornerRay;
-            frustumCorners[j] = frustumCorners[j] + nearCornerRay;
-          }
-          for (auto j = 0_u32; j < 8; ++j) {
-            frustumCenter += frustumCorners[j];
-          }
-          frustumCenter /= 8.0f;
-
-          for (auto j = 0_u32; j < 8; ++j) {
-            frustumSphereRadius = glm::max(frustumSphereRadius, glm::length(frustumCorners[j] - frustumCenter));
-          }
-          frustumSphereRadius = glm::ceil(frustumSphereRadius * 16.0f) / 16.0f;
-        }
-
-        const auto minFrustumExtent = glm::vec3(-frustumSphereRadius);
-        const auto maxFrustumExtent = glm::vec3(frustumSphereRadius);
-        const auto shadowCascadeExtent = maxFrustumExtent - minFrustumExtent;
-        const auto shadowEyePosition = frustumCenter + lightDirection * -minFrustumExtent.z;
-
-        const auto shadowView = glm::lookAt(
-          shadowEyePosition,
-          frustumCenter,
-          glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-
-        auto shadowProjection = glm::ortho(
-          minFrustumExtent.x,
-          maxFrustumExtent.x,
-          minFrustumExtent.y,
-          maxFrustumExtent.y,
-          0.0f,
-          shadowCascadeExtent.z
-        );
-        {
-          const auto shadowProjView = shadowProjection * shadowView;
-          const auto shadowOrigin = shadowProjView * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-          const auto shadowOriginScaled = shadowOrigin * (SHADOW_CASCADE_RESOLUTION / 2.0f);
-          const auto shadowOriginRoundDifference = glm::round(shadowOriginScaled) - shadowOriginScaled;
-          const auto shadowOriginOffset = shadowOriginRoundDifference * (2.0f / SHADOW_CASCADE_RESOLUTION);
-          shadowProjection[3][0] += shadowOriginOffset.x;
-          shadowProjection[3][1] += shadowOriginOffset.y;
-        }
-
-        const auto shadowProjView = shadowProjection * shadowView;
-        const auto invScaledShadowProjView = glm::inverse(uvScaleMatrix * shadowProjView);
-        const auto globalProjView = uvScaleMatrix * MakeGlobalShadowProjView(invMainProjView, lightDirection);
-
-        const auto shadowCascadeCorners = std::to_array<glm::vec3>({
-          { globalProjView * glm::vec4(glm::vec3(invScaledShadowProjView * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)), 1.0f) },
-          { globalProjView * glm::vec4(glm::vec3(invScaledShadowProjView * glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)), 1.0f) },
-        });
-
-        const auto shadowCascadeScale = 1.0f / (shadowCascadeCorners[1] - shadowCascadeCorners[0]);
-        const auto shadowCascadeOffset = -shadowCascadeCorners[0];
-        const auto shadowCascadeClipDistance = nearPlane + currentSplit * (farPlane - nearPlane);
-        result[i] = {
-          .Projection = shadowProjection,
-          .View = shadowView,
-          .ProjView = shadowProjView,
-          .Global = globalProjView,
-          .Scale = glm::vec4(shadowCascadeScale, 0.0f),
-          .Offset = glm::vec4(shadowCascadeOffset, shadowCascadeClipDistance),
-        };
-      }
-
-      return result;
     }
   }
 
@@ -284,11 +139,6 @@ namespace Retina::Sandbox {
       .Name = "ViewBuffer",
       .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
       .Capacity = 1,
-    });
-    _shadowCascadeBuffer = _device->GetShaderResourceTable().MakeBuffer<SShadowCascadeInfo>(FRAMES_IN_FLIGHT, {
-      .Name = "ShadowCascadeBuffer",
-      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
-      .Capacity = SHADOW_CASCADE_COUNT,
     });
 
     if (_model) {
@@ -396,29 +246,15 @@ namespace Retina::Sandbox {
       constexpr static auto fov = 60.0f;
       const auto aspectRatio = _swapchain->GetWidth() / static_cast<float32>(_swapchain->GetHeight());
       const auto projection = MakeInfiniteReversePerspective(fov, aspectRatio, 0.1f);
-      const auto finiteProjection = glm::perspective(glm::radians(fov), aspectRatio, SHADOW_CASCADE_NEAR_PLANE, SHADOW_CASCADE_FAR_PLANE);
       const auto view = _camera->GetViewMatrix();
       const auto projView = projection * view;
       mainView = {
         .Projection = projection,
-        .FiniteProjection = finiteProjection,
         .View = view,
         .ProjView = projView,
+        .Position = glm::vec4(_camera->GetPosition(), 1.0f),
       };
       viewBuffer->Write(mainView);
-    }
-
-    auto& shadowCascadeBuffer = _shadowCascadeBuffer[frameIndex];
-    {
-      const auto elevation = glm::radians(45.0f);
-      const auto azimuth = glm::radians(45.0f);
-      const auto direction = glm::vec3(
-        glm::cos(elevation) * glm::sin(azimuth),
-        glm::sin(elevation),
-        glm::cos(elevation) * glm::cos(azimuth)
-      );
-      const auto shadowCascadeViews = Details::MakeShadowCascadeViews(mainView, glm::normalize(direction));
-      shadowCascadeBuffer->Write(shadowCascadeViews);
     }
   }
 
@@ -431,7 +267,6 @@ namespace Retina::Sandbox {
     _device->Tick();
 
     const auto& viewBuffer = _viewBuffer[frameIndex];
-    const auto& shadowCascadeBuffer = _shadowCascadeBuffer[frameIndex];
 
     auto& commandBuffer = *_commandBuffers[frameIndex];
     commandBuffer.GetCommandPool().Reset();
@@ -539,8 +374,7 @@ namespace Retina::Sandbox {
       .PushConstants(
         _visbuffer.MainImage.GetHandle(),
         _visbuffer.DepthImage.GetHandle(),
-        viewBuffer.GetHandle(),
-        shadowCascadeBuffer.GetHandle()
+        viewBuffer.GetHandle()
       )
       .Draw(3)
       .EndRendering()
@@ -585,12 +419,13 @@ namespace Retina::Sandbox {
       )
       .Draw(3)
       .EndRendering()
+      .BeginNamedRegion("SwapchainBlit")
       .Barrier({
         .ImageMemoryBarriers = {
           {
             .Image = *_tonemap.MainImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .DestStage = Graphics::EPipelineStageFlag::E_BLIT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
             .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_READ,
             .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
@@ -599,7 +434,7 @@ namespace Retina::Sandbox {
           {
             .Image = _swapchain->GetCurrentImage(),
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .DestStage = Graphics::EPipelineStageFlag::E_BLIT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
             .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
             .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
@@ -610,13 +445,14 @@ namespace Retina::Sandbox {
       .BlitImage(*_tonemap.MainImage, _swapchain->GetCurrentImage(), {})
       .ImageMemoryBarrier({
         .Image = _swapchain->GetCurrentImage(),
-        .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+        .SourceStage = Graphics::EPipelineStageFlag::E_BLIT,
         .DestStage = Graphics::EPipelineStageFlag::E_NONE,
         .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
         .DestAccess = Graphics::EResourceAccessFlag::E_NONE,
         .OldLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
         .NewLayout = Graphics::EImageLayout::E_PRESENT_SRC_KHR,
       })
+      .EndNamedRegion()
       .End();
 
     _device->GetGraphicsQueue().Submit({

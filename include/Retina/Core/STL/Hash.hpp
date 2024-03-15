@@ -29,7 +29,7 @@ namespace Retina::Core {
   using namespace ankerl;
 
   template <typename... Args>
-  constexpr auto Hash(Args&&... args) noexcept -> usize {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto Hash(Args&&... args) noexcept -> usize {
     using unordered_dense::detail::wyhash::hash;
     const auto data = MakeByteArray(std::forward<Args>(args)...);
     return hash(data.data(), data.size());

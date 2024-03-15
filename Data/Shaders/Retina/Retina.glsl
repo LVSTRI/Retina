@@ -23,6 +23,7 @@
 #extension GL_EXT_shader_image_load_formatted : require
 #extension GL_EXT_control_flow_attributes : require
 #extension GL_EXT_shader_image_int64 : require
+#extension GL_EXT_shader_atomic_int64 : require
 #extension GL_EXT_samplerless_texture_functions : require
 
 #define RETINA_SAMPLER_DESCRIPTOR_BINDING 0
@@ -33,6 +34,7 @@
 #define RETINA_SAMPLER_LAYOUT layout (set = 0, binding = RETINA_SAMPLER_DESCRIPTOR_BINDING)
 #define RETINA_SAMPLED_IMAGE_LAYOUT layout (set = 0, binding = RETINA_SAMPLED_IMAGE_BINDING)
 #define RETINA_STORAGE_IMAGE_LAYOUT layout (set = 0, binding = RETINA_STORAGE_IMAGE_BINDING)
+#define RETINA_STORAGE_IMAGE_LAYOUT_WITH_FORMAT(format) layout (format, set = 0, binding = RETINA_STORAGE_IMAGE_BINDING)
 #define RETINA_BUFFER_POINTER_LAYOUT layout (scalar, buffer_reference)
 
 #define RETINA_DECLARE_SAMPLER_DESCRIPTOR()                           \
@@ -44,6 +46,9 @@
 
 #define RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name) \
   RETINA_STORAGE_IMAGE_LAYOUT uniform type[] u_StorageImageTable_##name
+
+#define RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR_WITH_FORMAT(format, type, name) \
+  RETINA_STORAGE_IMAGE_LAYOUT_WITH_FORMAT(format) uniform type[] u_StorageImageTable_##name
 
 #define RETINA_DECLARE_BUFFER_TYPE(name) \
   RETINA_BUFFER_POINTER_LAYOUT buffer SBufferPointerType_##name
@@ -65,6 +70,7 @@ restrict readonly buffer SAddressTable {
 #define RetinaGetSampledImage(name, id) u_SampledImageTable_##name[id]
 
 #define RetinaDeclareStorageImage(type, name) RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name)
+#define RetinaDeclareStorageImageWithFormat(format, type, name) RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR_WITH_FORMAT(format, type, name)
 #define RetinaGetStorageImage(name, id) u_StorageImageTable_##name[id]
 
 #define RetinaDeclareBuffer(name) RETINA_DECLARE_BUFFER_TYPE(name)

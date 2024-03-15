@@ -424,6 +424,12 @@ namespace Retina::Graphics {
     return *this;
   }
 
+  auto CCommandBuffer::Dispatch(uint32 x, uint32 y, uint32 z) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdDispatch(_handle, x, y, z);
+    return *this;
+  }
+
   auto CCommandBuffer::Barrier(const SMemoryBarrierInfo& barrierInfo) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     auto memoryBarriers = std::vector<VkMemoryBarrier2>();
@@ -489,6 +495,16 @@ namespace Retina::Graphics {
     return *this;
   }
 
+  auto CCommandBuffer::ClearBuffer(
+    const CBuffer& buffer,
+    uint32 value,
+    const SBufferMemoryRange& range
+  ) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdFillBuffer(_handle, buffer.GetHandle(), range.Offset, range.Size, value);
+    return *this;
+  }
+
   auto CCommandBuffer::CopyBuffer(
     const CBuffer& source,
     const CBuffer& dest,
@@ -510,6 +526,42 @@ namespace Retina::Graphics {
     copy.regionCount = 1;
     copy.pRegions = &region;
     vkCmdCopyBuffer2(_handle, &copy);
+    return *this;
+  }
+
+  auto CCommandBuffer::ClearImage(const CImageView& imageView, const SClearValue& clearValue) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    auto aspectMask = imageView.GetAspectMask();
+    const auto isColor = Core::IsFlagEnabled(aspectMask, EImageAspectFlag::E_COLOR);
+    const auto isDepth = Core::IsFlagEnabled(aspectMask, EImageAspectFlag::E_DEPTH);
+    const auto isStencil = Core::IsFlagEnabled(aspectMask, EImageAspectFlag::E_STENCIL);
+    auto nativeClearValue = std::bit_cast<VkClearValue>(clearValue);
+    auto subresourceRange = imageView.GetSubresourceRange();
+    auto nativeSubresourceRange = VkImageSubresourceRange();
+    nativeSubresourceRange.aspectMask = AsEnumCounterpart(aspectMask);
+    nativeSubresourceRange.baseMipLevel = subresourceRange.BaseLevel;
+    nativeSubresourceRange.levelCount = subresourceRange.LevelCount;
+    nativeSubresourceRange.baseArrayLayer = subresourceRange.BaseLayer;
+    nativeSubresourceRange.layerCount = subresourceRange.LayerCount;
+    if (isColor) {
+      vkCmdClearColorImage(
+        _handle,
+        imageView.GetImage().GetHandle(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        &nativeClearValue.color,
+        1,
+        &nativeSubresourceRange
+      );
+    } else if (isDepth || isStencil) {
+      vkCmdClearDepthStencilImage(
+        _handle,
+        imageView.GetImage().GetHandle(),
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        &nativeClearValue.depthStencil,
+        1,
+        &nativeSubresourceRange
+      );
+    }
     return *this;
   }
 

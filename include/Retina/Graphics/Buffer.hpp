@@ -47,17 +47,17 @@ namespace Retina::Graphics {
     auto Write(const void* data, usize offset, usize size) noexcept -> void;
 
     template <typename T>
-    auto Write(const T& value, usize offset = 0) noexcept -> void;
+    RETINA_INLINE auto Write(const T& value, usize offset = 0) noexcept -> void;
     template <typename T>
-    auto Write(std::span<const T> values, usize offset = 0) noexcept -> void;
+    RETINA_INLINE auto Write(std::span<const T> values, usize offset = 0) noexcept -> void;
 
     template <typename T>
-    auto View(usize offset = 0, usize size = -1_u64) noexcept -> std::span<T>;
+    RETINA_NODISCARD RETINA_INLINE auto View(usize offset = 0, usize size = -1_u64) noexcept -> std::span<T>;
     template <typename T>
-    auto View(usize offset = 0, usize size = -1_u64) const noexcept -> std::span<const T>;
+    RETINA_NODISCARD RETINA_INLINE auto View(usize offset = 0, usize size = -1_u64) const noexcept -> std::span<const T>;
 
     template <typename T>
-    auto Read(usize offset = 0, usize size = -1_u64) const noexcept -> std::vector<T>;
+    RETINA_NODISCARD RETINA_INLINE auto Read(usize offset = 0, usize size = -1_u64) const noexcept -> std::vector<T>;
 
   protected:
     static auto Make(const CDevice& device, const SBufferCreateInfo& createInfo, CBuffer* self) noexcept -> void;

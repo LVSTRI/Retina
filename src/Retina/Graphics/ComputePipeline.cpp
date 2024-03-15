@@ -86,6 +86,8 @@ namespace Retina::Graphics {
     );
     RETINA_GRAPHICS_INFO("Compute pipeline ({}) initialized", createInfo.Name);
 
+    vkDestroyShaderModule(device.GetHandle(), computeShaderStage.module, nullptr);
+
     self->_handle = pipelineHandle;
     self->_layout = {
       .Handle = pipelineLayoutHandle,

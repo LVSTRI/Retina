@@ -76,6 +76,7 @@ namespace Retina::Graphics {
             return new CShaderIncludeResult(includePath);
           }
         }
+        RETINA_GRAPHICS_PANIC_WITH("Failed to find include '{}'", requestedSource);
         return nullptr;
       }
 
@@ -121,6 +122,9 @@ namespace Retina::Graphics {
         includeDirectories.end()
       );
       includeDirectoriesWithRoot.emplace_back(root);
+      if (!std::filesystem::exists(path)) {
+        RETINA_GRAPHICS_PANIC_WITH("Shader '{}' does not exist", path.generic_string());
+      }
       const auto shaderSource = mio::mmap_source(path.generic_string());
       auto compiler = shaderc::Compiler();
       auto compilerOptions = shaderc::CompileOptions();

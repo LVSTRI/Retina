@@ -103,7 +103,7 @@ namespace Retina::Graphics {
     uint32 Stencil = 0;
   };
 
-  union SAttachmentClearValue {
+  union SClearValue {
     SColorClearValue Color = {};
     SDepthStencilClearValue DepthStencil;
   };
@@ -112,7 +112,7 @@ namespace Retina::Graphics {
     Core::CReferenceWrapper<const CImageView> ImageView;
     EAttachmentLoadOperator LoadOperator = EAttachmentLoadOperator::E_CLEAR;
     EAttachmentStoreOperator StoreOperator = EAttachmentStoreOperator::E_STORE;
-    SAttachmentClearValue ClearValue = {};
+    SClearValue ClearValue = {};
   };
 
   struct SRenderingInfo {
@@ -131,7 +131,7 @@ namespace Retina::Graphics {
     std::optional<SCommandPoolCreateInfo> PoolInfo = std::nullopt;
   };
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const float32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const float32(&array)[4] = {}) noexcept -> SClearValue {
     return {
       .Color = {
         .Float32 = {
@@ -144,7 +144,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const int32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const int32(&array)[4] = {}) noexcept -> SClearValue {
     return {
       .Color = {
         .Int32 = {
@@ -157,7 +157,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const uint32(&array)[4] = {}) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(const uint32(&array)[4] = {}) noexcept -> SClearValue {
     return {
       .Color = {
         .Uint32 = {
@@ -170,7 +170,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(float32 value) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(float32 value) noexcept -> SClearValue {
     return {
       .Color = {
         .Float32 = {
@@ -183,7 +183,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(int32 value) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(int32 value) noexcept -> SClearValue {
     return {
       .Color = {
         .Int32 = {
@@ -196,7 +196,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(uint32 value) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeColorClearValue(uint32 value) noexcept -> SClearValue {
     return {
       .Color = {
         .Uint32 = {
@@ -209,7 +209,7 @@ namespace Retina::Graphics {
     };
   }
 
-  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeDepthStencilClearValue(float32 depth = 0.0f, uint32 stencil = 0) noexcept -> SAttachmentClearValue {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto MakeDepthStencilClearValue(float32 depth = 0.0f, uint32 stencil = 0) noexcept -> SClearValue {
     return {
       .DepthStencil = {
         .Depth = depth,

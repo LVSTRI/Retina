@@ -17,11 +17,11 @@ RetinaDeclareSampledImage(texture2D, STexture2D);
 #define g_VisbufferResolveImage RetinaGetSampledImage(STexture2D, u_VisbufferResolveImageId)
 
 vec3 ExtendedReinhardTonemap(in vec3 color) {
-  const float oldLum = GetLuminance(color);
+  const float oldLum = RetinaGetLuminance(color);
   const float numerator = oldLum * (1.0 + (oldLum / (WHITE_POINT * WHITE_POINT)));
   const float denominator = 1.0 + oldLum;
   const float newLum = numerator / denominator;
-  return ChangeLuminance(color, newLum);
+  return RetinaChangeLuminance(color, newLum);
 }
 
 void main() {
