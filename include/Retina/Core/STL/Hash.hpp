@@ -6,6 +6,9 @@
 
 #include <ankerl/unordered_dense.h>
 
+#include <functional>
+#include <utility>
+
 #define RETINA_MAKE_TRANSPARENT_EQUAL_TO_SPECIALIZATION(T)                                              \
   struct ::std::equal_to<T> {                                                                           \
     using is_transparent = void;                                                                        \

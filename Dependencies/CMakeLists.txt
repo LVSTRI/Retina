@@ -47,7 +47,7 @@ target_compile_options(fmt PRIVATE -w)
 FetchContent_Declare(
   spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog
-  GIT_TAG 7e635fca68d014934b4af8a1cf874f63989352b7
+  GIT_TAG 7c02e204c92545f869e2f04edaab1f19fe8b19fd
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
@@ -156,7 +156,7 @@ FetchContent_MakeAvailable(spirv_cross)
 FetchContent_Declare(
   unordered_dense
   GIT_REPOSITORY https://github.com/martinus/unordered_dense
-  GIT_TAG d911053e390816ecc5dedd5a9d6b4bb5ed92b4c9
+  GIT_TAG 231e48c9426bd21c273669e5fdcd042c146975cf
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
