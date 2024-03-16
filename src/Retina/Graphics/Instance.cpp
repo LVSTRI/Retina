@@ -140,4 +140,9 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     return _createInfo.Features.*feature;
   }
+
+  auto CInstance::LoadFunction(std::string_view name) const noexcept -> PFN_vkVoidFunction {
+    RETINA_PROFILE_SCOPED();
+    return vkGetInstanceProcAddr(_handle, name.data());
+  }
 }

@@ -43,6 +43,8 @@ namespace Retina::Graphics {
 
     RETINA_NODISCARD auto IsFeatureEnabled(bool SDeviceFeature::* feature) const noexcept -> bool;
 
+    RETINA_NODISCARD auto LoadFunction(std::string_view name) const noexcept -> PFN_vkVoidFunction;
+
     auto WaitIdle() const noexcept -> void;
 
     auto Tick() noexcept -> void;

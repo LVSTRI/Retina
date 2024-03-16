@@ -20,16 +20,14 @@ RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
 
 RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewInfoBufferId);
 
-RetinaDeclareSampledImage(utexture2D, STexture2DU);
-RetinaDeclareSampledImage(texture2D, STexture2D);
-#define g_VisbufferMain RetinaGetSampledImage(STexture2DU, u_VisbufferMainId)
-#define g_VisbufferMainDepth RetinaGetSampledImage(STexture2D, u_VisbufferMainDepthId)
+#define g_VisbufferMain RetinaGetSampledImage(Texture2DU, u_VisbufferMainId)
+#define g_VisbufferMainDepth RetinaGetSampledImage(Texture2D, u_VisbufferMainDepthId)
 
-RetinaDeclareStorageImage(restrict readonly uimage2DArray, SROImage2DArrayU);
-#define g_VirtualPageTable RetinaGetStorageImage(SROImage2DArrayU, u_VirtualPageTableId)
+RetinaDeclareStorageImage(restrict readonly uimage2DArray, ROImage2DArrayU);
+#define g_VirtualPageTable RetinaGetStorageImage(ROImage2DArrayU, u_VirtualPageTableId)
 
-RetinaDeclareStorageImage(restrict readonly uimage2D, SROImage2DU);
-#define g_VirtualShadowMap RetinaGetStorageImage(SROImage2DU, u_VirtualShadowMapId)
+RetinaDeclareStorageImage(restrict readonly uimage2D, ROImage2DU);
+#define g_VirtualShadowMap RetinaGetStorageImage(ROImage2DU, u_VirtualShadowMapId)
 
 void main() {
   const uint payload = texelFetch(g_VisbufferMain, ivec2(gl_FragCoord.xy), 0).r;

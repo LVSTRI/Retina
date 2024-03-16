@@ -24,6 +24,10 @@ namespace Retina::Graphics {
     RETINA_NODISCARD RETINA_INLINE auto operator ->() noexcept -> T*;
     RETINA_NODISCARD RETINA_INLINE auto operator ->() const noexcept -> const T*;
 
+    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CShaderResource&) const noexcept -> std::strong_ordering = default;
+
+    RETINA_DECLARE_FRIEND_HASH(CShaderResource);
+
   private:
     T* _resource = nullptr;
     uint32 _handle = -1_u32;
@@ -84,3 +88,14 @@ namespace Retina::Graphics {
     return _resource;
   }
 }
+
+template <typename T>
+RETINA_MAKE_TRANSPARENT_EQUAL_TO_SPECIALIZATION(Retina::Graphics::CShaderResource<T>);
+
+template <typename T>
+RETINA_MAKE_AVALANCHING_TRANSPARENT_HASH_SPECIALIZATION(
+  Retina::Graphics::CShaderResource<T>,
+  [](const Retina::Graphics::CShaderResource<T>& resource) {
+    return Retina::Core::Hash(resource._resource, resource._handle);
+  }
+);

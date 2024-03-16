@@ -616,6 +616,11 @@ namespace Retina::Graphics {
     return _createInfo.Features.*feature;
   }
 
+  auto CDevice::LoadFunction(std::string_view name) const noexcept -> PFN_vkVoidFunction {
+    RETINA_PROFILE_SCOPED();
+    return vkGetDeviceProcAddr(_handle, name.data());
+  }
+
   auto CDevice::WaitIdle() const noexcept -> void {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_VULKAN_CHECK(vkDeviceWaitIdle(_handle));

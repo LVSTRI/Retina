@@ -41,8 +41,10 @@
   RETINA_SAMPLER_LAYOUT uniform sampler[] u_SamplerTable;             \
   RETINA_SAMPLER_LAYOUT uniform samplerShadow[] u_SamplerShadowTable
 
-#define RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR(type, name) \
-  RETINA_SAMPLED_IMAGE_LAYOUT uniform type[] u_SampledImageTable_##name
+#define RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(dimension)                                         \
+  RETINA_SAMPLED_IMAGE_LAYOUT uniform texture##dimension[] u_SampledImageTable_Texture##dimension;      \
+  RETINA_SAMPLED_IMAGE_LAYOUT uniform utexture##dimension[] u_SampledImageTable_Texture##dimension##U;  \
+  RETINA_SAMPLED_IMAGE_LAYOUT uniform itexture##dimension[] u_SampledImageTable_Texture##dimension##I
 
 #define RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name) \
   RETINA_STORAGE_IMAGE_LAYOUT uniform type[] u_StorageImageTable_##name
@@ -57,6 +59,15 @@
   RETINA_BUFFER_POINTER_LAYOUT qualifier buffer SBufferPointerType_##name
 
 RETINA_DECLARE_SAMPLER_DESCRIPTOR();
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(1D);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(2D);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(3D);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(Cube);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(CubeArray);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(1DArray);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(2DArray);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(2DMS);
+RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR_SIZE(2DMSArray);
 
 layout (set = 0, binding = RETINA_STORAGE_BUFFER_BINDING)
 restrict readonly buffer SAddressTable {
@@ -66,7 +77,6 @@ restrict readonly buffer SAddressTable {
 #define RetinaGetSampler(id) u_SamplerTable[id]
 #define RetinaGetSamplerShadow(id) u_SamplerShadowTable[id]
 
-#define RetinaDeclareSampledImage(type, name) RETINA_DECLARE_SAMPLED_IMAGE_DESCRIPTOR(type, name)
 #define RetinaGetSampledImage(name, id) u_SampledImageTable_##name[id]
 
 #define RetinaDeclareStorageImage(type, name) RETINA_DECLARE_STORAGE_IMAGE_DESCRIPTOR(type, name)

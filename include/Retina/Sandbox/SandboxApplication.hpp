@@ -52,6 +52,7 @@ namespace Retina::Sandbox {
     auto WaitForNextFrameIndex() noexcept -> uint32;
     auto GetCurrentFrameIndex() noexcept -> uint32;
 
+    auto InitializeGui() noexcept -> void;
     auto InitializeVisbufferPass() noexcept -> void;
     auto InitializeVisbufferResolvePass() noexcept -> void;
     auto InitializeTonemapPass() noexcept -> void;

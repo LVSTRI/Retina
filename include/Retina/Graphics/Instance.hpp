@@ -20,6 +20,8 @@ namespace Retina::Graphics {
 
     RETINA_NODISCARD auto IsFeatureEnabled(bool SInstanceFeature::* feature) const noexcept -> bool;
 
+    RETINA_NODISCARD auto LoadFunction(std::string_view name) const noexcept -> PFN_vkVoidFunction;
+
   private:
     VkInstance _handle = {};
     uint32 _version = 0;

@@ -7,7 +7,6 @@
 #include <ankerl/unordered_dense.h>
 
 #define RETINA_MAKE_TRANSPARENT_EQUAL_TO_SPECIALIZATION(T)                                              \
-  template <>                                                                                           \
   struct ::std::equal_to<T> {                                                                           \
     using is_transparent = void;                                                                        \
     RETINA_NODISCARD constexpr auto operator ()(const T& left, const T& right) const noexcept -> bool { \
@@ -16,7 +15,6 @@
   }                                                                                                     \
 
 #define RETINA_MAKE_AVALANCHING_TRANSPARENT_HASH_SPECIALIZATION(T, f)                         \
-  template <>                                                                                 \
   struct ::ankerl::unordered_dense::hash<T> {                                                 \
     using is_avalanching = void;                                                              \
     using is_transparent = void;                                                              \
@@ -24,6 +22,8 @@
       return (f)(x);                                                                          \
     }                                                                                         \
   }
+
+#define RETINA_DECLARE_FRIEND_HASH(T) friend struct ::ankerl::unordered_dense::hash<T>
 
 namespace Retina::Core {
   using namespace ankerl;

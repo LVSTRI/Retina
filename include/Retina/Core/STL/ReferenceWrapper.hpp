@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Retina/Core/STL/Hash.hpp>
 #include <Retina/Core/Macros.hpp>
 
 #include <utility>
@@ -97,3 +98,14 @@ namespace Retina::Core {
   template <typename T>
   RETINA_INLINE constexpr auto MakeConstRef(const T&& ref) noexcept -> CReferenceWrapper<const T> = delete;
 }
+
+template <typename T>
+RETINA_MAKE_TRANSPARENT_EQUAL_TO_SPECIALIZATION(Retina::Core::CReferenceWrapper<T>);
+
+template <typename T>
+RETINA_MAKE_AVALANCHING_TRANSPARENT_HASH_SPECIALIZATION(
+  Retina::Core::CReferenceWrapper<T>,
+  [](const Retina::Core::CReferenceWrapper<T>& ref) noexcept -> std::size_t {
+    return Retina::Core::Hash(ref.Get());
+  }
+);

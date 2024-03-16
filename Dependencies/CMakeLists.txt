@@ -194,6 +194,31 @@ FetchContent_Declare(
 set(MESHOPT_BUILD_GLTFPACK ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(meshoptimizer)
 
+# imgui
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui
+  GIT_TAG adcc3217c38142e965eae679a299a34ce1c963d5
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+FetchContent_GetProperties(imgui)
+if (NOT imgui_POPULATED)
+  FetchContent_Populate(imgui)
+  add_library(imgui STATIC)
+  target_sources(imgui PRIVATE
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+  )
+  target_include_directories(imgui PUBLIC
+    ${imgui_SOURCE_DIR}
+  )
+  target_compile_options(imgui PRIVATE -w)
+endif ()
+
 add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
@@ -210,6 +235,7 @@ endif ()
 add_library(Retina.Graphics.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Graphics.Dependencies INTERFACE
+  imgui
   spirv-cross-glsl
   volk
   Vulkan::SPIRV-Tools

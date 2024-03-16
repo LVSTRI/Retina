@@ -12,9 +12,7 @@ RetinaDeclarePushConstant() {
   uint u_VisbufferResolveImageId;
 };
 
-RetinaDeclareSampledImage(texture2D, STexture2D);
-
-#define g_VisbufferResolveImage RetinaGetSampledImage(STexture2D, u_VisbufferResolveImageId)
+#define g_VisbufferResolveImage RetinaGetSampledImage(Texture2D, u_VisbufferResolveImageId)
 
 vec3 ExtendedReinhardTonemap(in vec3 color) {
   const float oldLum = RetinaGetLuminance(color);

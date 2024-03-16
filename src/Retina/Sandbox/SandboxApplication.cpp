@@ -141,6 +141,11 @@ namespace Retina::Sandbox {
       .Capacity = 1,
     });
 
+    InitializeGui();
+    InitializeVisbufferPass();
+    InitializeVisbufferResolvePass();
+    InitializeTonemapPass();
+
     if (_model) {
       _meshletBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshlets(), "MeshletBuffer");
       _meshletInstanceBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshletInstances(), "MeshletInstanceBuffer");
@@ -150,10 +155,6 @@ namespace Retina::Sandbox {
       _indexBuffer = Details::UploadBufferAsResource(*_device, _model->GetIndices(), "IndexBuffer");
       _primitiveBuffer = Details::UploadBufferAsResource(*_device, _model->GetPrimitives(), "PrimitiveBuffer");
     }
-
-    InitializeVisbufferPass();
-    InitializeVisbufferResolvePass();
-    InitializeTonemapPass();
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
@@ -482,6 +483,10 @@ namespace Retina::Sandbox {
   auto CSandboxApplication::GetCurrentFrameIndex() noexcept -> uint32 {
     RETINA_PROFILE_SCOPED();
     return _frameTimeline->GetHostTimelineValue() % FRAMES_IN_FLIGHT;
+  }
+
+  auto CSandboxApplication::InitializeGui() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
   }
 
   auto CSandboxApplication::InitializeVisbufferPass() noexcept -> void {
