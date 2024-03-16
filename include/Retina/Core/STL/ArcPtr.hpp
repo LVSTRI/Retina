@@ -19,6 +19,15 @@ namespace Retina::Core {
     RETINA_INLINE constexpr CArcPtr(T* ptr) noexcept;
     RETINA_INLINE constexpr CArcPtr(std::nullptr_t) noexcept;
 
+    template <typename U>
+    constexpr CArcPtr(const CArcPtr<U>& other) noexcept;
+    template <typename U>
+    constexpr auto operator =(const CArcPtr<U>& other) noexcept -> CArcPtr&;
+    template <typename U>
+    constexpr CArcPtr(CArcPtr<U>&& other) noexcept;
+    template <typename U>
+    constexpr auto operator =(CArcPtr<U>&& other) noexcept -> CArcPtr&;
+
     RETINA_NODISCARD RETINA_INLINE constexpr auto Get() const noexcept -> T*;
     RETINA_INLINE constexpr auto Release() noexcept -> T*;
     RETINA_INLINE constexpr auto Reset() noexcept -> void;
@@ -31,7 +40,8 @@ namespace Retina::Core {
     RETINA_NODISCARD RETINA_INLINE constexpr auto AsConst() const noexcept -> CArcPtr<C>;
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator !() const noexcept -> bool;
-    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CArcPtr&) const noexcept -> std::strong_ordering = default;
+    template <typename U>
+    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CArcPtr<U>&) const noexcept -> std::strong_ordering;
 
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator *() const noexcept -> T&;
     RETINA_NODISCARD RETINA_INLINE constexpr auto operator ->() const noexcept -> T*;
@@ -41,6 +51,9 @@ namespace Retina::Core {
     template <typename C = std::add_const_t<T>>
       requires (!std::is_const_v<T>)
     RETINA_NODISCARD RETINA_INLINE constexpr operator CArcPtr<C>() const noexcept;
+
+    template <typename U>
+    friend class CArcPtr;
 
   private:
     T* _ptr = nullptr;
@@ -101,6 +114,36 @@ namespace Retina::Core {
   {}
 
   template <typename T>
+  template <typename U>
+  constexpr CArcPtr<T>::CArcPtr(const CArcPtr<U>& other) noexcept
+    : CArcPtr(other._ptr)
+  {}
+
+  template <typename T>
+  template <typename U>
+  constexpr auto CArcPtr<T>::operator =(const CArcPtr<U>& other) noexcept -> CArcPtr& {
+    if (this == &other) {
+      return *this;
+    }
+    return Core::Reconstruct(*this, other);
+  }
+
+  template <typename T>
+  template <typename U>
+  constexpr CArcPtr<T>::CArcPtr(CArcPtr<U>&& other) noexcept
+    : _ptr(std::exchange(other._ptr, nullptr))
+  {}
+
+  template <typename T>
+  template <typename U>
+  constexpr auto CArcPtr<T>::operator =(CArcPtr<U>&& other) noexcept -> CArcPtr& {
+    if (this == &other) {
+      return *this;
+    }
+    return Core::Reconstruct(*this, std::move(other));
+  }
+
+  template <typename T>
   constexpr auto CArcPtr<T>::Get() const noexcept -> T* {
     return _ptr;
   }
@@ -140,6 +183,12 @@ namespace Retina::Core {
   template <typename T>
   constexpr auto CArcPtr<T>::operator !() const noexcept -> bool {
     return !_ptr;
+  }
+
+  template <typename T>
+  template <typename U>
+  constexpr auto CArcPtr<T>::operator <=>(const CArcPtr<U>& other) const noexcept -> std::strong_ordering {
+    return _ptr <=> other._ptr;
   }
 
   template <typename T>

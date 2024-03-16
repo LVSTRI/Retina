@@ -36,7 +36,7 @@ void main() {
     return;
   }
   const uint meshletInstanceIndex = payload >> MESHLET_VISBUFFER_PRIMITIVE_ID_BITS;
-  const uint primitiveId = payload & MESHLET_VISBUFFER_PRIMITIVE_ID_MASK;
+  const uint meshletPrimitiveId = payload & MESHLET_VISBUFFER_PRIMITIVE_ID_MASK;
   const float depth = texelFetch(g_VisbufferMainDepth, ivec2(gl_FragCoord.xy), 0).r;
   const SViewInfo mainView = g_ViewInfoBuffer.Data[0];
   const vec3 worldPosition = RetinaUnprojectWorldPosition(i_Uv, depth, inverse(mainView.ProjView));

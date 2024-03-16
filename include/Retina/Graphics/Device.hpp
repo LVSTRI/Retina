@@ -58,10 +58,10 @@ namespace Retina::Graphics {
     Core::CArcPtr<CQueue> _computeQueue;
     Core::CArcPtr<CQueue> _transferQueue;
 
-    std::unique_ptr<CHostDeviceTimeline> _mainTimeline;
-    std::unique_ptr<CDeletionQueue> _deletionQueue;
+    Core::CUniquePtr<CHostDeviceTimeline> _mainTimeline;
+    Core::CUniquePtr<CDeletionQueue> _deletionQueue;
 
-    std::unique_ptr<CShaderResourceTable> _shaderResourceTable;
+    Core::CUniquePtr<CShaderResourceTable> _shaderResourceTable;
 
     SDeviceRayTracingProperties _rayTracingProperties = {};
     SDeviceCreateInfo _createInfo = {};

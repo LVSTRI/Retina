@@ -38,7 +38,7 @@ namespace Retina::Graphics {
       createInfo.IncludeDirectories,
       EShaderStageFlag::E_MESH_EXT
     );
-    const auto meshShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(meshShaderBinary);
+    const auto meshShaderCompiler = Core::MakeUnique<spirv_cross::CompilerGLSL>(meshShaderBinary);
     {
       auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
       stage.stage = VK_SHADER_STAGE_MESH_BIT_EXT;
@@ -47,14 +47,14 @@ namespace Retina::Graphics {
       shaderStages.emplace_back(stage);
     }
 
-    auto taskShaderCompiler = std::unique_ptr<spirv_cross::CompilerGLSL>();
+    auto taskShaderCompiler = Core::CUniquePtr<spirv_cross::CompilerGLSL>();
     if (createInfo.TaskShader) {
       const auto taskShaderBinary = Details::CompileShaderFromSource(
         createInfo.TaskShader.value(),
         createInfo.IncludeDirectories,
         EShaderStageFlag::E_TASK_EXT
       );
-      taskShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(taskShaderBinary);
+      taskShaderCompiler = Core::MakeUnique<spirv_cross::CompilerGLSL>(taskShaderBinary);
       {
         auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         stage.stage = VK_SHADER_STAGE_TASK_BIT_EXT;
@@ -64,14 +64,14 @@ namespace Retina::Graphics {
       }
     }
 
-    auto fragmentShaderCompiler = std::unique_ptr<spirv_cross::CompilerGLSL>();
+    auto fragmentShaderCompiler = Core::CUniquePtr<spirv_cross::CompilerGLSL>();
     if (createInfo.FragmentShader) {
       const auto fragmentShaderBinary = Details::CompileShaderFromSource(
         createInfo.FragmentShader.value(),
         createInfo.IncludeDirectories,
         EShaderStageFlag::E_FRAGMENT
       );
-      fragmentShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(fragmentShaderBinary);
+      fragmentShaderCompiler = Core::MakeUnique<spirv_cross::CompilerGLSL>(fragmentShaderBinary);
       {
         auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         stage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -247,9 +247,9 @@ namespace Retina::Graphics {
 
     const auto descriptorLayoutHandles = Details::MakeDescriptorLayoutHandles(createInfo.DescriptorLayouts);
     const auto pushConstantRange = Details::ReflectPushConstantRange(std::to_array({
-      meshShaderCompiler.get(),
-      taskShaderCompiler.get(),
-      fragmentShaderCompiler.get()
+      meshShaderCompiler.Get(),
+      taskShaderCompiler.Get(),
+      fragmentShaderCompiler.Get()
     }));
     const auto nativePushConstantInfo = std::bit_cast<VkPushConstantRange>(pushConstantRange);
 

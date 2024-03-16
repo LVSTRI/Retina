@@ -9,9 +9,9 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
   }
 
-  auto CDeletionQueue::Make(const CDevice& device) noexcept -> std::unique_ptr<CDeletionQueue> {
+  auto CDeletionQueue::Make(const CDevice& device) noexcept -> Core::CUniquePtr<CDeletionQueue> {
     RETINA_PROFILE_SCOPED();
-    return std::make_unique<CDeletionQueue>(device);
+    return Core::MakeUnique<CDeletionQueue>(device);
   }
 
   auto CDeletionQueue::Enqueue(std::move_only_function<void()>&& packet) noexcept -> void {

@@ -1,9 +1,9 @@
 #include <Retina/Sandbox/SandboxApplication.hpp>
 
 namespace Retina {
-  auto MakeApplication() noexcept -> std::unique_ptr<Entry::IApplication> {
+  auto MakeApplication() noexcept -> Core::CUniquePtr<Entry::IApplication> {
     RETINA_PROFILE_SCOPED();
-    return std::make_unique<Sandbox::CSandboxApplication>();
+    return Core::MakeUnique<Sandbox::CSandboxApplication>();
   }
 }
 

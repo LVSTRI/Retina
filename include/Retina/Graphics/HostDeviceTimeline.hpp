@@ -17,7 +17,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD static auto Make(
       const CDevice& device,
       uint64 maxTimelineDifference = 2
-    ) noexcept -> std::unique_ptr<CHostDeviceTimeline>;
+    ) noexcept -> Core::CUniquePtr<CHostDeviceTimeline>;
 
     RETINA_NODISCARD auto GetMaxTimelineDifference() const noexcept -> uint64;
     RETINA_NODISCARD auto GetHostTimelineValue() const noexcept -> uint64;

@@ -26,7 +26,7 @@ namespace Retina::WSI {
     RETINA_DELETE_COPY(CWindow);
     RETINA_DECLARE_MOVE(CWindow);
 
-    RETINA_NODISCARD static auto Make(const SWindowCreateInfo& createInfo) noexcept -> std::unique_ptr<CWindow>;
+    RETINA_NODISCARD static auto Make(const SWindowCreateInfo& createInfo) noexcept -> Core::CUniquePtr<CWindow>;
 
     RETINA_NODISCARD auto GetHandle() const noexcept -> WindowHandle;
     RETINA_NODISCARD auto GetEventDispatcher() noexcept -> EventDispatcher&;

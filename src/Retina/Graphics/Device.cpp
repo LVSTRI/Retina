@@ -448,9 +448,9 @@ namespace Retina::Graphics {
   CDevice::~CDevice() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_handle) {
-      _shaderResourceTable.reset();
+      _shaderResourceTable.Reset();
       _deletionQueue->Flush();
-      _mainTimeline.reset();
+      _mainTimeline.Reset();
       _transferQueue.Reset();
       _computeQueue.Reset();
       _graphicsQueue.Reset();

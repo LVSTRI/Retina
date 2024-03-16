@@ -69,13 +69,13 @@ namespace Retina::WSI {
     return Core::Reconstruct(*this, std::move(other));
   }
 
-  auto CWindow::Make(const SWindowCreateInfo& createInfo) noexcept -> std::unique_ptr<CWindow> {
+  auto CWindow::Make(const SWindowCreateInfo& createInfo) noexcept -> Core::CUniquePtr<CWindow> {
     RETINA_PROFILE_SCOPED();
-    auto self = std::make_unique<CWindow>();
+    auto self = Core::MakeUnique<CWindow>();
     auto dispatcher = EventDispatcher::Make();
     auto input = CInput::Make(*self);
     auto* windowHandle = Details::MakePlatformWindow(createInfo);
-    glfwSetWindowUserPointer(windowHandle, self.get());
+    glfwSetWindowUserPointer(windowHandle, self.Get());
     if (glfwRawMouseMotionSupported()) {
       glfwSetInputMode(windowHandle, GLFW_RAW_MOUSE_MOTION, true);
     }

@@ -6,7 +6,7 @@ namespace Retina::Entry {
   struct IApplication {
     virtual ~IApplication() noexcept = 0;
 
-    RETINA_NODISCARD static auto Make() noexcept -> std::unique_ptr<IApplication>;
+    RETINA_NODISCARD static auto Make() noexcept -> Core::CUniquePtr<IApplication>;
 
     virtual auto Run() noexcept -> void = 0;
   };

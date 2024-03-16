@@ -17,9 +17,9 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
   }
 
-  auto CShaderResourceTable::Make(const CDevice& device) noexcept -> std::unique_ptr<CShaderResourceTable> {
+  auto CShaderResourceTable::Make(const CDevice& device) noexcept -> Core::CUniquePtr<CShaderResourceTable> {
     RETINA_PROFILE_SCOPED();
-    auto self = std::make_unique<CShaderResourceTable>(device);
+    auto self = Core::MakeUnique<CShaderResourceTable>(device);
     const auto descriptorPoolSizes = std::vector<SDescriptorPoolSize> {
       { EDescriptorType::E_SAMPLER, MAX_SAMPLER_RESOURCE_SLOTS },
       { EDescriptorType::E_SAMPLED_IMAGE, MAX_IMAGE_RESOURCE_SLOTS },

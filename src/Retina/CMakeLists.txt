@@ -75,5 +75,6 @@ target_compile_definitions(Retina.Configuration INTERFACE ${RETINA_CONFIGURATION
 add_subdirectory(Core)
 add_subdirectory(Entry)
 add_subdirectory(Graphics)
+add_subdirectory(GUI)
 add_subdirectory(Sandbox)
 add_subdirectory(WSI)

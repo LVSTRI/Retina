@@ -64,9 +64,9 @@ namespace Retina::Sandbox {
 
     std::optional<CMeshletModel> _model = {};
 
-    std::unique_ptr<CCamera> _camera;
+    Core::CUniquePtr<CCamera> _camera;
 
-    std::unique_ptr<WSI::CWindow> _window;
+    Core::CUniquePtr<WSI::CWindow> _window;
 
     // TODO: Make an actual renderer
     Core::CArcPtr<Graphics::CInstance> _instance;
@@ -76,7 +76,7 @@ namespace Retina::Sandbox {
 
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _imageAvailableSemaphores;
     std::vector<Core::CArcPtr<Graphics::CBinarySemaphore>> _presentReadySemaphores;
-    std::unique_ptr<Graphics::CHostDeviceTimeline> _frameTimeline;
+    Core::CUniquePtr<Graphics::CHostDeviceTimeline> _frameTimeline;
 
     std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SViewInfo>>> _viewBuffer;
 

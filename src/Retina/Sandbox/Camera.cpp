@@ -14,9 +14,9 @@ namespace Retina::Sandbox {
     _input->GetEventDispatcher().Attach(this, &CCamera::OnInputCursorMode);
   }
 
-  auto CCamera::Make(WSI::CInput& input) noexcept -> std::unique_ptr<CCamera> {
+  auto CCamera::Make(WSI::CInput& input) noexcept -> Core::CUniquePtr<CCamera> {
     RETINA_PROFILE_SCOPED();
-    return std::make_unique<CCamera>(input);
+    return Core::MakeUnique<CCamera>(input);
   }
 
   auto CCamera::GetPosition() const noexcept -> const glm::vec3& {

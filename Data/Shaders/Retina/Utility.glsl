@@ -7,15 +7,6 @@
 #define FLT_MIN 1.175494351e-38
 #define FLT_LOWEST -3.402823466e+38
 
-float RetinaGetLuminance(in vec3 color) {
-  return dot(color, vec3(0.2126, 0.7152, 0.0722));
-}
-
-vec3 RetinaChangeLuminance(in vec3 color, in float inLum) {
-  const float outLum = RetinaGetLuminance(color);
-  return color * (inLum / outLum);
-}
-
 vec3 RetinaToNonLinearFromLinear(in vec3 color) {
   const bvec3 cutoff = lessThanEqual(color, vec3(0.0031308));
   const vec3 lower = color * 12.92;

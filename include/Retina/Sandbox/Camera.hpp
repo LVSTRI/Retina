@@ -20,7 +20,7 @@ namespace Retina::Sandbox {
     CCamera(WSI::CInput& input) noexcept;
     ~CCamera() noexcept = default;
 
-    RETINA_NODISCARD static auto Make(WSI::CInput& input) noexcept -> std::unique_ptr<CCamera>;
+    RETINA_NODISCARD static auto Make(WSI::CInput& input) noexcept -> Core::CUniquePtr<CCamera>;
 
     RETINA_NODISCARD auto GetPosition() const noexcept -> const glm::vec3&;
     RETINA_NODISCARD auto GetFront() const noexcept -> const glm::vec3&;

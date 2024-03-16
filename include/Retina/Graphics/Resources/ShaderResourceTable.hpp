@@ -20,7 +20,7 @@ namespace Retina::Graphics {
     ~CShaderResourceTable() noexcept = default;
     RETINA_DEFAULT_COPY_MOVE(CShaderResourceTable);
 
-    RETINA_NODISCARD static auto Make(const CDevice& device) noexcept -> std::unique_ptr<CShaderResourceTable>;
+    RETINA_NODISCARD static auto Make(const CDevice& device) noexcept -> Core::CUniquePtr<CShaderResourceTable>;
 
     RETINA_NODISCARD auto GetDescriptorSet() const noexcept -> const CDescriptorSet&;
     RETINA_NODISCARD auto GetDevice() const noexcept -> const CDevice&;

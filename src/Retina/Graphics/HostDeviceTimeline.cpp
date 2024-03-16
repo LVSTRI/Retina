@@ -14,15 +14,15 @@ namespace Retina::Graphics {
   auto CHostDeviceTimeline::Make(
     const CDevice& device,
     uint64 maxTimelineDifference
-  ) noexcept -> std::unique_ptr<CHostDeviceTimeline> {
+  ) noexcept -> Core::CUniquePtr<CHostDeviceTimeline> {
     RETINA_PROFILE_SCOPED();
-    auto self = std::make_unique<CHostDeviceTimeline>(device);
+    auto self = Core::MakeUnique<CHostDeviceTimeline>(device);
     self->_maxTimelineDifference = maxTimelineDifference;
     self->_hostTimelineValue = 0;
     self->_deviceTimeline = CTimelineSemaphore::Make(device, {
       .Name = "HostDeviceTimeline_DeviceTimeline",
       .Value = 0,
-    });
+    }).AsConst();
     return self;
   }
 

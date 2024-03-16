@@ -38,7 +38,7 @@ namespace Retina::Graphics {
       createInfo.IncludeDirectories,
       EShaderStageFlag::E_VERTEX
     );
-    const auto vertexShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(vertexShaderBinary);
+    const auto vertexShaderCompiler = Core::MakeUnique<spirv_cross::CompilerGLSL>(vertexShaderBinary);
     {
       auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
       stage.stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -47,14 +47,14 @@ namespace Retina::Graphics {
       shaderStages.emplace_back(stage);
     }
 
-    auto fragmentShaderCompiler = std::unique_ptr<spirv_cross::CompilerGLSL>();
+    auto fragmentShaderCompiler = Core::CUniquePtr<spirv_cross::CompilerGLSL>();
     if (createInfo.FragmentShader) {
       const auto fragmentShaderBinary = Details::CompileShaderFromSource(
         createInfo.FragmentShader.value(),
         createInfo.IncludeDirectories,
         EShaderStageFlag::E_FRAGMENT
       );
-      fragmentShaderCompiler = std::make_unique<spirv_cross::CompilerGLSL>(fragmentShaderBinary);
+      fragmentShaderCompiler = Core::MakeUnique<spirv_cross::CompilerGLSL>(fragmentShaderBinary);
       {
         auto stage = VkPipelineShaderStageCreateInfo(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         stage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -237,8 +237,8 @@ namespace Retina::Graphics {
 
     const auto descriptorLayoutHandles = Details::MakeDescriptorLayoutHandles(createInfo.DescriptorLayouts);
     const auto pushConstantRange = Details::ReflectPushConstantRange(std::to_array({
-      vertexShaderCompiler.get(),
-      fragmentShaderCompiler.get()
+      vertexShaderCompiler.Get(),
+      fragmentShaderCompiler.Get()
     }));
     const auto nativePushConstantInfo = std::bit_cast<VkPushConstantRange>(pushConstantRange);
 

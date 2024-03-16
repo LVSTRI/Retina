@@ -34,7 +34,7 @@ FetchContent_MakeAvailable(mio)
 FetchContent_Declare(
   fmtlib
   GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG df6e7b22f7fef9c37736b3718c5ccb357df7dcd2
+  GIT_TAG e69e5f977d458f2650bb346dadf2ad30c5320281
   GIT_SHALLOW TRUE
   GIT_PROGRESS TRUE
 )
@@ -235,7 +235,6 @@ endif ()
 add_library(Retina.Graphics.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Graphics.Dependencies INTERFACE
-  imgui
   spirv-cross-glsl
   volk
   Vulkan::SPIRV-Tools
@@ -247,6 +246,12 @@ add_library(Retina.Graphics.Vulkan INTERFACE)
 target_include_directories(Retina.Graphics.Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_compile_definitions(Retina.Graphics.Vulkan INTERFACE VK_NO_PROTOTYPES)
 target_link_libraries(Retina.Graphics.Vulkan INTERFACE vma)
+
+add_library(Retina.GUI.Dependencies INTERFACE)
+
+target_link_libraries(Retina.GUI.Dependencies INTERFACE
+  imgui
+)
 
 add_library(Retina.Sandbox.Dependencies INTERFACE)
 

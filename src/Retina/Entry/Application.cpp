@@ -3,13 +3,13 @@
 #include <filesystem>
 
 namespace Retina {
-  extern auto MakeApplication() noexcept -> std::unique_ptr<Entry::IApplication>;
+  extern auto MakeApplication() noexcept -> Core::CUniquePtr<Entry::IApplication>;
 }
 
 namespace Retina::Entry {
   IApplication::~IApplication() noexcept = default;
 
-  auto IApplication::Make() noexcept -> std::unique_ptr<IApplication> {
+  auto IApplication::Make() noexcept -> Core::CUniquePtr<IApplication> {
     RETINA_PROFILE_SCOPED();
     return MakeApplication();
   }

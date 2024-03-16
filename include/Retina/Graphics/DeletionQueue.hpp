@@ -14,7 +14,7 @@ namespace Retina::Graphics {
     RETINA_DELETE_COPY(CDeletionQueue);
     RETINA_DEFAULT_MOVE(CDeletionQueue);
 
-    RETINA_NODISCARD static auto Make(const CDevice& device) noexcept -> std::unique_ptr<CDeletionQueue>;
+    RETINA_NODISCARD static auto Make(const CDevice& device) noexcept -> Core::CUniquePtr<CDeletionQueue>;
 
     auto Enqueue(std::move_only_function<void()>&& packet) noexcept -> void;
     auto Tick() noexcept -> void;

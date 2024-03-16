@@ -2,7 +2,7 @@
 #include <Retina/Utility.glsl>
 #include <Meshlet.glsl>
 
-#define WHITE_POINT 1.25
+#define WHITE_POINT 0.95
 
 layout (location = 0) in vec2 i_Uv;
 
@@ -14,15 +14,24 @@ RetinaDeclarePushConstant() {
 
 #define g_VisbufferResolveImage RetinaGetSampledImage(Texture2D, u_VisbufferResolveImageId)
 
-vec3 ExtendedReinhardTonemap(in vec3 color) {
-  const float oldLum = RetinaGetLuminance(color);
+float GetLuminance(in vec3 color) {
+  return dot(color, vec3(0.2126, 0.7152, 0.0722));
+}
+
+vec3 ChangeLuminance(in vec3 color, in float outLum) {
+  const float inLum = GetLuminance(color);
+  return color * (outLum / inLum);
+}
+
+vec3 ApplyExtendedReinhardTonemap(in vec3 color) {
+  const float oldLum = GetLuminance(color);
   const float numerator = oldLum * (1.0 + (oldLum / (WHITE_POINT * WHITE_POINT)));
   const float denominator = 1.0 + oldLum;
   const float newLum = numerator / denominator;
-  return RetinaChangeLuminance(color, newLum);
+  return ChangeLuminance(color, newLum);
 }
 
 void main() {
   const vec4 color = texelFetch(g_VisbufferResolveImage, ivec2(gl_FragCoord.xy), 0);
-  o_Pixel = vec4(ExtendedReinhardTonemap(color.rgb), 1.0);
+  o_Pixel = vec4(ApplyExtendedReinhardTonemap(color.rgb), 1.0);
 }
