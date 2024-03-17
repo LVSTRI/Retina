@@ -12,12 +12,16 @@ namespace Retina::WSI {
   class CWindow {
   public:
     using EventDispatcher = Core::CEventDispatcher<
+      SWindowFocusEvent,
       SWindowResizeEvent,
       SWindowCloseEvent,
       SWindowKeyboardEvent,
       SWindowMouseButtonEvent,
       SWindowMousePositionEvent,
-      SWindowMouseScrollEvent
+      SWindowMouseEnterEvent,
+      SWindowMouseScrollEvent,
+      SWindowInputCharEvent,
+      SWindowMonitorEvent
     >;
 
   public:
@@ -41,6 +45,8 @@ namespace Retina::WSI {
     RETINA_NODISCARD auto IsFeatureEnabled(bool SWindowFeature::* feature) const noexcept -> bool;
 
     RETINA_NODISCARD auto IsOpen() const noexcept -> bool;
+
+    RETINA_NODISCARD auto GetPosition() const noexcept -> std::pair<int32, int32>;
 
   private:
     WindowHandle _handle = nullptr;

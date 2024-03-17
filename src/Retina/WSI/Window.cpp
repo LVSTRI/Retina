@@ -7,7 +7,7 @@
 
 namespace Retina::WSI {
   namespace Details {
-    auto MakePlatformWindow(const SWindowCreateInfo& createInfo) noexcept -> GLFWwindow* {
+    RETINA_NODISCARD RETINA_INLINE auto MakePlatformWindow(const SWindowCreateInfo& createInfo) noexcept -> GLFWwindow* {
       RETINA_PROFILE_SCOPED();
       auto featureHints = std::to_array({
         std::make_pair(GLFW_RESIZABLE, createInfo.Features.Resizable),
@@ -79,7 +79,11 @@ namespace Retina::WSI {
     if (glfwRawMouseMotionSupported()) {
       glfwSetInputMode(windowHandle, GLFW_RAW_MOUSE_MOTION, true);
     }
-    glfwSetWindowSizeCallback(windowHandle, [](GLFWwindow* window, int32 width, int32 height) {
+    glfwSetWindowFocusCallback(windowHandle, [](GLFWwindow* window, int32 focused) {
+      auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+      self.GetEventDispatcher().Fire<SWindowFocusEvent>(focused);
+    });
+    glfwSetFramebufferSizeCallback(windowHandle, [](GLFWwindow* window, int32 width, int32 height) {
       auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
       self._createInfo.Width = width;
       self._createInfo.Height = height;
@@ -113,12 +117,20 @@ namespace Retina::WSI {
         static_cast<float32>(y)
       );
     });
+    glfwSetCursorEnterCallback(windowHandle, [](GLFWwindow* window, int32 entered) {
+      auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+      self.GetEventDispatcher().Fire<SWindowMouseEnterEvent>(entered);
+    });
     glfwSetScrollCallback(windowHandle, [](GLFWwindow* window, float64 x, float64 y) {
       auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
       self.GetEventDispatcher().Fire<SWindowMouseScrollEvent>(
         static_cast<float32>(x),
         static_cast<float32>(y)
       );
+    });
+    glfwSetCharCallback(windowHandle, [](GLFWwindow* window, uint32 codepoint) {
+      auto& self = *static_cast<CWindow*>(glfwGetWindowUserPointer(window));
+      self.GetEventDispatcher().Fire<SWindowInputCharEvent>(codepoint);
     });
     self->_handle = windowHandle;
     self->_dispatcher = std::move(dispatcher);
@@ -181,5 +193,13 @@ namespace Retina::WSI {
   auto CWindow::IsOpen() const noexcept -> bool {
     RETINA_PROFILE_SCOPED();
     return !glfwWindowShouldClose(static_cast<GLFWwindow*>(_handle));
+  }
+
+  auto CWindow::GetPosition() const noexcept -> std::pair<int32, int32> {
+    RETINA_PROFILE_SCOPED();
+    auto x = 0_i32;
+    auto y = 0_i32;
+    glfwGetWindowPos(static_cast<GLFWwindow*>(_handle), &x, &y);
+    return { x, y };
   }
 }

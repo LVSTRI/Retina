@@ -226,7 +226,6 @@ namespace Retina::Sandbox {
         optimizedIndices
       ] = Details::OptimizeVertexData(vertices, indices);
 
-
       const auto [
         meshlets,
         meshletIndices,

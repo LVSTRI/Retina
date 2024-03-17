@@ -14,6 +14,13 @@ vec3 RetinaToNonLinearFromLinear(in vec3 color) {
   return mix(higher, lower, cutoff);
 }
 
+vec3 RetinaToLinearFromNonLinear(in vec3 color) {
+  const bvec3 cutoff = lessThanEqual(color, vec3(0.04045));
+  const vec3 lower = color / 12.92;
+  const vec3 higher = pow((color + 0.055) / 1.055, vec3(2.4));
+  return mix(higher, lower, cutoff);
+}
+
 bool RetinaIsWithin(in float lower, in float value, in float upper) {
   return lower <= value && value <= upper;
 }

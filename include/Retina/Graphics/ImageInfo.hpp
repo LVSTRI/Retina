@@ -140,7 +140,7 @@ namespace Retina::Graphics {
     return subresourceRange;
   }
 
-  RETINA_NODISCARD RETINA_INLINE auto MakeNativeImageSubresourceRange(
+  RETINA_NODISCARD auto MakeNativeImageSubresourceRange(
     const CImage& image,
     const SImageSubresourceRange& subresource
   ) noexcept -> VkImageSubresourceRange;

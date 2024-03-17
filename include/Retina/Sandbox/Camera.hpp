@@ -42,7 +42,7 @@ namespace Retina::Sandbox {
     auto GetViewMatrix() const noexcept -> glm::mat4;
 
   private:
-    auto OnInputCursorMode(const WSI::SInputCursorModeEvent& event) noexcept -> bool;
+    auto OnInputCursorMode(const WSI::SInputCursorModeEvent& event) noexcept -> void;
 
   private:
     glm::vec3 _position = {};

@@ -1,5 +1,7 @@
 #include <Retina/Sandbox/SandboxApplication.hpp>
 
+#include <imgui.h>
+
 namespace Retina {
   auto MakeApplication() noexcept -> Core::CUniquePtr<Entry::IApplication> {
     RETINA_PROFILE_SCOPED();
@@ -158,10 +160,7 @@ namespace Retina::Sandbox {
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
-    _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowKeyboard);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowMouseButton);
-    _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowMousePosition);
-    _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowMouseScroll);
   }
 
   CSandboxApplication::~CSandboxApplication() noexcept {
@@ -181,10 +180,10 @@ namespace Retina::Sandbox {
     }
   }
 
-  auto CSandboxApplication::OnWindowResize(const WSI::SWindowResizeEvent& windowResizeEvent) noexcept -> bool {
+  auto CSandboxApplication::OnWindowResize(const WSI::SWindowResizeEvent& windowResizeEvent) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     if (windowResizeEvent.Width == 0 || windowResizeEvent.Height == 0) {
-      return false;
+      return;
     }
     _device->WaitIdle();
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
@@ -195,39 +194,24 @@ namespace Retina::Sandbox {
 
     OnUpdate();
     OnRender();
-    return false;
   }
 
-  auto CSandboxApplication::OnWindowClose(const WSI::SWindowCloseEvent&) noexcept -> bool {
+  auto CSandboxApplication::OnWindowClose(const WSI::SWindowCloseEvent&) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     _isRunning = false;
-    return true;
   }
 
-  auto CSandboxApplication::OnWindowKeyboard(const WSI::SWindowKeyboardEvent&) noexcept -> bool {
+  auto CSandboxApplication::OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    return true;
-  }
-
-  auto CSandboxApplication::OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> bool {
-    RETINA_PROFILE_SCOPED();
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
+      return;
+    }
     if (event.Action == WSI::EInputAction::E_PRESS && event.Button == WSI::EInputMouse::E_BUTTON_RIGHT) {
       _window->GetInput().SetCursorMode(WSI::EInputCursorMode::E_DISABLED);
     }
     if (event.Action == WSI::EInputAction::E_RELEASE && event.Button == WSI::EInputMouse::E_BUTTON_RIGHT) {
       _window->GetInput().SetCursorMode(WSI::EInputCursorMode::E_NORMAL);
     }
-    return true;
-  }
-
-  auto CSandboxApplication::OnWindowMousePosition(const WSI::SWindowMousePositionEvent&) noexcept -> bool {
-    RETINA_PROFILE_SCOPED();
-    return true;
-  }
-
-  auto CSandboxApplication::OnWindowMouseScroll(const WSI::SWindowMouseScrollEvent&) noexcept -> bool {
-    RETINA_PROFILE_SCOPED();
-    return true;
   }
 
   auto CSandboxApplication::OnUpdate() noexcept -> void {
@@ -236,9 +220,9 @@ namespace Retina::Sandbox {
       WSI::WaitEvents();
     }
     WSI::PollEvents();
-
-    _camera->Update(_timer.GetDeltaTime());
-
+    if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
+      _camera->Update(_timer.GetDeltaTime());
+    }
     const auto frameIndex = WaitForNextFrameIndex();
 
     auto& viewBuffer = _viewBuffer[frameIndex];
@@ -266,6 +250,7 @@ namespace Retina::Sandbox {
       return;
     }
     _device->Tick();
+    _imGuiContext->NewFrame(_tonemap.MainImage->GetView());
 
     const auto& viewBuffer = _viewBuffer[frameIndex];
 
@@ -420,6 +405,19 @@ namespace Retina::Sandbox {
       )
       .Draw(3)
       .EndRendering()
+      .ImageMemoryBarrier({
+        .Image = *_tonemap.MainImage,
+        .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+        .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+        .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+        .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_READ,
+        .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+        .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+      });
+    _imGuiContext->Render(commandBuffer, [&] noexcept {
+      ImGui::ShowDemoWindow();
+    });
+    commandBuffer
       .BeginNamedRegion("SwapchainBlit")
       .Barrier({
         .ImageMemoryBarriers = {
@@ -487,6 +485,9 @@ namespace Retina::Sandbox {
 
   auto CSandboxApplication::InitializeGui() noexcept -> void {
     RETINA_PROFILE_SCOPED();
+    _imGuiContext = GUI::CImGuiContext::Make(*_window, *_device, {
+      .MaxTimelineDifference = static_cast<uint32>(_frameTimeline->GetMaxTimelineDifference()),
+    });
   }
 
   auto CSandboxApplication::InitializeVisbufferPass() noexcept -> void {

@@ -132,14 +132,13 @@ namespace Retina::Sandbox {
     return glm::lookAt(_position, _position + _front, _up);
   }
 
-  auto CCamera::OnInputCursorMode(const WSI::SInputCursorModeEvent& event) noexcept -> bool {
+  auto CCamera::OnInputCursorMode(const WSI::SInputCursorModeEvent& event) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     const auto [cursorX, cursorY] = _input->GetCursorPosition();
     _lastCursorPosition.X = static_cast<float32>(cursorX);
     _lastCursorPosition.Y = static_cast<float32>(cursorY);
     _cursorPosition = _lastCursorPosition;
     _isCaptured = event.Mode == WSI::EInputCursorMode::E_DISABLED;
-    return false;
   }
 
   auto MakeInfiniteReversePerspective(float32 fov, float32 aspect, float32 near) noexcept -> glm::mat4 {

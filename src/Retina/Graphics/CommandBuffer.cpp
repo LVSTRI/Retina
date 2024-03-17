@@ -407,6 +407,24 @@ namespace Retina::Graphics {
     return *this;
   }
 
+  auto CCommandBuffer::BindIndexBuffer(const CBuffer& buffer, EIndexType indexType) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdBindIndexBuffer(_handle, buffer.GetHandle(), 0, AsEnumCounterpart(indexType));
+    return *this;
+  }
+
+  auto CCommandBuffer::DrawIndexed(
+    uint32 indexCount,
+    uint32 instanceCount,
+    uint32 firstIndex,
+    int32 vertexOffset,
+    uint32 firstInstance
+  ) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    vkCmdDrawIndexed(_handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+    return *this;
+  }
+
   auto CCommandBuffer::Draw(
     uint32 vertexCount,
     uint32 instanceCount,
@@ -495,27 +513,18 @@ namespace Retina::Graphics {
     return *this;
   }
 
-  auto CCommandBuffer::ClearBuffer(
-    const CBuffer& buffer,
-    uint32 value,
-    const SBufferMemoryRange& range
-  ) noexcept -> CCommandBuffer& {
+  auto CCommandBuffer::ClearBuffer(const CBuffer& buffer, uint32 value, const SBufferMemoryRange& range) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     vkCmdFillBuffer(_handle, buffer.GetHandle(), range.Offset, range.Size, value);
     return *this;
   }
 
-  auto CCommandBuffer::CopyBuffer(
-    const CBuffer& source,
-    const CBuffer& dest,
-    const SBufferCopyRegion& copyRegion
-  ) noexcept -> CCommandBuffer& {
+  auto CCommandBuffer::CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> CCommandBuffer& {
     RETINA_PROFILE_SCOPED();
     auto region = VkBufferCopy2(VK_STRUCTURE_TYPE_BUFFER_COPY_2);
     region.srcOffset = copyRegion.SourceOffset;
     region.dstOffset = copyRegion.DestOffset;
     region.size = copyRegion.Size;
-
     if (region.size == WHOLE_SIZE) {
       region.size = source.GetSizeBytes();
     }
@@ -526,6 +535,34 @@ namespace Retina::Graphics {
     copy.regionCount = 1;
     copy.pRegions = &region;
     vkCmdCopyBuffer2(_handle, &copy);
+    return *this;
+  }
+
+  auto CCommandBuffer::CopyBufferToImage(const CBuffer& source, const CImage& dest, const SBufferImageCopyRegion& copyRegion) noexcept -> CCommandBuffer& {
+    RETINA_PROFILE_SCOPED();
+    const auto subresourceLayers = MakeNativeImageSubresourceLayers(dest, copyRegion.SubresourceRange);
+    auto region = VkBufferImageCopy2(VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2);
+    region.bufferOffset = copyRegion.Offset;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource = subresourceLayers;
+    region.imageOffset = std::bit_cast<VkOffset3D>(copyRegion.ImageOffset);
+    region.imageExtent = std::bit_cast<VkExtent3D>(copyRegion.ImageExtent);
+    if (copyRegion.ImageExtent == SExtent3D()) {
+      region.imageExtent = {
+        .width = std::max(dest.GetWidth() >> subresourceLayers.mipLevel, 1_u32),
+        .height = std::max(dest.GetHeight() >> subresourceLayers.mipLevel, 1_u32),
+        .depth = 1
+      };
+    }
+
+    auto copy = VkCopyBufferToImageInfo2(VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2);
+    copy.srcBuffer = source.GetHandle();
+    copy.dstImage = dest.GetHandle();
+    copy.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    copy.regionCount = 1;
+    copy.pRegions = &region;
+    vkCmdCopyBufferToImage2(_handle, &copy);
     return *this;
   }
 

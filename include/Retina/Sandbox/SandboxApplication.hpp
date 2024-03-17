@@ -13,6 +13,8 @@
 
 #include <Retina/Graphics/Graphics.hpp>
 
+#include <Retina/GUI/ImGuiContext.hpp>
+
 #include <Retina/WSI/WSI.hpp>
 
 #include <glm/glm.hpp>
@@ -39,12 +41,9 @@ namespace Retina::Sandbox {
     auto Run() noexcept -> void override;
 
   private:
-    auto OnWindowResize(const WSI::SWindowResizeEvent& event) noexcept -> bool;
-    auto OnWindowClose(const WSI::SWindowCloseEvent& event) noexcept -> bool;
-    auto OnWindowKeyboard(const WSI::SWindowKeyboardEvent& event) noexcept -> bool;
-    auto OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> bool;
-    auto OnWindowMousePosition(const WSI::SWindowMousePositionEvent& event) noexcept -> bool;
-    auto OnWindowMouseScroll(const WSI::SWindowMouseScrollEvent& event) noexcept -> bool;
+    auto OnWindowResize(const WSI::SWindowResizeEvent& event) noexcept -> void;
+    auto OnWindowClose(const WSI::SWindowCloseEvent& event) noexcept -> void;
+    auto OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> void;
 
     auto OnUpdate() noexcept -> void;
     auto OnRender() noexcept -> void;
@@ -67,6 +66,7 @@ namespace Retina::Sandbox {
     Core::CUniquePtr<CCamera> _camera;
 
     Core::CUniquePtr<WSI::CWindow> _window;
+    Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
 
     // TODO: Make an actual renderer
     Core::CArcPtr<Graphics::CInstance> _instance;

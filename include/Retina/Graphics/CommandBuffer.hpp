@@ -63,10 +63,20 @@ namespace Retina::Graphics {
     template <typename... Args>
     auto PushConstants(Args&&... args) noexcept -> CCommandBuffer&;
 
+    auto BindIndexBuffer(const CBuffer& buffer, EIndexType indexType = EIndexType::E_UINT32) noexcept -> CCommandBuffer&;
+
     auto Draw(
       uint32 vertexCount,
       uint32 instanceCount = 1,
       uint32 firstVertex = 0,
+      uint32 firstInstance = 0
+    ) noexcept -> CCommandBuffer&;
+
+    auto DrawIndexed(
+      uint32 indexCount,
+      uint32 instanceCount = 1,
+      uint32 firstIndex = 0,
+      int32 vertexOffset = 0,
       uint32 firstInstance = 0
     ) noexcept -> CCommandBuffer&;
 
@@ -81,6 +91,7 @@ namespace Retina::Graphics {
 
     auto ClearBuffer(const CBuffer& buffer, uint32 value = 0, const SBufferMemoryRange& range = {}) noexcept -> CCommandBuffer&;
     auto CopyBuffer(const CBuffer& source, const CBuffer& dest, const SBufferCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
+    auto CopyBufferToImage(const CBuffer& source, const CImage& dest, const SBufferImageCopyRegion& copyRegion) noexcept -> CCommandBuffer&;
 
     auto ClearImage(const CImageView& imageView, const SClearValue& clearValue) noexcept -> CCommandBuffer&;
     auto CopyImage(const CImage& source, const CImage& dest, const SImageCopyRegion& copyRegion) noexcept -> CCommandBuffer&;

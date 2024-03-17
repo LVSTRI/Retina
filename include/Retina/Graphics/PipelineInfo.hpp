@@ -47,7 +47,7 @@ namespace Retina::Graphics {
     EBlendFactor DestColorBlendFactor = EBlendFactor::E_ONE_MINUS_SRC_ALPHA;
     EBlendOperator ColorBlendOperator = EBlendOperator::E_ADD;
     EBlendFactor SourceAlphaBlendFactor = EBlendFactor::E_ONE;
-    EBlendFactor DestAlphaBlendFactor = EBlendFactor::E_ZERO;
+    EBlendFactor DestAlphaBlendFactor = EBlendFactor::E_ONE_MINUS_SRC_ALPHA;
     EBlendOperator AlphaBlendOperator = EBlendOperator::E_ADD;
     EColorComponentFlag ColorWriteMask =
       EColorComponentFlag::E_R |

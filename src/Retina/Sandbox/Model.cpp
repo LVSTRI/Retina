@@ -175,10 +175,9 @@ namespace Retina::Sandbox {
                 continue;
               }
             }
-
-            primitives.emplace_back(primitive);
-            primitiveIndices.emplace(&currentPrimitive, primitives.size() - 1);
           }
+          primitives.emplace_back(primitive);
+          primitiveIndices.emplace(&currentPrimitive, primitives.size() - 1);
         }
 
         auto mesh = SMesh();

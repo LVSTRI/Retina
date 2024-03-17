@@ -15,12 +15,16 @@ namespace Retina::WSI {
   enum class EInputMouse;
   enum class EInputKeyboard;
   enum class EInputCursorMode;
+  struct SWindowFocusEvent;
   struct SWindowResizeEvent;
   struct SWindowCloseEvent;
   struct SWindowKeyboardEvent;
   struct SWindowMouseButtonEvent;
   struct SWindowMousePositionEvent;
+  struct SWindowMouseEnterEvent;
   struct SWindowMouseScrollEvent;
+  struct SWindowInputCharEvent;
+  struct SWindowMonitorEvent;
   struct SInputCursorModeEvent;
   struct SInputCursorPosition;
 

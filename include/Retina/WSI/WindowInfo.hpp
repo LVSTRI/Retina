@@ -178,6 +178,10 @@ namespace Retina::WSI {
     E_DISABLED = 0x00034003,
   };
 
+  struct SWindowFocusEvent {
+    bool Focused = false;
+  };
+
   struct SWindowResizeEvent {
     int32 Width = 0;
     int32 Height = 0;
@@ -203,9 +207,21 @@ namespace Retina::WSI {
     float64 Y = 0.0;
   };
 
+  struct SWindowMouseEnterEvent {
+    bool Entered = false;
+  };
+
   struct SWindowMouseScrollEvent {
     float64 X = 0.0;
     float64 Y = 0.0;
+  };
+
+  struct SWindowInputCharEvent {
+    uint32 Codepoint = 0;
+  };
+
+  struct SWindowMonitorEvent {
+    bool Connected = false;
   };
 
   struct SInputCursorModeEvent {

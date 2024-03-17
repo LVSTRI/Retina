@@ -52,7 +52,13 @@ namespace Retina::Graphics {
 
     info.Format = format;
     info.SubresourceRange.BaseLevel = imageViewCreateInfo.subresourceRange.baseMipLevel;
+    if (info.SubresourceRange.BaseLevel == SUBRESOURCE_LEVEL_IGNORED) {
+      info.SubresourceRange.BaseLevel = 0;
+    }
     info.SubresourceRange.BaseLayer = imageViewCreateInfo.subresourceRange.baseArrayLayer;
+    if (info.SubresourceRange.BaseLevel == SUBRESOURCE_LEVEL_IGNORED) {
+      info.SubresourceRange.BaseLevel = 0;
+    }
     info.SubresourceRange.LevelCount = imageViewCreateInfo.subresourceRange.levelCount;
     if (info.SubresourceRange.LevelCount == SUBRESOURCE_REMAINING_LEVELS) {
       info.SubresourceRange.LevelCount = image.GetLevelCount() - info.SubresourceRange.BaseLevel;

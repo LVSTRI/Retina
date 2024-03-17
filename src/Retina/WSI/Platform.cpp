@@ -26,6 +26,11 @@ namespace Retina::WSI {
     glfwWaitEvents();
   }
 
+  auto GetKeyName(EInputKeyboard key, int32 scancode) noexcept -> const char* {
+    RETINA_PROFILE_SCOPED();
+    return glfwGetKeyName(std::to_underlying(key), scancode);
+  }
+
   auto GetSurfaceExtensionNames() noexcept -> std::span<const char*> {
     RETINA_PROFILE_SCOPED();
     auto count = 0_u32;

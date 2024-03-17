@@ -16,7 +16,7 @@ namespace Retina::Core {
   class CEventDispatcher {
   public:
     template <typename E>
-    using EventCallbackFunction = std::move_only_function<bool(const E&)>;
+    using EventCallbackFunction = std::move_only_function<void(const E&)>;
 
     template <typename E>
     using EventCallbackList = FlatHashMap<uintptr, EventCallbackFunction<E>>;
@@ -36,29 +36,27 @@ namespace Retina::Core {
       const auto event = T(std::forward<Args>(args)...);
       auto& callbacks = std::get<EventCallbackList<T>>(_storage);
       for (auto& [_, callback] : callbacks) {
-        if (!callback(event)) {
-          break;
-        }
+        callback(event);
       }
     }
 
     template <typename E, typename C>
       requires (TContains<E, Es...>)
-    constexpr auto Attach(C* receiver, auto (C::* func)(const E&) noexcept -> bool) noexcept -> void {
+    constexpr auto Attach(C* receiver, auto (C::* func)(const E&) noexcept -> void) noexcept -> void {
       auto& callbacks = std::get<EventCallbackList<E>>(_storage);
       const auto id = reinterpret_cast<uintptr>(receiver);
-      callbacks[id] = [receiver, func](const E& event) noexcept -> bool {
-        return (receiver->*func)(event);
+      callbacks[id] = [receiver, func](const E& event) noexcept -> void {
+        (receiver->*func)(event);
       };
     }
 
     template <typename E, typename C>
       requires (TContains<E, Es...>)
-    constexpr auto Attach(C* receiver, auto (C::* func)(const E&) const noexcept -> bool) noexcept -> void {
+    constexpr auto Attach(C* receiver, auto (C::* func)(const E&) const noexcept -> void) noexcept -> void {
       auto& callbacks = std::get<EventCallbackList<E>>(_storage);
       const auto id = reinterpret_cast<uintptr>(receiver);
-      callbacks[id] = [receiver, func](const E& event) noexcept -> bool {
-        return (receiver->*func)(event);
+      callbacks[id] = [receiver, func](const E& event) noexcept -> void {
+        (receiver->*func)(event);
       };
     }
 

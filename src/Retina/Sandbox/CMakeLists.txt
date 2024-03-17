@@ -15,6 +15,7 @@ target_link_libraries(Retina.Sandbox PRIVATE
   Retina.Core
   Retina.Dependencies
   Retina.Graphics
+  Retina.GUI
   Retina.Sandbox.Dependencies
   Retina.WSI
 )

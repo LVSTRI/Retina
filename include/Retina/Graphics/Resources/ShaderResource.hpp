@@ -24,7 +24,10 @@ namespace Retina::Graphics {
     RETINA_NODISCARD RETINA_INLINE auto operator ->() noexcept -> T*;
     RETINA_NODISCARD RETINA_INLINE auto operator ->() const noexcept -> const T*;
 
-    RETINA_NODISCARD RETINA_INLINE constexpr auto operator <=>(const CShaderResource&) const noexcept -> std::strong_ordering = default;
+    RETINA_NODISCARD RETINA_INLINE operator bool() const noexcept;
+    RETINA_NODISCARD RETINA_INLINE auto operator !() const noexcept -> bool;
+
+    RETINA_NODISCARD RETINA_INLINE auto operator <=>(const CShaderResource&) const noexcept -> std::strong_ordering = default;
 
     RETINA_DECLARE_FRIEND_HASH(CShaderResource);
 
@@ -86,6 +89,18 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     RETINA_ASSERT_WITH(IsValid(), "Invalid shader resource");
     return _resource;
+  }
+
+  template <typename T>
+  CShaderResource<T>::operator bool() const noexcept {
+    RETINA_PROFILE_SCOPED();
+    return IsValid();
+  }
+
+  template <typename T>
+  auto CShaderResource<T>::operator !() const noexcept -> bool {
+    RETINA_PROFILE_SCOPED();
+    return !IsValid();
   }
 }
 

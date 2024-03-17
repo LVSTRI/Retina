@@ -76,6 +76,13 @@ namespace Retina::Graphics {
     usize Size = WHOLE_SIZE;
   };
 
+  struct SBufferImageCopyRegion {
+    uint64 Offset = 0;
+    SImageSubresourceRange SubresourceRange = {};
+    SOffset3D ImageOffset = {};
+    SExtent3D ImageExtent = {};
+  };
+
   struct SImageCopyRegion {
     SOffset3D SourceOffset = {};
     SOffset3D DestOffset = {};

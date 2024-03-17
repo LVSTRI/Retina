@@ -172,12 +172,6 @@ namespace Retina::Graphics {
 
         auto colorBlendAttachmentInfo = SPipelineColorBlendAttachmentInfo();
         colorBlendAttachmentInfo.BlendEnable = Core::IsFlagEnabled(colorWriteMask, EColorComponentFlag::E_A);
-        colorBlendAttachmentInfo.SourceColorBlendFactor = EBlendFactor::E_ONE;
-        colorBlendAttachmentInfo.DestColorBlendFactor = EBlendFactor::E_ZERO;
-        colorBlendAttachmentInfo.ColorBlendOperator = EBlendOperator::E_ADD;
-        colorBlendAttachmentInfo.SourceAlphaBlendFactor = EBlendFactor::E_ONE;
-        colorBlendAttachmentInfo.DestAlphaBlendFactor = EBlendFactor::E_ZERO;
-        colorBlendAttachmentInfo.AlphaBlendOperator = EBlendOperator::E_ADD;
         colorBlendAttachmentInfo.ColorWriteMask = colorWriteMask;
         colorBlendAttachments.emplace_back(colorBlendAttachmentInfo);
       }
