@@ -151,22 +151,14 @@ namespace Retina::GUI {
     return self;
   }
 
-  auto CImGuiContext::NewFrame(const Graphics::CImageView& target) noexcept -> void {
+  auto CImGuiContext::NewFrame() noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    _currentState.Target = &target;
-    {
-      auto& io = ImGui::GetIO();
-      io.DisplaySize = ImVec2(
-        static_cast<float32>(target.GetImage().GetWidth()),
-        static_cast<float32>(target.GetImage().GetHeight())
-      );
-      io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-    }
+    ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     _currentFrame = _frameCount++ % _createInfo.MaxTimelineDifference;
   }
 
-  auto CImGuiContext::Render(Graphics::CCommandBuffer& commands) noexcept -> void {
+  auto CImGuiContext::Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     ImGui::Render();
     const auto* drawData = ImGui::GetDrawData();
@@ -192,11 +184,10 @@ namespace Retina::GUI {
         }
       }
 
-      const auto& targetView = *_currentState.Target;
       const auto clipOffset = drawData->DisplayPos;
       const auto clipScale = drawData->FramebufferScale;
-      const auto targetWidth = static_cast<float32>(targetView.GetImage().GetWidth());
-      const auto targetHeight = static_cast<float32>(targetView.GetImage().GetHeight());
+      const auto targetWidth = static_cast<float32>(target.GetWidth());
+      const auto targetHeight = static_cast<float32>(target.GetHeight());
 
       auto globalVertexOffset = 0_i32;
       auto globalIndexOffset = 0_i32;
@@ -207,7 +198,7 @@ namespace Retina::GUI {
           .Name = "ImGuiContext_Rendering",
           .ColorAttachments = {
             {
-              .ImageView = targetView,
+              .ImageView = target.GetView(),
               .LoadOperator = Graphics::EAttachmentLoadOperator::E_LOAD,
               .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
             }

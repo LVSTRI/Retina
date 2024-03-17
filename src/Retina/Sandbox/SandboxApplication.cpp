@@ -250,7 +250,7 @@ namespace Retina::Sandbox {
       return;
     }
     _device->Tick();
-    _imGuiContext->NewFrame(_tonemap.MainImage->GetView());
+    _imGuiContext->NewFrame();
 
     const auto& viewBuffer = _viewBuffer[frameIndex];
 
@@ -414,7 +414,7 @@ namespace Retina::Sandbox {
         .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
         .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
       });
-    _imGuiContext->Render(commandBuffer, [&] noexcept {
+    _imGuiContext->Render(*_tonemap.MainImage, commandBuffer, [&] noexcept {
       ImGui::ShowDemoWindow();
     });
     commandBuffer

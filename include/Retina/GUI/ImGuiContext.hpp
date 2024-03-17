@@ -26,9 +26,9 @@ namespace Retina::GUI {
       const SImGuiContextCreateInfo& createInfo
     ) noexcept -> Core::CUniquePtr<CImGuiContext>;
 
-    auto NewFrame(const Graphics::CImageView& target) noexcept -> void;
+    auto NewFrame() noexcept -> void;
     template <typename F>
-    auto Render(Graphics::CCommandBuffer& commands, F&& f) noexcept -> void;
+    auto Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& f) noexcept -> void;
 
   private:
     struct SVertexFormat {
@@ -39,7 +39,7 @@ namespace Retina::GUI {
     static_assert(sizeof(SVertexFormat) == 20, "Invalid vertex format size");
 
   private:
-    auto Render(Graphics::CCommandBuffer& commands) noexcept -> void;
+    auto Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands) noexcept -> void;
 
   private:
     std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SVertexFormat>>> _vertexBuffers;
@@ -47,10 +47,6 @@ namespace Retina::GUI {
     Graphics::CShaderResource<Graphics::CImage> _fontTexture;
     Graphics::CShaderResource<Graphics::CSampler> _fontSampler;
     Core::CArcPtr<Graphics::CGraphicsPipeline> _pipeline;
-
-    struct {
-      const Graphics::CImageView* Target = nullptr;
-    } _currentState;
 
     uint32 _currentFrame = 0;
     uint32 _frameCount = 0;
@@ -61,9 +57,9 @@ namespace Retina::GUI {
   };
 
   template <typename F>
-  auto CImGuiContext::Render(Graphics::CCommandBuffer& commands, F&& f) noexcept -> void {
+  auto CImGuiContext::Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& f) noexcept -> void {
     RETINA_PROFILE_SCOPED();
     f();
-    Render(commands);
+    Render(target, commands);
   }
 }
