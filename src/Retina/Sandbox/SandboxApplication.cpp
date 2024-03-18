@@ -129,7 +129,7 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/deccer-cubes/SM_Deccer_Cubes.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_SANDBOX_ERROR("Failed to load model");
         return std::unexpected(error);
@@ -424,7 +424,6 @@ namespace Retina::Sandbox {
         .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
       });
     _imGuiContext->Render(*_tonemap.MainImage, commandBuffer, [&] noexcept {
-      ImGui::ShowDemoWindow();
       if (ImGui::Begin("Info")) {
         ImGui::Text("AFPS: %.2f rad/s", glm::two_pi<float32>() * 1.0f / _timer.GetDeltaTime());
         ImGui::Text("FPS: %.2f", 1.0f / _timer.GetDeltaTime());
@@ -456,11 +455,6 @@ namespace Retina::Sandbox {
           ImGui::Text("Device Local Heap: %.2lf MB / %.2lf MB", deviceLocalBudget.Usage / 1048576.0_f64, deviceLocalBudget.Budget / 1048576.0_f64);
           ImGui::Text("Host Visible Heap: %.2lf MB / %.2lf MB", hostVisibleBudget.Usage / 1048576.0_f64, hostVisibleBudget.Budget / 1048576.0_f64);
         }
-
-        if (ImGui::Begin("Texture Viewer")) {
-          ImGui::Image(GUI::AsTextureHandle(_visbufferResolve.MainImage), ImVec2(512, 512));
-        }
-        ImGui::End();
       }
       ImGui::End();
       if (ImGui::Begin("Settings")) {
