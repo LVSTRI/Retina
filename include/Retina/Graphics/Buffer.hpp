@@ -37,7 +37,7 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetDebugName() const noexcept -> std::string_view;
     auto SetDebugName(std::string_view name) noexcept -> void;
 
-    RETINA_NODISCARD auto GetCapacity() const noexcept -> usize;
+    RETINA_NODISCARD auto GetCapacityBytes() const noexcept -> usize;
     RETINA_NODISCARD auto GetAlignment() const noexcept -> usize;
     RETINA_NODISCARD auto GetDescriptor(usize offset = 0, usize size = WHOLE_SIZE) const noexcept -> SBufferDescriptor;
     RETINA_NODISCARD auto GetData() const noexcept -> uint8*;
@@ -96,7 +96,6 @@ namespace Retina::Graphics {
     }
     return { ptr + offset, size };
   }
-
 
   template <typename T>
   auto CBuffer::View(usize offset, usize size) const noexcept -> std::span<const T> {

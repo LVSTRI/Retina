@@ -127,7 +127,7 @@ namespace Retina::Graphics {
     _createInfo.Name = name;
   }
 
-  auto CBuffer::GetCapacity() const noexcept -> usize {
+  auto CBuffer::GetCapacityBytes() const noexcept -> usize {
     RETINA_PROFILE_SCOPED();
     return _createInfo.Capacity;
   }
@@ -157,7 +157,7 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     auto* ptr = GetData();
     if (ptr) {
-      std::memset(ptr, 0, GetCapacity());
+      std::memset(ptr, 0, GetCapacityBytes());
     }
     _size = 0;
   }
@@ -171,13 +171,12 @@ namespace Retina::Graphics {
     if (size == 0) {
       return;
     }
-    const auto offsetSize = offset + size;
-    if (offsetSize > GetCapacity()) {
-      RETINA_GRAPHICS_ERROR("Write out of bounds - offset: {}, size: {}, capacity: {}", offset, size, GetCapacity());
+    if (offset + size > GetCapacityBytes()) {
+      RETINA_GRAPHICS_ERROR("Write out of bounds - offset: {}, size: {}, capacity: {}", offset, size, GetCapacityBytes());
       return;
     }
     std::memcpy(ptr + offset, data, size);
-    _size = std::max(_size, offsetSize);
+    _size = std::max(_size, offset + size);
   }
 
   auto CBuffer::Make(const CDevice& device, const SBufferCreateInfo& createInfo, CBuffer* self) noexcept -> void {

@@ -1,5 +1,6 @@
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/CommandBuffer.hpp>
+#include <Retina/Graphics/DeletionQueue.hpp>
 #include <Retina/Graphics/DescriptorLayout.hpp>
 #include <Retina/Graphics/Device.hpp>
 #include <Retina/Graphics/GraphicsPipeline.hpp>
@@ -32,26 +33,7 @@ namespace Retina::GUI {
       return std::filesystem::path(RETINA_GUI_FONT_DIRECTORY) / path;
     }
 
-    RETINA_NODISCARD RETINA_INLINE auto ApplyEotf(const glm::vec4& color) noexcept -> glm::vec4 {
-      RETINA_PROFILE_SCOPED();
-      const auto rgb = glm::vec3(color);
-      const auto cutoff = glm::lessThanEqual(rgb, glm::vec3(0.04045f));
-      const auto lower = rgb / 12.92f;
-      const auto higher = glm::pow((rgb + 0.055f) / 1.055f, glm::vec3(2.4f));
-      return { glm::mix(higher, lower, cutoff), color.a };
-    }
-
-    auto SetLinearDarkStyle() noexcept -> void {
-      auto& style = ImGui::GetStyle();
-      ImGui::StyleColorsDark();
-      auto* colors = style.Colors;
-      for (auto i = 0; i < ImGuiCol_COUNT; ++i) {
-        auto color = glm::vec4();
-        std::memcpy(&color, &colors[i], sizeof(ImVec4));
-        color = ApplyEotf(color);
-        colors[i] = ImVec4(color.r, color.g, color.b, color.a);
-      }
-    }
+    constexpr inline auto FONT_TEXTURE_MAGIC_ID = 0x100000001_u64;
   }
 
   CImGuiContext::CImGuiContext(WSI::CWindow& window, const Graphics::CDevice& device) noexcept
@@ -76,7 +58,7 @@ namespace Retina::GUI {
     auto self = Core::MakeUnique<CImGuiContext>(window, device);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    Details::SetLinearDarkStyle();
+    ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOther(static_cast<GLFWwindow*>(window.GetHandle()), true);
     {
       auto& io = ImGui::GetIO();
@@ -86,8 +68,8 @@ namespace Retina::GUI {
       io.BackendRendererName = "Retina";
       io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
-      io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_ItalicVariableFontWeight.ttf").generic_string().c_str(), 24.0f);
-      io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 24.0f);
+      io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_ItalicVariableFontWeight.ttf").generic_string().c_str(), 20.0f);
+      io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 20.0f);
     }
 
     auto vertexBuffer = device.GetShaderResourceTable().MakeBuffer<SVertexFormat>(createInfo.MaxTimelineDifference, {
@@ -178,7 +160,7 @@ namespace Retina::GUI {
             .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
           });
       });
-      io.Fonts->SetTexID(nullptr);
+      io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(Details::FONT_TEXTURE_MAGIC_ID));
 
       return resource;
     }();
@@ -277,9 +259,12 @@ namespace Retina::GUI {
             scissor.Width = static_cast<uint32>(clipMax.x - clipMin.x);
             scissor.Height = static_cast<uint32>(clipMax.y - clipMin.y);
 
-            const auto textureId = cmd.TextureId
-              ? reinterpret_cast<uint32>(cmd.TextureId)
-              : _fontTexture.GetHandle();
+            auto textureId = -1_u32;
+            if (reinterpret_cast<uint64>(cmd.TextureId) == Details::FONT_TEXTURE_MAGIC_ID) {
+              textureId = _fontTexture.GetHandle();
+            } else if (cmd.TextureId != ImTextureID()) {
+              textureId = reinterpret_cast<uint32>(cmd.TextureId);
+            }
             const auto samplerId = _fontSampler.GetHandle();
             const auto scale = glm::vec2(
               2.0f / drawData->DisplaySize.x,
@@ -295,6 +280,7 @@ namespace Retina::GUI {
                 currentVertexBuffer.GetHandle(),
                 samplerId,
                 textureId,
+                _fontTexture.GetHandle(),
                 scale,
                 translate
               )

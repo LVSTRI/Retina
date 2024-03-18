@@ -7,14 +7,14 @@
 #define FLT_MIN 1.175494351e-38
 #define FLT_LOWEST -3.402823466e+38
 
-vec3 RetinaToNonLinearFromLinear(in vec3 color) {
+vec3 RetinaAsNonLinear(in vec3 color) {
   const bvec3 cutoff = lessThanEqual(color, vec3(0.0031308));
   const vec3 lower = color * 12.92;
   const vec3 higher = 1.055 * pow(color, vec3(1.0 / 2.4)) - 0.055;
   return mix(higher, lower, cutoff);
 }
 
-vec3 RetinaToLinearFromNonLinear(in vec3 color) {
+vec3 RetinaAsLinear(in vec3 color) {
   const bvec3 cutoff = lessThanEqual(color, vec3(0.04045));
   const vec3 lower = color / 12.92;
   const vec3 higher = pow((color + 0.055) / 1.055, vec3(2.4));
