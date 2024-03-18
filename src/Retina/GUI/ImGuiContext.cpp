@@ -249,6 +249,7 @@ namespace Retina::GUI {
         })
         .BindPipeline(*_pipeline)
         .BindShaderResourceTable(_device->GetShaderResourceTable())
+        .BindIndexBuffer(*currentIndexBuffer, Graphics::EIndexType::E_UINT16)
         .SetViewport();
       for (auto i = 0_u32; i < drawData->CmdListsCount; ++i) {
         const auto& cmdList = *drawData->CmdLists[i];
@@ -290,7 +291,6 @@ namespace Retina::GUI {
             );
             commands
               .SetScissor(scissor)
-              .BindIndexBuffer(*currentIndexBuffer, Graphics::EIndexType::E_UINT16)
               .PushConstants(
                 currentVertexBuffer.GetHandle(),
                 samplerId,

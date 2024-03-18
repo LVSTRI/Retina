@@ -225,7 +225,7 @@ namespace Retina::Graphics {
     allocationCreateInfo.memoryTypeBits = 0;
     allocationCreateInfo.pool = {};
     allocationCreateInfo.pUserData = {};
-    allocationCreateInfo.priority = 1.0f;
+    allocationCreateInfo.priority = 0.5f;
 
     auto bufferHandle = VkBuffer();
     auto allocationHandle = VmaAllocation();

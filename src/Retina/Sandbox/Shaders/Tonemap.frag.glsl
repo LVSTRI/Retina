@@ -9,6 +9,7 @@ layout (location = 0) out vec4 o_Pixel;
 RetinaDeclarePushConstant() {
   uint u_VisbufferResolveImageId;
   float u_WhitePoint;
+  uint u_IsPassthrough;
 };
 
 #define g_VisbufferResolveImage RetinaGetSampledImage(Texture2D, u_VisbufferResolveImageId)
@@ -23,6 +24,9 @@ vec3 ChangeLuminance(in vec3 color, in float outLum) {
 }
 
 vec3 ApplyExtendedReinhardTonemap(in vec3 color) {
+  if (bool(u_IsPassthrough)) {
+    return color;
+  }
   const float oldLum = GetLuminance(color);
   const float numerator = oldLum * (1.0 + (oldLum / (u_WhitePoint * u_WhitePoint)));
   const float denominator = 1.0 + oldLum;

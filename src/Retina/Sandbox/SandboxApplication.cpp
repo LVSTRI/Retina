@@ -20,7 +20,7 @@ namespace Retina::Sandbox {
       RETINA_PROFILE_SCOPED();
       return std::filesystem::path(RETINA_ASSET_DIRECTORY) / path;
     }
-    
+
     template <typename T>
     RETINA_NODISCARD constexpr auto NextPowerTwo(T value) noexcept -> T {
         auto result = static_cast<T>(1);
@@ -103,6 +103,8 @@ namespace Retina::Sandbox {
       .Features = {
         .Swapchain = true,
         .MeshShader = true,
+        .MemoryBudget = true,
+        .MemoryPriority = true,
       },
     });
 
@@ -356,7 +358,12 @@ namespace Retina::Sandbox {
       .BindShaderResourceTable(_device->GetShaderResourceTable())
       .PushConstants(
         _visbuffer.MainImage.GetHandle(),
-        _visbuffer.DepthImage.GetHandle(),
+        _meshletBuffer.GetHandle(),
+        _meshletInstanceBuffer.GetHandle(),
+        _transformBuffer.GetHandle(),
+        _positionBuffer.GetHandle(),
+        _indexBuffer.GetHandle(),
+        _primitiveBuffer.GetHandle(),
         viewBuffer.GetHandle()
       )
       .Draw(3)
@@ -399,7 +406,8 @@ namespace Retina::Sandbox {
       .BindShaderResourceTable(_device->GetShaderResourceTable())
       .PushConstants(
         _visbufferResolve.MainImage.GetHandle(),
-        _tonemap.WhitePoint
+        _tonemap.WhitePoint,
+        static_cast<uint32>(_tonemap.IsPassthrough)
       )
       .Draw(3)
       .EndRendering()
@@ -419,6 +427,7 @@ namespace Retina::Sandbox {
         ImGui::Text("AFPS: %.2f rad/s", glm::two_pi<float32>() * 1.0f / _timer.GetDeltaTime());
         ImGui::Text("FPS: %.2f", 1.0f / _timer.GetDeltaTime());
         ImGui::Text("Frame Time: %.2f ms", _timer.GetDeltaTime() * 1000.0f);
+
         ImGui::SeparatorText("Camera Info");
         {
           const auto position = _camera->GetPosition();
@@ -430,7 +439,20 @@ namespace Retina::Sandbox {
           ImGui::Text("Up: (%.2f, %.2f, %.2f)", up.x, up.y, up.z);
           ImGui::Text("Right: (%.2f, %.2f, %.2f)", right.x, right.y, right.z);
           ImGui::Text("Rotation: (%.2f, %.2f)", _camera->GetYaw(), _camera->GetPitch());
+        }
 
+        ImGui::SeparatorText("Memory Budget");
+        {
+          const auto deviceLocalBudget = _device->GetHeapBudget(
+            Graphics::EMemoryPropertyFlag::E_DEVICE_LOCAL,
+            ~Graphics::EMemoryPropertyFlag::E_DEVICE_LOCAL
+          );
+          const auto hostVisibleBudget = _device->GetHeapBudget(
+            Graphics::EMemoryPropertyFlag::E_HOST_VISIBLE,
+            Graphics::EMemoryPropertyFlag::E_DEVICE_LOCAL
+          );
+          ImGui::Text("Device Local Heap: %.2lf MB / %.2lf MB", deviceLocalBudget.Usage / 1048576.0_f64, deviceLocalBudget.Budget / 1048576.0_f64);
+          ImGui::Text("Host Visible Heap: %.2lf MB / %.2lf MB", hostVisibleBudget.Usage / 1048576.0_f64, hostVisibleBudget.Budget / 1048576.0_f64);
         }
       }
       ImGui::End();
@@ -444,6 +466,7 @@ namespace Retina::Sandbox {
 
         if (ImGui::CollapsingHeader("Tonemap", ImGuiTreeNodeFlags_DefaultOpen)) {
           ImGui::DragFloat("White Point", &_tonemap.WhitePoint, 0.1f, 0.0f, 5.0f);
+          ImGui::Checkbox("Passthrough", &_tonemap.IsPassthrough);
         }
       }
       ImGui::End();

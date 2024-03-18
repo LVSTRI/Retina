@@ -112,6 +112,7 @@ namespace Retina::Sandbox {
       bool IsInitialized = false;
 
       float32 WhitePoint = 1.0f;
+      bool IsPassthrough = false;
 
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;

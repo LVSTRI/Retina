@@ -22,7 +22,7 @@ namespace Retina::Graphics {
     self->_deviceTimeline = CTimelineSemaphore::Make(device, {
       .Name = "HostDeviceTimeline_DeviceTimeline",
       .Value = 0,
-    }).AsConst();
+    });
     return self;
   }
 

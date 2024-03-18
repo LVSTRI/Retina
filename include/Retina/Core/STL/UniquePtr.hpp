@@ -87,9 +87,6 @@ namespace Retina::Core {
   template <typename T>
   template <typename U>
   constexpr auto CUniquePtr<T>::operator =(CUniquePtr<U>&& other) noexcept -> CUniquePtr& {
-    if (this == &other) {
-      return *this;
-    }
     return Reconstruct(*this, std::move(other));
   }
 

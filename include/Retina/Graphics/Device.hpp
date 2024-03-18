@@ -41,6 +41,8 @@ namespace Retina::Graphics {
     RETINA_NODISCARD auto GetDebugName() const noexcept -> std::string_view;
     auto SetDebugName(std::string_view name) noexcept -> void;
 
+    RETINA_NODISCARD auto GetHeapBudget(EMemoryPropertyFlag required, EMemoryPropertyFlag ignored = {}) const noexcept -> SDeviceHeapBudget;
+
     RETINA_NODISCARD auto IsFeatureEnabled(bool SDeviceFeature::* feature) const noexcept -> bool;
 
     RETINA_NODISCARD auto LoadFunction(std::string_view name) const noexcept -> PFN_vkVoidFunction;
@@ -63,6 +65,8 @@ namespace Retina::Graphics {
 
     Core::CUniquePtr<CShaderResourceTable> _shaderResourceTable;
 
+    std::vector<SDeviceMemoryType> _memoryTypes;
+    std::vector<SDeviceMemoryHeap> _memoryHeaps;
     SDeviceRayTracingProperties _rayTracingProperties = {};
     SDeviceCreateInfo _createInfo = {};
     Core::CArcPtr<const CInstance> _instance;

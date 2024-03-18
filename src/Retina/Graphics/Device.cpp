@@ -38,6 +38,7 @@ namespace Retina::Graphics {
       VkPhysicalDeviceRayTracingPipelineFeaturesKHR RayTracingPipelineFeatures = {};
       VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR RayTracingPositionFetchFeatures = {};
       VkPhysicalDeviceAccelerationStructureFeaturesKHR AccelerationStructureFeatures = {};
+      VkPhysicalDeviceMemoryPriorityFeaturesEXT MemoryPriorityFeatures = {};
     };
 
     struct SQueueFamilyInfo {
@@ -116,11 +117,13 @@ namespace Retina::Graphics {
     ) noexcept -> SPhysicalDeviceProperties {
       RETINA_PROFILE_SCOPED();
       auto properties = VkPhysicalDeviceProperties2(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2);
-      auto memoryProperties = VkPhysicalDeviceMemoryProperties2(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2);
       auto rayTracingPipelineProperties = VkPhysicalDeviceRayTracingPipelinePropertiesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR);
       auto accelerationStructureProperties = VkPhysicalDeviceAccelerationStructurePropertiesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR);
       properties.pNext = &rayTracingPipelineProperties;
       rayTracingPipelineProperties.pNext = &accelerationStructureProperties;
+
+      auto memoryProperties = VkPhysicalDeviceMemoryProperties2(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2);
+
       vkGetPhysicalDeviceProperties2(physicalDevice, &properties);
       vkGetPhysicalDeviceMemoryProperties2(physicalDevice, &memoryProperties);
       RETINA_GRAPHICS_INFO("Acquired physical device properties");
@@ -144,6 +147,8 @@ namespace Retina::Graphics {
       auto rayTracingPipelineFeatures = VkPhysicalDeviceRayTracingPipelineFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR);
       auto rayTracingPositionFetchFeatures = VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_POSITION_FETCH_FEATURES_KHR);
       auto accelerationStructureFeatures = VkPhysicalDeviceAccelerationStructureFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR);
+      auto memoryPriorityFeatures = VkPhysicalDeviceMemoryPriorityFeaturesEXT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT);
+
       features.pNext = &features11;
       features11.pNext = &features12;
       features12.pNext = &features13;
@@ -151,6 +156,7 @@ namespace Retina::Graphics {
       meshShaderFeatures.pNext = &rayTracingPipelineFeatures;
       rayTracingPipelineFeatures.pNext = &rayTracingPositionFetchFeatures;
       rayTracingPositionFetchFeatures.pNext = &accelerationStructureFeatures;
+      accelerationStructureFeatures.pNext = &memoryPriorityFeatures;
       vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
 
       RETINA_GRAPHICS_INFO("Acquired physical device features");
@@ -163,6 +169,7 @@ namespace Retina::Graphics {
         rayTracingPipelineFeatures,
         rayTracingPositionFetchFeatures,
         accelerationStructureFeatures,
+        memoryPriorityFeatures,
       };
     }
 
@@ -222,6 +229,13 @@ namespace Retina::Graphics {
         RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
         RETINA_ENABLE_EXTENSION_OR_PANIC(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
       }
+      if (features.MemoryBudget) {
+        RETINA_ENABLE_EXTENSION_OR_PANIC(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+      }
+      if (features.MemoryPriority) {
+        RETINA_ENABLE_EXTENSION_OR_PANIC(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME);
+      }
+
 #undef RETINA_ENABLE_EXTENSION_OR_PANIC
 
       RETINA_GRAPHICS_INFO("Enabled device extensions");
@@ -241,7 +255,8 @@ namespace Retina::Graphics {
         VkPhysicalDeviceMeshShaderFeaturesEXT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT),
         VkPhysicalDeviceRayTracingPipelineFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR),
         VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_POSITION_FETCH_FEATURES_KHR),
-        VkPhysicalDeviceAccelerationStructureFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR)
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR),
+        VkPhysicalDeviceMemoryPriorityFeaturesEXT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT)
       );
       enabledFeatures.Features.pNext = &enabledFeatures.Features11;
       enabledFeatures.Features11.pNext = &enabledFeatures.Features12;
@@ -250,6 +265,7 @@ namespace Retina::Graphics {
       enabledFeatures.MeshShaderFeatures.pNext = &enabledFeatures.RayTracingPipelineFeatures;
       enabledFeatures.RayTracingPipelineFeatures.pNext = &enabledFeatures.RayTracingPositionFetchFeatures;
       enabledFeatures.RayTracingPositionFetchFeatures.pNext = &enabledFeatures.AccelerationStructureFeatures;
+      enabledFeatures.AccelerationStructureFeatures.pNext = &enabledFeatures.MemoryPriorityFeatures;
 
 #define RETINA_ENABLE_FEATURE_OR_PANIC(x)                                         \
   do {                                                                            \
@@ -352,6 +368,10 @@ namespace Retina::Graphics {
         RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.accelerationStructure);
         RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.accelerationStructureCaptureReplay);
         RETINA_ENABLE_FEATURE_OR_PANIC(AccelerationStructureFeatures.descriptorBindingAccelerationStructureUpdateAfterBind);
+      }
+
+      if (requestedFeatures.MemoryPriority) {
+        RETINA_ENABLE_FEATURE_OR_PANIC(MemoryPriorityFeatures.memoryPriority);
       }
 
       RETINA_GRAPHICS_INFO("Enabled device features");
@@ -540,6 +560,25 @@ namespace Retina::Graphics {
     self->_mainTimeline = CHostDeviceTimeline::Make(*self, -1);
     self->_deletionQueue = CDeletionQueue::Make(*self);
     self->_shaderResourceTable = CShaderResourceTable::Make(*self);
+
+    {
+      const auto& memoryProperties = physicalDeviceProperties.MemoryProperties.memoryProperties;
+      auto memoryHeaps = std::vector<SDeviceMemoryHeap>(memoryProperties.memoryHeapCount);
+      for (auto i = 0_u32; i < memoryProperties.memoryHeapCount; ++i) {
+        memoryHeaps[i].Size = memoryProperties.memoryHeaps[i].size;
+        memoryHeaps[i].Flags = static_cast<EMemoryHeapFlag>(memoryProperties.memoryHeaps[i].flags);
+      }
+
+      auto memoryTypes = std::vector<SDeviceMemoryType>(memoryProperties.memoryTypeCount);
+      for (auto i = 0_u32; i < memoryProperties.memoryTypeCount; ++i) {
+        memoryTypes[i].Heap = memoryProperties.memoryTypes[i].heapIndex;
+        memoryTypes[i].Flags = static_cast<EMemoryPropertyFlag>(memoryProperties.memoryTypes[i].propertyFlags);
+      }
+
+      self->_memoryHeaps = std::move(memoryHeaps);
+      self->_memoryTypes = std::move(memoryTypes);
+    }
+
     self->SetDebugName(createInfo.Name);
 
     return self;
@@ -609,6 +648,31 @@ namespace Retina::Graphics {
     RETINA_PROFILE_SCOPED();
     RETINA_GRAPHICS_SET_DEBUG_NAME(_handle, _handle, VK_OBJECT_TYPE_DEVICE, name);
     _createInfo.Name = name;
+  }
+
+  auto CDevice::GetHeapBudget(EMemoryPropertyFlag required, EMemoryPropertyFlag ignored) const noexcept -> SDeviceHeapBudget {
+    RETINA_PROFILE_SCOPED();
+    // find heap index
+    auto heapIndex = -1_u32;
+    for (auto i = 0_u32; i < _memoryTypes.size(); ++i) {
+      const auto currentFlags = static_cast<EMemoryPropertyFlag>(_memoryTypes[i].Flags);
+      if (Core::IsFlagEnabled(currentFlags, required) && !Core::IsFlagEnabled(currentFlags, ignored)) {
+        heapIndex = _memoryTypes[i].Heap;
+        break;
+      }
+    }
+    if (heapIndex == -1_u32) {
+      return {};
+    }
+
+    auto properties = VkPhysicalDeviceMemoryProperties2(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2);
+    auto memoryBudget = VkPhysicalDeviceMemoryBudgetPropertiesEXT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT);
+    properties.pNext = &memoryBudget;
+    vkGetPhysicalDeviceMemoryProperties2(_physicalDevice, &properties);
+    return {
+      memoryBudget.heapBudget[heapIndex],
+      memoryBudget.heapUsage[heapIndex],
+    };
   }
 
   auto CDevice::IsFeatureEnabled(bool SDeviceFeature::* feature) const noexcept -> bool {

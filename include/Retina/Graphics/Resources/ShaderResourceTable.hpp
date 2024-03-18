@@ -80,9 +80,10 @@ namespace Retina::Graphics {
     const SBufferCreateInfo& createInfo
   ) noexcept -> CShaderResource<CTypedBuffer<T>> {
     RETINA_PROFILE_SCOPED();
+    auto x = std::unique_ptr<T>();
     auto buffer = CTypedBuffer<T>::Make(_device, createInfo);
     const auto slot = _bufferSlots.Allocate();
-    _bufferStorage[slot] = buffer.template As<CBuffer>();
+    _bufferStorage[slot] = buffer;
     _addressBuffer->Write(buffer->GetAddress(), slot);
     return CShaderResource<CTypedBuffer<T>>::Make(*buffer, slot);
   }
@@ -98,7 +99,7 @@ namespace Retina::Graphics {
     resources.reserve(count);
     for (auto i = 0_u32; i < count; ++i) {
       const auto slot = _bufferSlots.Allocate();
-      _bufferStorage[slot] = buffers[i].template As<CBuffer>();
+      _bufferStorage[slot] = buffers[i];
       _addressBuffer->Write(buffers[i]->GetAddress(), slot);
       resources.emplace_back(CShaderResource<CTypedBuffer<T>>::Make(*buffers[i], slot));
     }

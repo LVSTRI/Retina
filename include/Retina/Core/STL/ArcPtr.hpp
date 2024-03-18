@@ -122,9 +122,6 @@ namespace Retina::Core {
   template <typename T>
   template <typename U>
   constexpr auto CArcPtr<T>::operator =(const CArcPtr<U>& other) noexcept -> CArcPtr& {
-    if (this == &other) {
-      return *this;
-    }
     return Core::Reconstruct(*this, other);
   }
 
@@ -137,9 +134,6 @@ namespace Retina::Core {
   template <typename T>
   template <typename U>
   constexpr auto CArcPtr<T>::operator =(CArcPtr<U>&& other) noexcept -> CArcPtr& {
-    if (this == &other) {
-      return *this;
-    }
     return Core::Reconstruct(*this, std::move(other));
   }
 

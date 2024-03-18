@@ -90,6 +90,7 @@ namespace Retina::Sandbox {
       _yaw += cursorDeltaX * _viewSensitivity;
       _pitch += cursorDeltaY * _viewSensitivity;
     }
+    _yaw = glm::mod(_yaw, 360.0f);
     _pitch = glm::clamp(_pitch, -89.9f, 89.9f);
 
     const auto radYaw = glm::radians(_yaw);

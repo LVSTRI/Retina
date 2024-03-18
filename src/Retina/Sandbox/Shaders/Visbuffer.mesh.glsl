@@ -21,9 +21,6 @@ RetinaDeclarePushConstant() {
   uint u_ViewBufferId;
 };
 
-RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
-  SViewInfo[] Data;
-};
 RetinaDeclareQualifiedBuffer(restrict readonly, SMeshletBuffer) {
   SMeshlet[] Data;
 };
@@ -41,6 +38,9 @@ RetinaDeclareQualifiedBuffer(restrict readonly, SIndexBuffer) {
 };
 RetinaDeclareQualifiedBuffer(restrict readonly, SPrimitiveBuffer) {
   uint8_t[] Data;
+};
+RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
+  SViewInfo[] Data;
 };
 
 RetinaDeclareBufferPointer(SMeshletBuffer, g_MeshletBuffer, u_MeshletBufferId);

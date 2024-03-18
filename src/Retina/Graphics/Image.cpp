@@ -142,10 +142,11 @@ namespace Retina::Graphics {
       auto allocationCreateInfo = VmaAllocationCreateInfo();
       allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_STRATEGY_MIN_MEMORY_BIT;
       allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-      allocationCreateInfo.priority = 1.0f;
+      allocationCreateInfo.priority = 0.5f;
 
       if (isAttachment || createInfo.IsDedicated) {
         allocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        allocationCreateInfo.priority = 1.0f;
       }
 
       vmaCreateImage(
