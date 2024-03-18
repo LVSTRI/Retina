@@ -10,7 +10,6 @@ RetinaDeclarePushConstant() {
   uint u_VertexBufferId;
   uint u_SamplerId;
   uint u_TextureId;
-  uint u_FontTextureId;
   vec2 u_Scale;
   vec2 u_Translate;
 };
@@ -20,12 +19,7 @@ RetinaDeclarePushConstant() {
 
 void main() {
   if (RetinaIsHandleValid(u_TextureId)) {
-    const vec4 sampledColor = texture(sampler2D(g_Texture, g_Sampler), i_Uv);
-    if (u_TextureId == u_FontTextureId) {
-      o_Pixel = i_Color * sampledColor;
-    } else {
-      o_Pixel = i_Color * vec4(RetinaAsNonLinear(vec3(sampledColor)), sampledColor.a);
-    }
+    o_Pixel = i_Color * texture(sampler2D(g_Texture, g_Sampler), i_Uv);
   } else {
     o_Pixel = i_Color;
   }

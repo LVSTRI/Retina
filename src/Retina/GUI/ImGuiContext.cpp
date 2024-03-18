@@ -33,6 +33,27 @@ namespace Retina::GUI {
       return std::filesystem::path(RETINA_GUI_FONT_DIRECTORY) / path;
     }
 
+    RETINA_NODISCARD RETINA_INLINE auto ApplyEotf(const glm::vec4& color) noexcept -> glm::vec4 {
+      RETINA_PROFILE_SCOPED();
+      const auto rgb = glm::vec3(color);
+      const auto cutoff = glm::lessThanEqual(rgb, glm::vec3(0.04045f));
+      const auto lower = rgb / 12.92f;
+      const auto higher = glm::pow((rgb + 0.055f) / 1.055f, glm::vec3(2.4f));
+      return { glm::mix(higher, lower, cutoff), color.a };
+    }
+
+    auto SetLinearDarkStyle() noexcept -> void {
+      auto& style = ImGui::GetStyle();
+      ImGui::StyleColorsDark();
+      auto* colors = style.Colors;
+      for (auto i = 0; i < ImGuiCol_COUNT; ++i) {
+        auto color = glm::vec4();
+        std::memcpy(&color, &colors[i], sizeof(ImVec4));
+        color = ApplyEotf(color);
+        colors[i] = ImVec4(color.r, color.g, color.b, color.a);
+      }
+    }
+
     constexpr inline auto FONT_TEXTURE_MAGIC_ID = 0x100000001_u64;
   }
 
@@ -58,7 +79,7 @@ namespace Retina::GUI {
     auto self = Core::MakeUnique<CImGuiContext>(window, device);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::StyleColorsDark();
+    Details::SetLinearDarkStyle();
     ImGui_ImplGlfw_InitForOther(static_cast<GLFWwindow*>(window.GetHandle()), true);
     {
       auto& io = ImGui::GetIO();
@@ -280,7 +301,6 @@ namespace Retina::GUI {
                 currentVertexBuffer.GetHandle(),
                 samplerId,
                 textureId,
-                _fontTexture.GetHandle(),
                 scale,
                 translate
               )

@@ -14,7 +14,6 @@ RetinaDeclarePushConstant() {
   uint u_VertexBufferId;
   uint u_SamplerId;
   uint u_TextureId;
-  uint u_FontTextureId;
   vec2 u_Scale;
   vec2 u_Translate;
 };

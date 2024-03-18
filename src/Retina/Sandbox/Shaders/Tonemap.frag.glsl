@@ -36,5 +36,5 @@ vec3 ApplyExtendedReinhard(in vec3 color) {
 
 void main() {
   const vec4 color = texelFetch(g_VisbufferResolveImage, ivec2(gl_FragCoord.xy), 0);
-  o_Pixel = vec4(RetinaAsNonLinear(ApplyExtendedReinhard(color.rgb)), 1.0);
+  o_Pixel = vec4(ApplyExtendedReinhard(color.rgb), 1.0);
 }
