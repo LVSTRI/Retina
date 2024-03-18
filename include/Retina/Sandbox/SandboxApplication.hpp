@@ -89,6 +89,13 @@ namespace Retina::Sandbox {
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
 
     struct {
+      float32 Fov = 90.0f;
+      float32 MovementSpeed = 5.0f;
+      float32 ViewSensitivity = 0.1f;
+      float32 Near = 0.1f;
+    } _cameraState;
+
+    struct {
       bool IsInitialized = false;
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Graphics::CShaderResource<Graphics::CImage> DepthImage;
@@ -103,6 +110,9 @@ namespace Retina::Sandbox {
 
     struct {
       bool IsInitialized = false;
+
+      float32 WhitePoint = 1.0f;
+
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
     } _tonemap;

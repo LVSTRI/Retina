@@ -108,7 +108,7 @@ namespace Retina::Sandbox {
 
     _swapchain = Graphics::CSwapchain::Make(*_device, *_window, {
       .Name = "MainSwapchain",
-      .VSync = true,
+      .VSync = false,
       .MakeSurface = WSI::MakeSurface,
     });
 
@@ -220,17 +220,16 @@ namespace Retina::Sandbox {
       WSI::WaitEvents();
     }
     WSI::PollEvents();
-    if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
-      _camera->Update(_timer.GetDeltaTime());
-    }
     const auto frameIndex = WaitForNextFrameIndex();
 
     auto& viewBuffer = _viewBuffer[frameIndex];
     auto mainView = SViewInfo();
     {
-      constexpr static auto fov = 60.0f;
+      _camera->SetMovementSpeed(_cameraState.MovementSpeed);
+      _camera->SetViewSensitivity(_cameraState.ViewSensitivity);
+      const auto fov = _cameraState.Fov;
       const auto aspectRatio = _swapchain->GetWidth() / static_cast<float32>(_swapchain->GetHeight());
-      const auto projection = MakeInfiniteReversePerspective(fov, aspectRatio, 0.1f);
+      const auto projection = MakeInfiniteReversePerspective(fov, aspectRatio, _cameraState.Near);
       const auto view = _camera->GetViewMatrix();
       const auto projView = projection * view;
       mainView = {
@@ -240,6 +239,9 @@ namespace Retina::Sandbox {
         .Position = glm::vec4(_camera->GetPosition(), 1.0f),
       };
       viewBuffer->Write(mainView);
+      if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
+        _camera->Update(_timer.GetDeltaTime());
+      }
     }
   }
 
@@ -401,7 +403,8 @@ namespace Retina::Sandbox {
       .BindPipeline(*_tonemap.MainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
       .PushConstants(
-        _visbufferResolve.MainImage.GetHandle()
+        _visbufferResolve.MainImage.GetHandle(),
+        _tonemap.WhitePoint
       )
       .Draw(3)
       .EndRendering()
@@ -417,8 +420,24 @@ namespace Retina::Sandbox {
         .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
       });
     _imGuiContext->Render(*_tonemap.MainImage, commandBuffer, [&] noexcept {
-      ImGui::Begin("Hello, world!");
-      ImGui::Image(GUI::AsTextureHandle(_visbuffer.DepthImage.GetHandle()), { 1280, 720 });
+      if (ImGui::Begin("Info")) {
+        ImGui::Text("AFPS: %.2f rad/s", glm::two_pi<float32>() * 1.0f / _timer.GetDeltaTime());
+        ImGui::Text("FPS: %.2f", 1.0f / _timer.GetDeltaTime());
+        ImGui::Text("Frame Time: %.2f ms", _timer.GetDeltaTime() * 1000.0f);
+      }
+      ImGui::End();
+      if (ImGui::Begin("Settings")) {
+        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::DragFloat("FOV", &_cameraState.Fov, 1.0f, 0.0f, 180.0f);
+          ImGui::DragFloat("Movement Speed", &_cameraState.MovementSpeed, 0.1f, 0.0f, 100.0f);
+          ImGui::DragFloat("View Sensitivity", &_cameraState.ViewSensitivity, 0.01f, 0.0f, 1.0f);
+          ImGui::DragFloat("Near", &_cameraState.Near, 0.1f, 0.0f, 5.0f);
+        }
+
+        if (ImGui::CollapsingHeader("Tonemap", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::DragFloat("White Point", &_tonemap.WhitePoint, 0.1f, 0.0f, 5.0f);
+        }
+      }
       ImGui::End();
     });
     commandBuffer

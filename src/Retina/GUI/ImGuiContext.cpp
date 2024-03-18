@@ -86,8 +86,8 @@ namespace Retina::GUI {
       io.BackendRendererName = "Retina";
       io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
-      io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_ItalicVariableFontWeight.ttf").generic_string().c_str(), 20.0f);
-      io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 20.0f);
+      io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_ItalicVariableFontWeight.ttf").generic_string().c_str(), 24.0f);
+      io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 24.0f);
     }
 
     auto vertexBuffer = device.GetShaderResourceTable().MakeBuffer<SVertexFormat>(createInfo.MaxTimelineDifference, {
@@ -105,6 +105,13 @@ namespace Retina::GUI {
       .VertexShader = Details::WithShaderPath("ImGui.vert.glsl"),
       .FragmentShader = Details::WithShaderPath("ImGui.frag.glsl"),
       .DescriptorLayouts = { device.GetShaderResourceTable().GetDescriptorLayout() },
+      .ColorBlendState = {
+        .Attachments = {
+          {
+            .BlendEnable = true,
+          }
+        }
+      },
       .DynamicState = { {
         Graphics::EDynamicState::E_VIEWPORT,
         Graphics::EDynamicState::E_SCISSOR,

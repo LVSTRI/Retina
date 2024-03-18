@@ -1,7 +1,5 @@
 #include <Retina/Entry/Application.hpp>
 
-#include <filesystem>
-
 namespace Retina {
   extern auto MakeApplication() noexcept -> Core::CUniquePtr<Entry::IApplication>;
 }

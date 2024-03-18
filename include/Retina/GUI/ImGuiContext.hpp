@@ -65,7 +65,11 @@ namespace Retina::GUI {
     Render(target, commands);
   }
 
-  RETINA_NODISCARD RETINA_INLINE auto AsTextureHandle(uint32 handle) noexcept -> ImTextureID {
-    return reinterpret_cast<ImTextureID>(handle);
+  template <typename T>
+    requires
+      std::same_as<T, Graphics::CImage> ||
+      std::same_as<T, Graphics::CImageView>
+  RETINA_NODISCARD RETINA_INLINE constexpr auto AsTextureHandle(Graphics::CShaderResource<T> resource) noexcept -> ImTextureID {
+    return reinterpret_cast<ImTextureID>(resource.GetHandle());
   }
 }
