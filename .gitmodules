@@ -1,0 +1,3 @@
+[submodule "src/Retina/Sandbox/Assets/Models/deccer-cubes"]
+	path = src/Retina/Sandbox/Assets/Models/deccer-cubes
+	url = https://github.com/GraphicsProgramming/deccer-cubes

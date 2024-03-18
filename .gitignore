@@ -591,4 +591,6 @@ FodyWeavers.xsd
 
 # Android studio 3.1+ serialized cache file
 
-src/Retina/Sandbox/Assets/**
+src/Retina/Sandbox/Assets/Models/*
+!src/Retina/Sandbox/Assets/Models/deccer-cubes
+

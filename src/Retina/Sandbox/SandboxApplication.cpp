@@ -108,7 +108,7 @@ namespace Retina::Sandbox {
 
     _swapchain = Graphics::CSwapchain::Make(*_device, *_window, {
       .Name = "MainSwapchain",
-      .VSync = false,
+      .VSync = true,
       .MakeSurface = WSI::MakeSurface,
     });
 
@@ -127,7 +127,7 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/deccer-cubes/SM_Deccer_Cubes.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_SANDBOX_ERROR("Failed to load model");
         return std::unexpected(error);
@@ -203,9 +203,6 @@ namespace Retina::Sandbox {
 
   auto CSandboxApplication::OnWindowMouseButton(const WSI::SWindowMouseButtonEvent& event) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
-      return;
-    }
     if (event.Action == WSI::EInputAction::E_PRESS && event.Button == WSI::EInputMouse::E_BUTTON_RIGHT) {
       _window->GetInput().SetCursorMode(WSI::EInputCursorMode::E_DISABLED);
     }
@@ -239,9 +236,7 @@ namespace Retina::Sandbox {
         .Position = glm::vec4(_camera->GetPosition(), 1.0f),
       };
       viewBuffer->Write(mainView);
-      if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) {
-        _camera->Update(_timer.GetDeltaTime());
-      }
+      _camera->Update(_timer.GetDeltaTime());
     }
   }
 
@@ -424,6 +419,19 @@ namespace Retina::Sandbox {
         ImGui::Text("AFPS: %.2f rad/s", glm::two_pi<float32>() * 1.0f / _timer.GetDeltaTime());
         ImGui::Text("FPS: %.2f", 1.0f / _timer.GetDeltaTime());
         ImGui::Text("Frame Time: %.2f ms", _timer.GetDeltaTime() * 1000.0f);
+        ImGui::SeparatorText("Camera Info");
+        {
+          const auto position = _camera->GetPosition();
+          const auto front = _camera->GetFront();
+          const auto up = _camera->GetUp();
+          const auto right = _camera->GetRight();
+          ImGui::Text("Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+          ImGui::Text("Front: (%.2f, %.2f, %.2f)", front.x, front.y, front.z);
+          ImGui::Text("Up: (%.2f, %.2f, %.2f)", up.x, up.y, up.z);
+          ImGui::Text("Right: (%.2f, %.2f, %.2f)", right.x, right.y, right.z);
+          ImGui::Text("Rotation: (%.2f, %.2f)", _camera->GetYaw(), _camera->GetPitch());
+
+        }
       }
       ImGui::End();
       if (ImGui::Begin("Settings")) {
