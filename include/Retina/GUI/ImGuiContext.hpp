@@ -10,6 +10,8 @@
 
 #include <glm/glm.hpp>
 
+#include <imgui.h>
+
 namespace Retina::GUI {
   struct SImGuiContextCreateInfo {
     uint32 MaxTimelineDifference = -1_u32;
@@ -61,5 +63,9 @@ namespace Retina::GUI {
     RETINA_PROFILE_SCOPED();
     f();
     Render(target, commands);
+  }
+
+  RETINA_NODISCARD RETINA_INLINE auto AsTextureHandle(uint32 handle) noexcept -> ImTextureID {
+    return reinterpret_cast<ImTextureID>(handle);
   }
 }

@@ -410,12 +410,16 @@ namespace Retina::Sandbox {
         .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
         .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
         .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-        .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_READ,
+        .DestAccess =
+          Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_READ |
+          Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
         .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
         .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
       });
     _imGuiContext->Render(*_tonemap.MainImage, commandBuffer, [&] noexcept {
-      ImGui::ShowDemoWindow();
+      ImGui::Begin("Hello, world!");
+      ImGui::Image(GUI::AsTextureHandle(_visbuffer.DepthImage.GetHandle()), { 1280, 720 });
+      ImGui::End();
     });
     commandBuffer
       .BeginNamedRegion("SwapchainBlit")

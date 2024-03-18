@@ -19,4 +19,5 @@ target_link_libraries(Retina.GUI PUBLIC
 
 target_compile_definitions(Retina.GUI PRIVATE
   RETINA_GUI_SHADER_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/Shaders"
+  RETINA_GUI_FONT_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/Fonts"
 )

@@ -27,6 +27,11 @@ namespace Retina::GUI {
       return std::filesystem::path(RETINA_GUI_SHADER_DIRECTORY) / path;
     }
 
+    RETINA_NODISCARD RETINA_INLINE auto WithFontPath(const std::filesystem::path& path) noexcept -> std::filesystem::path {
+      RETINA_PROFILE_SCOPED();
+      return std::filesystem::path(RETINA_GUI_FONT_DIRECTORY) / path;
+    }
+
     RETINA_NODISCARD RETINA_INLINE auto ApplyEotf(const glm::vec4& color) noexcept -> glm::vec4 {
       RETINA_PROFILE_SCOPED();
       const auto rgb = glm::vec3(color);
@@ -58,6 +63,8 @@ namespace Retina::GUI {
 
   CImGuiContext::~CImGuiContext() noexcept {
     RETINA_PROFILE_SCOPED();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
   }
 
   auto CImGuiContext::Make(
@@ -78,6 +85,9 @@ namespace Retina::GUI {
         ImGuiConfigFlags_DockingEnable;
       io.BackendRendererName = "Retina";
       io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+
+      io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_ItalicVariableFontWeight.ttf").generic_string().c_str(), 20.0f);
+      io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 20.0f);
     }
 
     auto vertexBuffer = device.GetShaderResourceTable().MakeBuffer<SVertexFormat>(createInfo.MaxTimelineDifference, {
@@ -99,6 +109,11 @@ namespace Retina::GUI {
         Graphics::EDynamicState::E_VIEWPORT,
         Graphics::EDynamicState::E_SCISSOR,
       } },
+      .RenderingInfo = { {
+        .ColorAttachmentFormats = {
+          Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
+        },
+      } }
     });
 
     auto fontSampler = device.GetShaderResourceTable().MakeSampler({
@@ -216,7 +231,7 @@ namespace Retina::GUI {
       // Assumes the RT is already in the correct layout
       commands
         .BeginRendering({
-          .Name = "ImGuiContext_Rendering",
+          .Name = "ImGuiPass",
           .ColorAttachments = {
             {
               .ImageView = target.GetView(),

@@ -77,6 +77,20 @@ namespace Retina::Graphics {
       info.subresourceRange = MakeNativeImageSubresourceRange(image.GetView().GetAspectMask(), barrier.SubresourceRange);
       return info;
     }
+
+    RETINA_INLINE auto IssueFullBarrier(VkCommandBuffer commandBuffer) noexcept -> void {
+      RETINA_PROFILE_SCOPED();
+      auto barrier = VkMemoryBarrier2(VK_STRUCTURE_TYPE_MEMORY_BARRIER_2);
+      barrier.srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+      barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+      barrier.dstStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+      barrier.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT | VK_ACCESS_MEMORY_READ_BIT;
+
+      auto dependencyInfo = VkDependencyInfo(VK_STRUCTURE_TYPE_DEPENDENCY_INFO);
+      dependencyInfo.memoryBarrierCount = 1;
+      dependencyInfo.pMemoryBarriers = &barrier;
+      vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+    }
   }
 
   CCommandBuffer::~CCommandBuffer() noexcept {
