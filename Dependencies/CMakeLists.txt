@@ -11,7 +11,7 @@ FetchContent_Declare(
   debugbreak
   GIT_REPOSITORY https://github.com/scottt/debugbreak
   GIT_TAG 5dcbe41d2bd4712c8014aa7e843723ad7b40fd74
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_GetProperties(debugbreak)
@@ -26,7 +26,7 @@ FetchContent_Declare(
   mio
   GIT_REPOSITORY https://github.com/vimpunk/mio
   GIT_TAG 8b6b7d878c89e81614d05edca7936de41ccdd2da
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(mio)
@@ -35,7 +35,7 @@ FetchContent_Declare(
   fmtlib
   GIT_REPOSITORY https://github.com/fmtlib/fmt
   GIT_TAG e69e5f977d458f2650bb346dadf2ad30c5320281
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(FMT_DOC OFF CACHE BOOL "" FORCE)
@@ -48,7 +48,7 @@ FetchContent_Declare(
   spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog
   GIT_TAG 7c02e204c92545f869e2f04edaab1f19fe8b19fd
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
@@ -61,7 +61,7 @@ FetchContent_Declare(
   glm
   GIT_REPOSITORY https://github.com/g-truc/glm
   GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -78,7 +78,7 @@ FetchContent_Declare(
   tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy
   GIT_TAG 37aff70dfa50cf6307b3fee6074d627dc2929143
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(TRACY_ENABLE ON CACHE BOOL "" FORCE)
@@ -92,7 +92,7 @@ FetchContent_Declare(
   glfw
   GIT_REPOSITORY https://github.com/glfw/glfw
   GIT_TAG 7b6aead9fb88b3623e3b3725ebb42670cbe4c579
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -106,7 +106,7 @@ FetchContent_Declare(
   volk
   GIT_REPOSITORY https://github.com/zeux/volk
   GIT_TAG dd19b95a0ce6f66ca3172765f9e20d3f9ec9272a
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(VOLK_PULL_IN_VULKAN OFF CACHE BOOL "" FORCE)
@@ -118,7 +118,7 @@ FetchContent_Declare(
   vma
   GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
   GIT_TAG 19b940e864bd3a5afb3c79e3c6788869d01a19eb
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_GetProperties(vma)
@@ -157,7 +157,7 @@ FetchContent_Declare(
   unordered_dense
   GIT_REPOSITORY https://github.com/martinus/unordered_dense
   GIT_TAG 231e48c9426bd21c273669e5fdcd042c146975cf
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(unordered_dense)
@@ -167,7 +167,7 @@ FetchContent_Declare(
   CGLTF
   GIT_REPOSITORY https://github.com/jkuhlmann/cgltf
   GIT_TAG de399881c65c438a635627c749440eeea7e05599
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_GetProperties(cgltf)
@@ -188,7 +188,7 @@ FetchContent_Declare(
   meshoptimizer
   GIT_REPOSITORY https://github.com/zeux/meshoptimizer
   GIT_TAG 1b34f94ff4a322ed38673d84c9f76b86524f90b3
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 set(MESHOPT_BUILD_GLTFPACK ON CACHE BOOL "" FORCE)
@@ -199,7 +199,7 @@ FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui
   GIT_TAG adcc3217c38142e965eae679a299a34ce1c963d5
-  GIT_SHALLOW TRUE
+  GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
 FetchContent_GetProperties(imgui)

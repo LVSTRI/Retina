@@ -10,7 +10,7 @@
 #include <utility>
 
 #define RETINA_MAKE_TRANSPARENT_EQUAL_TO_SPECIALIZATION(T)                                              \
-  struct ::std::equal_to<T> {                                                                           \
+  struct std::equal_to<T> {                                                                             \
     using is_transparent = void;                                                                        \
     RETINA_NODISCARD constexpr auto operator ()(const T& left, const T& right) const noexcept -> bool { \
       return left == right;                                                                             \
@@ -18,7 +18,7 @@
   }                                                                                                     \
 
 #define RETINA_MAKE_AVALANCHING_TRANSPARENT_HASH_SPECIALIZATION(T, f)                         \
-  struct ::ankerl::unordered_dense::hash<T> {                                                 \
+  struct ankerl::unordered_dense::hash<T> {                                                   \
     using is_avalanching = void;                                                              \
     using is_transparent = void;                                                              \
     RETINA_NODISCARD constexpr auto operator ()(const T& x) const noexcept -> ::std::size_t { \

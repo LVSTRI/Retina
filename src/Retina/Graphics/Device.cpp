@@ -652,7 +652,6 @@ namespace Retina::Graphics {
 
   auto CDevice::GetHeapBudget(EMemoryPropertyFlag required, EMemoryPropertyFlag ignored) const noexcept -> SDeviceHeapBudget {
     RETINA_PROFILE_SCOPED();
-    // find heap index
     auto heapIndex = -1_u32;
     for (auto i = 0_u32; i < _memoryTypes.size(); ++i) {
       const auto currentFlags = static_cast<EMemoryPropertyFlag>(_memoryTypes[i].Flags);

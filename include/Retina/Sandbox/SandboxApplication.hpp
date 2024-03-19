@@ -28,8 +28,13 @@
 namespace Retina::Sandbox {
   struct SViewInfo {
     glm::mat4 Projection = {};
+    glm::mat4 PrevProjection = {};
+    glm::mat4 JitterProj = {};
+    glm::mat4 PrevJitterProj = {};
     glm::mat4 View = {};
+    glm::mat4 PrevView = {};
     glm::mat4 ProjView = {};
+    glm::mat4 PrevProjView = {};
     glm::vec4 Position = {};
   };
 
@@ -52,9 +57,10 @@ namespace Retina::Sandbox {
     auto GetCurrentFrameIndex() noexcept -> uint32;
 
     auto InitializeGui() noexcept -> void;
+    auto InitializeTonemapPass() noexcept -> void;
     auto InitializeVisbufferPass() noexcept -> void;
     auto InitializeVisbufferResolvePass() noexcept -> void;
-    auto InitializeTonemapPass() noexcept -> void;
+    auto InitializeTaaPass() noexcept -> void;
 
   private:
     bool _isRunning = true;
@@ -66,7 +72,6 @@ namespace Retina::Sandbox {
     Core::CUniquePtr<CCamera> _camera;
 
     Core::CUniquePtr<WSI::CWindow> _window;
-    Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
 
     // TODO: Make an actual renderer
     Core::CArcPtr<Graphics::CInstance> _instance;
@@ -88,6 +93,8 @@ namespace Retina::Sandbox {
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint32>> _indexBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
 
+    Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
+
     struct {
       float32 Fov = 90.0f;
       float32 MovementSpeed = 5.0f;
@@ -107,6 +114,23 @@ namespace Retina::Sandbox {
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
     } _visbufferResolve;
+
+    struct {
+      bool IsInitialized = false;
+      Graphics::CShaderResource<Graphics::CImage> VelocityImage;
+      Graphics::CShaderResource<Graphics::CImage> HistoryImage;
+      Graphics::CShaderResource<Graphics::CImage> OutputImage;
+      Graphics::CShaderResource<Graphics::CSampler> Linear;
+      Graphics::CShaderResource<Graphics::CSampler> Nearest;
+
+      Core::CArcPtr<Graphics::CGraphicsPipeline> ResolvePipeline;
+
+      bool ShouldReset = true;
+      bool AlwaysReset = false;
+      float32 ModulationFactor = 0.9f;
+      glm::mat4 PrevProjection = {};
+      glm::mat4 PrevView = {};
+    } _taa;
 
     struct {
       bool IsInitialized = false;

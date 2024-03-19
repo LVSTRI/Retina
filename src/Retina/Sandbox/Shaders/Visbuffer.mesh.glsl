@@ -9,6 +9,8 @@
 
 layout (location = 0) out SVertexData {
   flat uint MeshletInstanceIndex;
+  vec4 ClipPosition;
+  vec4 PrevClipPosition;
 } o_VertexData[];
 
 RetinaDeclarePushConstant() {
@@ -61,16 +63,21 @@ void main() {
   const SMeshlet meshlet = g_MeshletBuffer.Data[meshletInstance.MeshletIndex];
   const SViewInfo mainView = g_ViewInfoBuffer.Data[0];
   const mat4 transform = g_TransformBuffer.Data[meshletInstance.TransformIndex];
+  const mat4 jitterPvm = mainView.JitterProj * mainView.View * transform;
+  const mat4 pvm = mainView.ProjView * transform;
+  const mat4 prevPvm = mainView.PrevProjView * transform;
 
   SetMeshOutputsEXT(meshlet.IndexCount, meshlet.PrimitiveCount);
   for (uint i = 0; i < MAX_INDICES_PER_THREAD; i++) {
     const uint id = min(gl_LocalInvocationID.x + i * WORK_GROUP_SIZE, meshlet.IndexCount - 1);
     const uint index = g_IndexBuffer.Data[meshlet.IndexOffset + id];
     const vec3 position = g_PositionBuffer.Data[meshlet.VertexOffset + index];
-    const vec4 clip = mainView.ProjView * transform * vec4(position, 1.0);
+    const vec4 clipJitter = jitterPvm * vec4(position, 1.0);
     o_VertexData[id].MeshletInstanceIndex = meshletInstanceIndex;
-    sh_ClipVertices[id] = vec3(clip.xyw);
-    gl_MeshVerticesEXT[id].gl_Position = clip;
+    o_VertexData[id].ClipPosition = pvm * vec4(position, 1.0);
+    o_VertexData[id].PrevClipPosition = prevPvm * vec4(position, 1.0);
+    sh_ClipVertices[id] = vec3(clipJitter.xyw);
+    gl_MeshVerticesEXT[id].gl_Position = clipJitter;
   }
   barrier();
 

@@ -32,8 +32,13 @@ struct SMeshletVertex {
 
 struct SViewInfo {
   mat4 Projection;
+  mat4 PrevProjection;
+  mat4 JitterProj;
+  mat4 PrevJitterProj;
   mat4 View;
+  mat4 PrevView;
   mat4 ProjView;
+  mat4 PrevProjView;
   vec4 Position;
 };
 

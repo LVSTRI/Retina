@@ -12,7 +12,11 @@
 
 namespace Retina::Graphics {
   CShaderResourceTable::CShaderResourceTable(const CDevice& device) noexcept
-    : _device(device)
+    : _device(device),
+      _samplerStorage({}),
+      _bufferStorage({}),
+      _imageStorage({}),
+      _imageViewStorage({})
   {
     RETINA_PROFILE_SCOPED();
   }
@@ -198,6 +202,36 @@ namespace Retina::Graphics {
     _descriptorSet->Write(descriptorWriteInfos);
 
     return CShaderResource<CImageView>::Make(*imageView, slot);
+  }
+
+  auto CShaderResourceTable::IsAllocated(CShaderResource<CSampler> handle) const noexcept -> bool {
+    RETINA_PROFILE_SCOPED();
+    return handle.IsValid() && _samplerStorage[handle.GetHandle()];
+  }
+
+  auto CShaderResourceTable::IsAllocated(CShaderResource<CImage> handle) const noexcept -> bool {
+    RETINA_PROFILE_SCOPED();
+    return handle.IsValid() && _imageStorage[handle.GetHandle()];
+  }
+
+  auto CShaderResourceTable::IsAllocated(CShaderResource<CImageView> handle) const noexcept -> bool {
+    RETINA_PROFILE_SCOPED();
+    return handle.IsValid() && _imageViewStorage[handle.GetHandle()];
+  }
+
+  auto CShaderResourceTable::GetSamplerResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CSampler> {
+    RETINA_PROFILE_SCOPED();
+    return CShaderResource<CSampler>::Make(*_samplerStorage[handle], handle);
+  }
+
+  auto CShaderResourceTable::GetImageResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CImage> {
+    RETINA_PROFILE_SCOPED();
+    return CShaderResource<CImage>::Make(*_imageStorage[handle], handle);
+  }
+
+  auto CShaderResourceTable::GetImageViewResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CImageView> {
+    RETINA_PROFILE_SCOPED();
+    return CShaderResource<CImageView>::Make(*_imageViewStorage[handle], handle);
   }
 
   auto CShaderResourceTable::Destroy(CShaderResource<CSampler> handle) noexcept -> void {

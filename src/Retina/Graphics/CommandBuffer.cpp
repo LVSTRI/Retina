@@ -628,6 +628,13 @@ namespace Retina::Graphics {
     region.dstSubresource = destSubresource;
     region.dstOffset = destOffset;
     region.extent = std::bit_cast<VkExtent3D>(copyRegion.Extent);
+    if (copyRegion.Extent == SExtent3D()) {
+      region.extent = {
+        .width = std::max(source.GetWidth() >> sourceSubresource.mipLevel, 1_u32),
+        .height = std::max(source.GetHeight() >> sourceSubresource.mipLevel, 1_u32),
+        .depth = 1
+      };
+    }
 
     auto copy = VkCopyImageInfo2(VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2);
     copy.srcImage = source.GetHandle();

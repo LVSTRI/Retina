@@ -167,7 +167,7 @@ void main() {
   const SMeshletInstance meshletInstance = g_MeshletInstanceBuffer.Data[meshletInstanceIndex];
   const SMeshlet meshlet = g_MeshletBuffer.Data[meshletInstance.MeshletIndex];
   const mat4 transform = g_TransformBuffer.Data[meshletInstance.TransformIndex];
-  const mat4 pvm = mainView.ProjView * transform;
+  const mat4 pvm = mainView.JitterProj * mainView.View * transform;
   const uvec3 indices = uvec3(
     meshlet.VertexOffset + g_IndexBuffer.Data[meshlet.IndexOffset + uint(g_PrimitiveBuffer.Data[meshlet.PrimitiveOffset + meshletPrimitiveId * 3 + 0])],
     meshlet.VertexOffset + g_IndexBuffer.Data[meshlet.IndexOffset + uint(g_PrimitiveBuffer.Data[meshlet.PrimitiveOffset + meshletPrimitiveId * 3 + 1])],
@@ -200,5 +200,5 @@ void main() {
   ));
 
   const vec3 color = RetinaHsvToRgb(fract(float(meshletInstanceIndex) * M_GOLDEN_CONJUGATE), 0.75, 0.75);
-  o_Pixel = vec4(color, 1.0);
+  o_Pixel = vec4(normal * 0.5 + 0.5, 1.0);
 }
