@@ -30,7 +30,7 @@ namespace Retina::GUI {
 
     auto NewFrame() noexcept -> void;
     template <typename F>
-    auto Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& f) noexcept -> void;
+    auto Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& recorder) noexcept -> void;
 
   private:
     struct SVertexFormat {
@@ -44,8 +44,10 @@ namespace Retina::GUI {
     auto Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands) noexcept -> void;
 
   private:
-    std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<SVertexFormat>>> _vertexBuffers;
-    std::vector<Graphics::CShaderResource<Graphics::CTypedBuffer<uint16>>> _indexBuffers;
+    std::vector<Core::CArcPtr<Graphics::CTypedBuffer<SVertexFormat>>> _vertexBufferStaging;
+    std::vector<Core::CArcPtr<Graphics::CTypedBuffer<uint16>>> _indexBufferStaging;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<SVertexFormat>> _vertexBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<uint16>> _indexBuffer;
     Graphics::CShaderResource<Graphics::CImage> _fontTexture;
     Graphics::CShaderResource<Graphics::CSampler> _fontSampler;
     Core::CArcPtr<Graphics::CGraphicsPipeline> _pipeline;
@@ -59,9 +61,9 @@ namespace Retina::GUI {
   };
 
   template <typename F>
-  auto CImGuiContext::Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& f) noexcept -> void {
+  auto CImGuiContext::Render(const Graphics::CImage& target, Graphics::CCommandBuffer& commands, F&& recorder) noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    f();
+    recorder();
     Render(target, commands);
   }
 

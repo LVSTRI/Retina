@@ -291,6 +291,11 @@ namespace Retina::Graphics {
     _createInfo.Name = name;
   }
 
+  auto CImage::GetAspectRatio() const noexcept -> float32 {
+    RETINA_PROFILE_SCOPED();
+    return static_cast<float32>(_createInfo.Width) / static_cast<float32>(_createInfo.Height);
+  }
+
   auto CImage::GetDescriptor(EImageLayout layout) const noexcept -> SImageDescriptor {
     RETINA_PROFILE_SCOPED();
     return _view->GetDescriptor(layout);

@@ -53,6 +53,18 @@ namespace Retina::Graphics {
       EImageLayout layout = EImageLayout::E_GENERAL
     ) noexcept -> CShaderResource<CImageView>;
 
+    auto IsAllocated(CShaderResource<CSampler> handle) const noexcept -> bool;
+    template <typename T>
+    auto IsAllocated(CShaderResource<CTypedBuffer<T>> handle) const noexcept -> bool;
+    auto IsAllocated(CShaderResource<CImage> handle) const noexcept -> bool;
+    auto IsAllocated(CShaderResource<CImageView> handle) const noexcept -> bool;
+
+    auto GetSamplerResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CSampler>;
+    template <typename T>
+    auto GetBufferResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CTypedBuffer<T>>;
+    auto GetImageResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CImage>;
+    auto GetImageViewResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CImageView>;
+
     auto Destroy(CShaderResource<CSampler> handle) noexcept -> void;
     template <typename T>
     auto Destroy(CShaderResource<CTypedBuffer<T>> resource) noexcept -> void;
@@ -107,11 +119,23 @@ namespace Retina::Graphics {
   }
 
   template <typename T>
-  auto CShaderResourceTable::Destroy(CShaderResource<CTypedBuffer<T>> resource) noexcept -> void {
+  auto CShaderResourceTable::IsAllocated(CShaderResource<CTypedBuffer<T>> handle) const noexcept -> bool {
     RETINA_PROFILE_SCOPED();
-    if (resource.IsValid()) {
-      _bufferSlots.Free(resource.GetHandle());
-      _bufferStorage[resource.GetHandle()] = {};
+    return handle.IsValid() && _bufferStorage[handle.GetHandle()];
+  }
+
+  template <typename T>
+  auto CShaderResourceTable::GetBufferResourceFromHandle(uint32 handle) const noexcept -> CShaderResource<CTypedBuffer<T>> {
+    RETINA_PROFILE_SCOPED();
+    return CShaderResource<T>::Make(*_bufferStorage[handle], handle);
+  }
+
+  template <typename T>
+  auto CShaderResourceTable::Destroy(CShaderResource<CTypedBuffer<T>> handle) noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    if (handle.IsValid()) {
+      _bufferSlots.Free(handle.GetHandle());
+      _bufferStorage[handle.GetHandle()] = {};
     }
   }
 }

@@ -93,14 +93,24 @@ namespace Retina::GUI {
       io.FontDefault = io.Fonts->AddFontFromFileTTF(Details::WithFontPath("RobotoMono/RobotoMono_VariableFontWeight.ttf").generic_string().c_str(), 20.0f);
     }
 
-    auto vertexBuffer = device.GetShaderResourceTable().MakeBuffer<SVertexFormat>(createInfo.MaxTimelineDifference, {
-      .Name = "ImGuiContext_MainVertexBuffer",
-      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
+    auto vertexBufferStaging = Graphics::CTypedBuffer<SVertexFormat>::Make(device, createInfo.MaxTimelineDifference, {
+      .Name = "ImGuiContext_MainVertexBufferStaging",
+      .Heap = Graphics::EHeapType::E_HOST_ONLY_CACHED,
       .Capacity = 1 << 20,
     });
-    auto indexBuffer = device.GetShaderResourceTable().MakeBuffer<uint16>(createInfo.MaxTimelineDifference, {
+    auto indexBufferStaging = Graphics::CTypedBuffer<uint16>::Make(device, createInfo.MaxTimelineDifference, {
+      .Name = "ImGuiContext_MainIndexBufferStaging",
+      .Heap = Graphics::EHeapType::E_HOST_ONLY_CACHED,
+      .Capacity = 1 << 20,
+    });
+    auto vertexBuffer = device.GetShaderResourceTable().MakeBuffer<SVertexFormat>({
+      .Name = "ImGuiContext_MainVertexBuffer",
+      .Heap = Graphics::EHeapType::E_DEVICE_ONLY,
+      .Capacity = 1 << 20,
+    });
+    auto indexBuffer = device.GetShaderResourceTable().MakeBuffer<uint16>({
       .Name = "ImGuiContext_MainIndexBuffer",
-      .Heap = Graphics::EHeapType::E_DEVICE_MAPPABLE,
+      .Heap = Graphics::EHeapType::E_DEVICE_ONLY,
       .Capacity = 1 << 20,
     });
     auto pipeline = Graphics::CGraphicsPipeline::Make(device, {
@@ -188,8 +198,10 @@ namespace Retina::GUI {
 
     RETINA_GUI_INFO("Initialized ImGui context");
 
-    self->_vertexBuffers = std::move(vertexBuffer);
-    self->_indexBuffers = std::move(indexBuffer);
+    self->_vertexBufferStaging = std::move(vertexBufferStaging);
+    self->_indexBufferStaging = std::move(indexBufferStaging);
+    self->_vertexBuffer = vertexBuffer;
+    self->_indexBuffer = indexBuffer;
     self->_fontTexture = fontTexture;
     self->_fontSampler = fontSampler;
     self->_pipeline = std::move(pipeline);
@@ -209,19 +221,19 @@ namespace Retina::GUI {
     ImGui::Render();
     const auto* drawData = ImGui::GetDrawData();
     if (drawData && drawData->TotalVtxCount > 0) {
-      auto& currentVertexBuffer = _vertexBuffers[_currentFrame];
-      auto& currentIndexBuffer = _indexBuffers[_currentFrame];
+      auto& currentStagingVertexBuffer = *_vertexBufferStaging[_currentFrame];
+      auto& currentStagingIndexBuffer = *_indexBufferStaging[_currentFrame];
 
       {
         auto currentVertexOffset = 0_u32;
         auto currentIndexOffset = 0_u32;
         for (auto i = 0_u32; i < drawData->CmdListsCount; ++i) {
           const auto& cmdList = *drawData->CmdLists[i];
-          currentVertexBuffer->Write({
+          currentStagingVertexBuffer.Write({
             reinterpret_cast<const SVertexFormat*>(cmdList.VtxBuffer.Data),
             static_cast<usize>(cmdList.VtxBuffer.Size)
           }, currentVertexOffset);
-          currentIndexBuffer->Write({
+          currentStagingIndexBuffer.Write({
             reinterpret_cast<const uint16*>(cmdList.IdxBuffer.Data),
             static_cast<usize>(cmdList.IdxBuffer.Size)
           }, currentIndexOffset);
@@ -240,8 +252,52 @@ namespace Retina::GUI {
 
       // Assumes the RT is already in the correct layout
       commands
+        .BeginNamedRegion("GuiTransferBuffer")
+        .Barrier({
+          .BufferMemoryBarriers = {
+            {
+              .Buffer = *_vertexBuffer,
+              .SourceStage = Graphics::EPipelineStageFlag::E_TOP_OF_PIPE,
+              .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+              .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+              .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            },
+            {
+              .Buffer = *_indexBuffer,
+              .SourceStage = Graphics::EPipelineStageFlag::E_TOP_OF_PIPE,
+              .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+              .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+              .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            }
+          }
+        })
+        .CopyBuffer(currentStagingVertexBuffer, *_vertexBuffer, {
+          .Size = currentStagingVertexBuffer.GetSizeBytes()
+        })
+        .CopyBuffer(currentStagingIndexBuffer, *_indexBuffer, {
+          .Size = currentStagingIndexBuffer.GetSizeBytes()
+        })
+        .Barrier({
+          .BufferMemoryBarriers = {
+            {
+              .Buffer = *_vertexBuffer,
+              .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+              .DestStage = Graphics::EPipelineStageFlag::E_VERTEX_SHADER,
+              .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+              .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_STORAGE_READ,
+            },
+            {
+              .Buffer = *_indexBuffer,
+              .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+              .DestStage = Graphics::EPipelineStageFlag::E_INDEX_INPUT,
+              .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+              .DestAccess = Graphics::EResourceAccessFlag::E_INDEX_READ,
+            }
+          }
+        })
+        .EndNamedRegion()
         .BeginRendering({
-          .Name = "ImGuiPass",
+          .Name = "GuiRenderPass",
           .ColorAttachments = {
             {
               .ImageView = target.GetView(),
@@ -252,7 +308,7 @@ namespace Retina::GUI {
         })
         .BindPipeline(*_pipeline)
         .BindShaderResourceTable(_device->GetShaderResourceTable())
-        .BindIndexBuffer(*currentIndexBuffer, Graphics::EIndexType::E_UINT16)
+        .BindIndexBuffer(*_indexBuffer, Graphics::EIndexType::E_UINT16)
         .SetViewport();
       for (auto i = 0_u32; i < drawData->CmdListsCount; ++i) {
         const auto& cmdList = *drawData->CmdLists[i];
@@ -298,7 +354,7 @@ namespace Retina::GUI {
             commands
               .SetScissor(scissor)
               .PushConstants(
-                currentVertexBuffer.GetHandle(),
+                _vertexBuffer.GetHandle(),
                 samplerId,
                 textureId,
                 scale,
