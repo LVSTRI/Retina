@@ -56,11 +56,11 @@ namespace Retina::Sandbox {
     auto WaitForNextFrameIndex() noexcept -> uint32;
     auto GetCurrentFrameIndex() noexcept -> uint32;
 
-    auto InitializeGui() noexcept -> void;
+    auto InitializeGUI() noexcept -> void;
     auto InitializeTonemapPass() noexcept -> void;
     auto InitializeVisbufferPass() noexcept -> void;
     auto InitializeVisbufferResolvePass() noexcept -> void;
-    auto InitializeTaaPass() noexcept -> void;
+    auto InitializeTAAPass() noexcept -> void;
 
   private:
     bool _isRunning = true;
@@ -111,6 +111,8 @@ namespace Retina::Sandbox {
 
     struct {
       bool IsInitialized = false;
+
+      bool InvertY = false;
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
     } _visbufferResolve;

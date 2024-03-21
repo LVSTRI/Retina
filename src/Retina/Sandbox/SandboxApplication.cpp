@@ -23,28 +23,28 @@ namespace Retina::Sandbox {
 
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto NextPowerTwo(T value) noexcept -> T {
-        auto result = static_cast<T>(1);
-        while (result < value) {
-            result <<= 1;
-        }
-        return result;
+      auto result = static_cast<T>(1);
+      while (result < value) {
+        result <<= 1;
+      }
+      return result;
     }
     
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundUp(T dividend, T divisor) noexcept -> T {
-        return (dividend + divisor - 1) / divisor;
+      return (dividend + divisor - 1) / divisor;
     }
     
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundDown(T dividend, T divisor) noexcept -> T {
-        return dividend / divisor;
+      return dividend / divisor;
     }
     
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundNearest(T dividend, T divisor) noexcept -> T {
-        return (dividend >= 0)
-            ? (dividend + divisor / 2) / divisor
-            : (dividend - divisor / 2 + 1) / divisor;
+      return (dividend >= 0)
+        ? (dividend + divisor / 2) / divisor
+        : (dividend - divisor / 2 + 1) / divisor;
     }
 
     RETINA_NODISCARD RETINA_INLINE auto SampleJitter(uint32 index) noexcept -> glm::vec2 {
@@ -151,7 +151,7 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/deccer-cubes/SM_Deccer_Cubes.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_SANDBOX_ERROR("Failed to load model");
         return std::unexpected(error);
@@ -167,8 +167,8 @@ namespace Retina::Sandbox {
       .Capacity = 1,
     });
 
-    InitializeGui();
-    InitializeTaaPass();
+    InitializeGUI();
+    InitializeTAAPass();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
     InitializeTonemapPass();
@@ -213,7 +213,7 @@ namespace Retina::Sandbox {
     _device->WaitIdle();
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
-    InitializeTaaPass();
+    InitializeTAAPass();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
     InitializeTonemapPass();
@@ -431,7 +431,8 @@ namespace Retina::Sandbox {
         _positionBuffer.GetHandle(),
         _indexBuffer.GetHandle(),
         _primitiveBuffer.GetHandle(),
-        viewBuffer.GetHandle()
+        viewBuffer.GetHandle(),
+        static_cast<uint32>(_visbufferResolve.InvertY)
       )
       .Draw(3)
       .EndRendering()
@@ -610,6 +611,10 @@ namespace Retina::Sandbox {
           ImGui::DragFloat("Near", &_cameraState.Near, 0.1f, 0.0f, 5.0f);
         }
 
+        if (ImGui::CollapsingHeader("Resolve", ImGuiTreeNodeFlags_DefaultOpen)) {
+          ImGui::Checkbox("Invert Y", &_visbufferResolve.InvertY);
+        }
+
         if (ImGui::CollapsingHeader("Tonemap", ImGuiTreeNodeFlags_DefaultOpen)) {
           ImGui::DragFloat("White Point", &_tonemap.WhitePoint, 0.1f, 0.0f, 5.0f);
           ImGui::Checkbox("Passthrough", &_tonemap.IsPassthrough);
@@ -700,14 +705,14 @@ namespace Retina::Sandbox {
     return _frameTimeline->GetHostTimelineValue() % FRAMES_IN_FLIGHT;
   }
 
-  auto CSandboxApplication::InitializeGui() noexcept -> void {
+  auto CSandboxApplication::InitializeGUI() noexcept -> void {
     RETINA_PROFILE_SCOPED();
     _imGuiContext = GUI::CImGuiContext::Make(*_window, *_device, {
       .MaxTimelineDifference = static_cast<uint32>(_frameTimeline->GetMaxTimelineDifference()),
     });
   }
 
-  auto CSandboxApplication::InitializeTaaPass() noexcept -> void {
+  auto CSandboxApplication::InitializeTAAPass() noexcept -> void {
     RETINA_PROFILE_SCOPED();
     _device->GetShaderResourceTable().Destroy(_taa.VelocityImage);
     _taa.VelocityImage = _device->GetShaderResourceTable().MakeImage({

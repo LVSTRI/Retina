@@ -76,7 +76,7 @@ void main() {
     o_VertexData[id].MeshletInstanceIndex = meshletInstanceIndex;
     o_VertexData[id].ClipPosition = pvm * vec4(position, 1.0);
     o_VertexData[id].PrevClipPosition = prevPvm * vec4(position, 1.0);
-    sh_ClipVertices[id] = vec3(clipJitter.xyw);
+    sh_ClipVertices[id] = clipJitter.xyw;
     gl_MeshVerticesEXT[id].gl_Position = clipJitter;
   }
   barrier();
