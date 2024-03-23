@@ -15,7 +15,7 @@ vec2 GetVelocity() {
   const vec4 prevNdcPosition = i_VertexData.PrevClipPosition / i_VertexData.PrevClipPosition.w;
   const vec2 uvPosition = ndcPosition.xy * 0.5 + 0.5;
   const vec2 prevUvPosition = prevNdcPosition.xy * 0.5 + 0.5;
-  return uvPosition - prevUvPosition;
+  return prevUvPosition - uvPosition;
 }
 
 void main() {

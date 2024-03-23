@@ -6,6 +6,7 @@ namespace Retina::Graphics {
   struct SInstanceFeature {
     bool Debug = false;
     bool Surface = false;
+    bool DLSS = false;
   };
 
   struct SInstanceCreateInfo {

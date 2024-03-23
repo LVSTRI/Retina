@@ -9,7 +9,7 @@ namespace Retina::Sandbox {
   CModel::~CModel() noexcept {
     RETINA_PROFILE_SCOPED();
     if (_data) {
-      RETINA_CORE_INFO("Freeing glTF data: {}", static_cast<const void*>(_data));
+      RETINA_SANDBOX_INFO("Freeing glTF data: {}", static_cast<const void*>(_data));
       cgltf_free(_data);
     }
   }
@@ -39,7 +39,7 @@ namespace Retina::Sandbox {
       return std::unexpected(EError::E_FILE_NOT_FOUND);
     }
 
-    auto* gltf = static_cast<cgltf_data*>(nullptr);
+    auto* gltf = Core::Null<cgltf_data>();
     {
       auto options = cgltf_options();
       options.file = {

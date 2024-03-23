@@ -3,6 +3,17 @@
 #include <Retina/Graphics/ImageView.hpp>
 
 namespace Retina::Graphics {
+  auto MakeNativeImageSubresourceRangeFrom(const CImage& image) noexcept -> VkImageSubresourceRange {
+    RETINA_PROFILE_SCOPED();
+    auto subresourceRange = VkImageSubresourceRange();
+    subresourceRange.aspectMask = AsEnumCounterpart(image.GetView().GetAspectMask());
+    subresourceRange.baseMipLevel = 0;
+    subresourceRange.levelCount = image.GetLevelCount();
+    subresourceRange.baseArrayLayer = 0;
+    subresourceRange.layerCount = image.GetLayerCount();
+    return subresourceRange;
+  }
+
   auto MakeNativeImageSubresourceRange(
     const CImage& image,
     const SImageSubresourceRange& subresource

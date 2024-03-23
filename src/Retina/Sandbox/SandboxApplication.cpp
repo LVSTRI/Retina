@@ -117,6 +117,7 @@ namespace Retina::Sandbox {
       .Features = {
         .Debug = true,
         .Surface = true,
+        .DLSS = true,
       },
     });
 
@@ -151,7 +152,9 @@ namespace Retina::Sandbox {
 
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/deccer-cubes/SM_Deccer_Cubes.gltf"))
+    _dlssInstance = Graphics::CNvidiaDlssFeature::Make(*_device);
+
+    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
       .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
         RETINA_SANDBOX_ERROR("Failed to load model");
         return std::unexpected(error);
@@ -168,10 +171,10 @@ namespace Retina::Sandbox {
     });
 
     InitializeGUI();
-    InitializeTAAPass();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
     InitializeTonemapPass();
+    InitializeDLSSPass();
 
     if (_model) {
       _meshletBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshlets(), "MeshletBuffer");
@@ -213,10 +216,10 @@ namespace Retina::Sandbox {
     _device->WaitIdle();
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
-    InitializeTAAPass();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
     InitializeTonemapPass();
+    InitializeDLSSPass();
 
     OnUpdate();
     OnRender();
@@ -251,33 +254,33 @@ namespace Retina::Sandbox {
       _camera->SetMovementSpeed(_cameraState.MovementSpeed);
       _camera->SetViewSensitivity(_cameraState.ViewSensitivity);
       const auto fov = _cameraState.Fov;
-      const auto viewportSize = glm::vec2(_swapchain->GetWidth(), _swapchain->GetHeight());
+      const auto viewportSize = glm::vec2(_visbuffer.MainImage->GetWidth(), _visbuffer.MainImage->GetHeight());
       const auto aspectRatio = viewportSize.x / viewportSize.y;
       const auto projection = MakeInfiniteReversePerspective(fov, aspectRatio, _cameraState.Near);
-      const auto jitter = _taa.AlwaysReset ? glm::vec2(0.0f) : Details::SampleJitter(_frameTimeline->GetHostTimelineValue());
+      const auto jitter = _dlss.AlwaysReset ? glm::vec2(0.0f) : Details::SampleJitter(_frameTimeline->GetHostTimelineValue());
       const auto jitterMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f * jitter / viewportSize, 0.0f));
       const auto view = _camera->GetViewMatrix();
       const auto projView = projection * view;
 
-      if (_taa.ShouldReset || _taa.AlwaysReset) {
-        _taa.PrevProjection = projection;
-        _taa.PrevView = view;
-        _taa.ShouldReset = false;
+      if (_dlss.ShouldReset || _dlss.AlwaysReset) {
+        _dlss.PrevProjection = projection;
+        _dlss.PrevView = view;
+        _dlss.ShouldReset = false;
       }
 
       mainView = {
         .Projection = projection,
-        .PrevProjection = _taa.PrevProjection,
+        .PrevProjection = _dlss.PrevProjection,
         .JitterProj = jitterMatrix * projection,
-        .PrevJitterProj = jitterMatrix * _taa.PrevProjection,
+        .PrevJitterProj = jitterMatrix * _dlss.PrevProjection,
         .View = view,
-        .PrevView = _taa.PrevView,
+        .PrevView = _dlss.PrevView,
         .ProjView = projView,
-        .PrevProjView = _taa.PrevProjection * _taa.PrevView,
+        .PrevProjView = _dlss.PrevProjection * _dlss.PrevView,
         .Position = glm::vec4(_camera->GetPosition(), 1.0f),
       };
-      _taa.PrevProjection = projection;
-      _taa.PrevView = view;
+      _dlss.PrevProjection = projection;
+      _dlss.PrevView = view;
 
       viewBuffer->Write(mainView);
       _camera->Update(_timer.GetDeltaTime());
@@ -311,7 +314,7 @@ namespace Retina::Sandbox {
             .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
           },
           {
-            .Image = *_taa.VelocityImage,
+            .Image = *_visbuffer.VelocityImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
             .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
@@ -340,7 +343,7 @@ namespace Retina::Sandbox {
             .ClearValue = Graphics::MakeColorClearValue(-1_u32),
           },
           {
-            .ImageView = _taa.VelocityImage->GetView(),
+            .ImageView = _visbuffer.VelocityImage->GetView(),
             .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
             .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
             .ClearValue = Graphics::MakeColorClearValue(0.0f),
@@ -380,7 +383,7 @@ namespace Retina::Sandbox {
             .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
           },
           {
-            .Image = *_taa.VelocityImage,
+            .Image = *_visbuffer.VelocityImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
             .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
@@ -431,8 +434,7 @@ namespace Retina::Sandbox {
         _positionBuffer.GetHandle(),
         _indexBuffer.GetHandle(),
         _primitiveBuffer.GetHandle(),
-        viewBuffer.GetHandle(),
-        static_cast<uint32>(_visbufferResolve.InvertY)
+        viewBuffer.GetHandle()
       )
       .Draw(3)
       .EndRendering()
@@ -448,15 +450,6 @@ namespace Retina::Sandbox {
             .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
           },
           {
-            .Image = *_taa.OutputImage,
-            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
-            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
-          },
-          {
             .Image = *_tonemap.MainImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
             .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
@@ -465,78 +458,50 @@ namespace Retina::Sandbox {
             .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
             .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
           },
-        },
-      })
-      .BeginRendering({
-        .Name = "TaaPass",
-        .ColorAttachments = {
           {
-            .ImageView = _taa.OutputImage->GetView(),
-            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
-            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
-          }
-        },
-      })
-      .BindPipeline(*_taa.ResolvePipeline)
-      .BindShaderResourceTable(_device->GetShaderResourceTable())
-      .PushConstants(
-        _visbufferResolve.MainImage.GetHandle(),
-        _taa.HistoryImage.GetHandle(),
-        _taa.VelocityImage.GetHandle(),
-        _taa.Linear.GetHandle(),
-        _taa.Nearest.GetHandle(),
-        static_cast<uint32>(_taa.ShouldReset || _taa.AlwaysReset),
-        _taa.ModulationFactor
-      )
-      .Draw(3)
-      .EndRendering()
-      .BeginNamedRegion("TaaUpdateHistory")
-      .Barrier({
-        .ImageMemoryBarriers = {
-          {
-            .Image = *_taa.HistoryImage,
-            .SourceStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
-            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .Image = *_dlss.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage =
+              Graphics::EPipelineStageFlag::E_TRANSFER |
+              Graphics::EPipelineStageFlag::E_COMPUTE_SHADER,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
-            .OldLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
-            .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
-          },
-          {
-            .Image = *_taa.OutputImage,
-            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
-            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_READ,
-            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
-            .NewLayout = Graphics::EImageLayout::E_TRANSFER_SRC_OPTIMAL,
+            .DestAccess =
+              Graphics::EResourceAccessFlag::E_SHADER_READ |
+              Graphics::EResourceAccessFlag::E_SHADER_WRITE |
+              Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_GENERAL,
           },
         },
       })
-      .CopyImage(*_taa.OutputImage, *_taa.HistoryImage, {})
-      .Barrier({
-        .ImageMemoryBarriers = {
-          {
-            .Image = *_taa.HistoryImage,
-            .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
-            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
-            .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
-            .OldLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
-            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
-          },
-          {
-            .Image = *_taa.OutputImage,
-            .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
-            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
-            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
-            .OldLayout = Graphics::EImageLayout::E_TRANSFER_SRC_OPTIMAL,
-            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
-          },
-        }
-      })
+      .BeginNamedRegion("DLSSPass");
+    _dlssInstance->Evaluate(commandBuffer, {
+      .Color = *_visbufferResolve.MainImage,
+      .Depth = *_visbuffer.DepthImage,
+      .Velocity = *_visbuffer.VelocityImage,
+      .Output = *_dlss.MainImage,
+      .JitterOffset = Details::SampleJitter(_frameTimeline->GetHostTimelineValue()),
+      .MotionVectorScale = {
+        _swapchain->GetWidth(),
+        _swapchain->GetHeight(),
+      },
+    });
+    commandBuffer
       .EndNamedRegion()
+      .ImageMemoryBarrier({
+        .Image = *_dlss.MainImage,
+        .SourceStage =
+          Graphics::EPipelineStageFlag::E_TRANSFER |
+          Graphics::EPipelineStageFlag::E_COMPUTE_SHADER,
+        .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
+        .SourceAccess =
+          Graphics::EResourceAccessFlag::E_SHADER_READ |
+          Graphics::EResourceAccessFlag::E_SHADER_WRITE |
+          Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+        .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
+        .OldLayout = Graphics::EImageLayout::E_GENERAL,
+        .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+      })
       .BeginRendering({
         .Name = "Tonemap",
         .ColorAttachments = {
@@ -552,7 +517,7 @@ namespace Retina::Sandbox {
       .BindPipeline(*_tonemap.MainPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
       .PushConstants(
-        _taa.OutputImage.GetHandle(),
+        _dlss.MainImage.GetHandle(),
         _tonemap.WhitePoint,
         static_cast<uint32>(_tonemap.IsPassthrough)
       )
@@ -611,33 +576,15 @@ namespace Retina::Sandbox {
           ImGui::DragFloat("Near", &_cameraState.Near, 0.1f, 0.0f, 5.0f);
         }
 
-        if (ImGui::CollapsingHeader("Resolve", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::Checkbox("Invert Y", &_visbufferResolve.InvertY);
-        }
-
         if (ImGui::CollapsingHeader("Tonemap", ImGuiTreeNodeFlags_DefaultOpen)) {
           ImGui::DragFloat("White Point", &_tonemap.WhitePoint, 0.1f, 0.0f, 5.0f);
           ImGui::Checkbox("Passthrough", &_tonemap.IsPassthrough);
         }
-
-        if (ImGui::CollapsingHeader("TAA", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::DragFloat("Modulation Factor", &_taa.ModulationFactor, 0.01f, 0.0f, 1.0f);
-          ImGui::Checkbox("Reset", &_taa.AlwaysReset);
-        }
       }
       ImGui::End();
 
-      if (ImGui::Begin("Texture Viewer")) {
-        if (ImGui::CollapsingHeader("Render Targets", ImGuiTreeNodeFlags_DefaultOpen)) {
-          const auto regionSize = ImGui::GetContentRegionAvail();
-          {
-            ImGui::SeparatorText("Velocity Buffer");
-            const auto imageWidth = regionSize.x;
-            const auto imageHeight = regionSize.x / _taa.VelocityImage->GetAspectRatio();
-            ImGui::Image(GUI::AsTextureHandle(_taa.VelocityImage), { imageWidth, imageHeight });
-          }
-        }
-      }
+      if (ImGui::Begin("Texture Viewer")) {}
+      ImGui::End();
     });
     commandBuffer
       .BeginNamedRegion("SwapchainBlit")
@@ -712,87 +659,6 @@ namespace Retina::Sandbox {
     });
   }
 
-  auto CSandboxApplication::InitializeTAAPass() noexcept -> void {
-    RETINA_PROFILE_SCOPED();
-    _device->GetShaderResourceTable().Destroy(_taa.VelocityImage);
-    _taa.VelocityImage = _device->GetShaderResourceTable().MakeImage({
-      .Name = "TaaVelocityImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R16G16_SFLOAT,
-      .Usage =
-        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
-        Graphics::EImageUsageFlag::E_SAMPLED,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-    _device->GetShaderResourceTable().Destroy(_taa.HistoryImage);
-    _taa.HistoryImage = _device->GetShaderResourceTable().MakeImage({
-      .Name = "TaaHistoryImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
-      .Usage =
-        Graphics::EImageUsageFlag::E_TRANSFER_DST |
-        Graphics::EImageUsageFlag::E_SAMPLED,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-    _device->GetShaderResourceTable().Destroy(_taa.OutputImage);
-    _taa.OutputImage = _device->GetShaderResourceTable().MakeImage({
-      .Name = "TaaOutputImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
-      .Usage =
-        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
-        Graphics::EImageUsageFlag::E_TRANSFER_SRC |
-        Graphics::EImageUsageFlag::E_SAMPLED,
-      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
-    });
-    _device->GetGraphicsQueue().Submit([&](Graphics::CCommandBuffer& commands) noexcept {
-      commands.ImageMemoryBarrier({
-        .Image = *_taa.HistoryImage,
-        .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-        .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
-        .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-        .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
-        .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
-        .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
-      });
-    });
-    _taa.ShouldReset = true;
-    if (!_taa.IsInitialized) {
-      _taa.Linear = _device->GetShaderResourceTable().MakeSampler({
-        .Name = "TaaLinearSampler",
-        .Filter = { Graphics::EFilter::E_LINEAR },
-        .MipmapMode = Graphics::ESamplerMipmapMode::E_LINEAR,
-      });
-      _taa.Nearest = _device->GetShaderResourceTable().MakeSampler({
-        .Name = "TaaNearestSampler",
-        .Filter = { Graphics::EFilter::E_NEAREST },
-        .MipmapMode = Graphics::ESamplerMipmapMode::E_NEAREST,
-      });
-      _taa.ResolvePipeline = Graphics::CGraphicsPipeline::Make(*_device, {
-        .Name = "TaaResolvePipeline",
-        .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
-        .FragmentShader = Details::WithShaderPath("TaaResolve.frag.glsl"),
-        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
-        .DescriptorLayouts = {
-          _device->GetShaderResourceTable().GetDescriptorLayout(),
-        },
-        .DynamicState = { {
-          Graphics::EDynamicState::E_VIEWPORT,
-          Graphics::EDynamicState::E_SCISSOR,
-        } },
-        .RenderingInfo = {
-          {
-            .ColorAttachmentFormats = { _taa.OutputImage->GetFormat() },
-          }
-        },
-      });
-      _taa.IsInitialized = true;
-    }
-  }
-
   auto CSandboxApplication::InitializeVisbufferPass() noexcept -> void {
     RETINA_PROFILE_SCOPED();
 
@@ -807,7 +673,17 @@ namespace Retina::Sandbox {
         Graphics::EImageUsageFlag::E_SAMPLED,
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
-
+    _device->GetShaderResourceTable().Destroy(_visbuffer.VelocityImage);
+    _visbuffer.VelocityImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferVelocityImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_R16G16_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
     _device->GetShaderResourceTable().Destroy(_visbuffer.DepthImage);
     _visbuffer.DepthImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "VisbufferDepthImage",
@@ -841,7 +717,7 @@ namespace Retina::Sandbox {
           {
             .ColorAttachmentFormats = {
               _visbuffer.MainImage->GetFormat(),
-              _taa.VelocityImage->GetFormat(),
+              _visbuffer.VelocityImage->GetFormat(),
             },
             .DepthAttachmentFormat = _visbuffer.DepthImage->GetFormat(),
           }
@@ -921,5 +797,39 @@ namespace Retina::Sandbox {
       });
       _tonemap.IsInitialized = true;
     }
+  }
+
+  auto CSandboxApplication::InitializeDLSSPass() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    RETINA_SANDBOX_WARN("Initializing DLSS Feature");
+    const auto qualityPreset = Graphics::ENvidiaDlssQualityPreset::E_NATIVE;
+    _dlssInstance->Shutdown();
+    _dlssInstance->Initialize({
+      .RenderResolution = {
+        _visbuffer.MainImage->GetWidth(),
+        _visbuffer.MainImage->GetHeight(),
+      },
+      .OutputResolution = {
+        _swapchain->GetWidth(),
+        _swapchain->GetHeight(),
+      },
+      .Quality = qualityPreset,
+      .DepthScale = 1.0f,
+      .IsHDR = true,
+      .IsReverseDepth = true
+    });
+    _device->GetShaderResourceTable().Destroy(_dlss.MainImage);
+    _dlss.MainImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "DLSSOutputImage",
+      .Width = _swapchain->GetWidth(),
+      .Height = _swapchain->GetHeight(),
+      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_TRANSFER_DST |
+        Graphics::EImageUsageFlag::E_STORAGE |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    _dlss.IsInitialized = true;
   }
 }

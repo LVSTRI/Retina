@@ -1,3 +1,4 @@
+#include <Retina/Graphics/NVIDIA/NvidiaDlssFeature.hpp>
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/Buffer.hpp>
 #include <Retina/Graphics/DeletionQueue.hpp>
@@ -201,7 +202,9 @@ namespace Retina::Graphics {
       };
     }
 
-    RETINA_NODISCARD RETINA_INLINE auto GetEnabledDeviceExtensions(
+    RETINA_NODISCARD auto GetEnabledDeviceExtensions(
+      const CInstance& instance,
+      VkPhysicalDevice physicalDevice,
       const SDeviceFeature& features,
       std::span<const VkExtensionProperties> extensions
     ) noexcept -> std::vector<const char*> {
@@ -236,9 +239,18 @@ namespace Retina::Graphics {
         RETINA_ENABLE_EXTENSION_OR_PANIC(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME);
       }
 
+      if (instance.IsFeatureEnabled(&SInstanceFeature::DLSS)) {
+        const auto dlssExtensions = GetNvidiaDlssDeviceExtensions(instance.GetHandle(), physicalDevice);
+        for (const auto& name : dlssExtensions) {
+          RETINA_ENABLE_EXTENSION_OR_PANIC(name);
+        }
+      }
+
 #undef RETINA_ENABLE_EXTENSION_OR_PANIC
 
       RETINA_GRAPHICS_INFO("Enabled device extensions");
+      std::sort(enabledExtensions.begin(), enabledExtensions.end());
+      enabledExtensions.erase(std::unique(enabledExtensions.begin(), enabledExtensions.end()), enabledExtensions.end());
       return enabledExtensions;
     }
 
@@ -491,7 +503,7 @@ namespace Retina::Graphics {
     const auto physicalDeviceFeatures = Details::GetPhysicalDeviceFeatures(physicalDevice);
     const auto physicalDeviceQueues = Details::GetPhysicalDeviceQueueProperties(physicalDevice);
     const auto availableDeviceExtensions = Details::EnumeratePhysicalDeviceExtensions(physicalDevice);
-    const auto enabledDeviceExtensions = Details::GetEnabledDeviceExtensions(createInfo.Features, availableDeviceExtensions);
+    const auto enabledDeviceExtensions = Details::GetEnabledDeviceExtensions(instance, physicalDevice, createInfo.Features, availableDeviceExtensions);
     const auto enabledDeviceFeatures = Details::GetEnabledDeviceFeatures(createInfo.Features, physicalDeviceFeatures);
     const auto deviceRayTracingProperties = Details::MakeDeviceRayTracingProperties(physicalDeviceProperties);
     const auto deviceQueueInfos = Details::MakeDeviceQueueInfos(physicalDeviceQueues);

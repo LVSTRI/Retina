@@ -60,7 +60,7 @@ namespace Retina::Sandbox {
     auto InitializeTonemapPass() noexcept -> void;
     auto InitializeVisbufferPass() noexcept -> void;
     auto InitializeVisbufferResolvePass() noexcept -> void;
-    auto InitializeTAAPass() noexcept -> void;
+    auto InitializeDLSSPass() noexcept -> void;
 
   private:
     bool _isRunning = true;
@@ -94,6 +94,7 @@ namespace Retina::Sandbox {
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
 
     Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
+    Core::CUniquePtr<Graphics::CNvidiaDlssFeature> _dlssInstance;
 
     struct {
       float32 Fov = 90.0f;
@@ -105,6 +106,7 @@ namespace Retina::Sandbox {
     struct {
       bool IsInitialized = false;
       Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Graphics::CShaderResource<Graphics::CImage> VelocityImage;
       Graphics::CShaderResource<Graphics::CImage> DepthImage;
       Core::CArcPtr<Graphics::CMeshShadingPipeline> MainPipeline;
     } _visbuffer;
@@ -112,27 +114,20 @@ namespace Retina::Sandbox {
     struct {
       bool IsInitialized = false;
 
-      bool InvertY = false;
       Graphics::CShaderResource<Graphics::CImage> MainImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
     } _visbufferResolve;
 
     struct {
       bool IsInitialized = false;
-      Graphics::CShaderResource<Graphics::CImage> VelocityImage;
-      Graphics::CShaderResource<Graphics::CImage> HistoryImage;
-      Graphics::CShaderResource<Graphics::CImage> OutputImage;
-      Graphics::CShaderResource<Graphics::CSampler> Linear;
-      Graphics::CShaderResource<Graphics::CSampler> Nearest;
-
-      Core::CArcPtr<Graphics::CGraphicsPipeline> ResolvePipeline;
 
       bool ShouldReset = true;
       bool AlwaysReset = false;
-      float32 ModulationFactor = 0.9f;
+
       glm::mat4 PrevProjection = {};
       glm::mat4 PrevView = {};
-    } _taa;
+      Graphics::CShaderResource<Graphics::CImage> MainImage;
+    } _dlss;
 
     struct {
       bool IsInitialized = false;

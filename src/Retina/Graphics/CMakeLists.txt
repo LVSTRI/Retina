@@ -1,6 +1,7 @@
 add_library(Retina.Graphics STATIC)
 
 target_sources(Retina.Graphics PRIVATE
+  NVIDIA/NvidiaDlssFeature.cpp
   Resources/ShaderResourceTable.cpp
   BinarySemaphore.cpp
   Buffer.cpp

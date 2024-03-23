@@ -1,3 +1,4 @@
+#include <Retina/Graphics/NVIDIA/NvidiaDlssFeature.hpp>
 #include <Retina/Graphics/Resources/ShaderResource.hpp>
 #include <Retina/Graphics/Resources/ShaderResourceTable.hpp>
 #include <Retina/Graphics/BinarySemaphore.hpp>

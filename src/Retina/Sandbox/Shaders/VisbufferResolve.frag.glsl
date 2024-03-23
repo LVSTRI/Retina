@@ -18,7 +18,6 @@ RetinaDeclarePushConstant() {
   uint u_IndexBufferId;
   uint u_PrimitiveBufferId;
   uint u_ViewBufferId;
-  uint u_InvertY;
 };
 
 RetinaDeclareQualifiedBuffer(restrict readonly, SMeshletBuffer) {
@@ -103,11 +102,6 @@ precise SPartialDerivatives CalculatePartialDerivatives(in vec4 clip0, in vec4 c
   ddy *= 2.0 / screenSize.y;
   ddxSum *= 2.0 / screenSize.x;
   ddySum *= 2.0 / screenSize.y;
-
-  if (bool(u_InvertY)) {
-    ddy *= -1.0;
-    ddySum *= -1.0;
-  }
 
   const float ddxInterpW = 1.0 / (interpInvW + ddxSum);
   const float ddyInterpW = 1.0 / (interpInvW + ddySum);

@@ -222,6 +222,57 @@ if (NOT imgui_POPULATED)
   target_link_libraries(imgui PRIVATE glfw)
 endif ()
 
+# NVIDIA DLSS
+FetchContent_Declare(
+  nvdia_dlss
+  GIT_REPOSITORY https://github.com/NVIDIA/DLSS
+  GIT_TAG 2aa0b2c9d07995f517561ab6bbef60308bc7eb3a
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+)
+FetchContent_GetProperties(nvdia_dlss)
+if (NOT nvdia_dlss_POPULATED)
+  FetchContent_Populate(nvdia_dlss)
+  add_library(nvdia_dlss INTERFACE)
+
+  set(RETINA_DLSS_LIBRARY_DIRECTORY ${nvdia_dlss_SOURCE_DIR}/lib)
+  if (WIN32)
+    set(RETINA_DLSS_LIBRARY_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY}/Windows_x86_64)
+    set(RETINA_DLSS_LIBRARY_STATIC_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY}/x86_64)
+    set(RETINA_DLSS_LIBRARY_DYNAMIC_NAME nvngx_dlss.dll)
+  else ()
+    set(RETINA_DLSS_LIBRARY_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY}/Linux_x86_64)
+    set(RETINA_DLSS_LIBRARY_STATIC_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY})
+    set(RETINA_DLSS_LIBRARY_DYNAMIC_NAME libnvidia-ngx-dlss.so.3.5.10)
+  endif ()
+
+  if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(RETINA_DLSS_LIBRARY_DYNAMIC_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY}/dev)
+  else ()
+    set(RETINA_DLSS_LIBRARY_DYNAMIC_DIRECTORY ${RETINA_DLSS_LIBRARY_DIRECTORY}/rel)
+  endif ()
+
+  if (WIN32)
+    if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+      set(RETINA_DLSS_LIBRARY_STATIC_NAME nvsdk_ngx_d_dbg)
+    else ()
+      set(RETINA_DLSS_LIBRARY_STATIC_NAME nvsdk_ngx_d)
+    endif ()
+  else ()
+    set(RETINA_DLSS_LIBRARY_STATIC_NAME libnvsdk_ngx)
+  endif ()
+
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${RETINA_DLSS_LIBRARY_DYNAMIC_DIRECTORY}/${RETINA_DLSS_LIBRARY_DYNAMIC_NAME}
+      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${RETINA_DLSS_LIBRARY_DYNAMIC_NAME}
+  )
+
+  target_link_directories(nvdia_dlss INTERFACE ${RETINA_DLSS_LIBRARY_STATIC_DIRECTORY})
+  target_link_libraries(nvdia_dlss INTERFACE ${RETINA_DLSS_LIBRARY_STATIC_NAME})
+  target_include_directories(nvdia_dlss INTERFACE ${nvdia_dlss_SOURCE_DIR}/include)
+endif ()
+
 add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
@@ -238,8 +289,8 @@ endif ()
 add_library(Retina.Graphics.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Graphics.Dependencies INTERFACE
+  nvdia_dlss
   spirv-cross-glsl
-  volk
   Vulkan::SPIRV-Tools
   Vulkan::shaderc_combined
 )
@@ -248,7 +299,7 @@ add_library(Retina.Graphics.Vulkan INTERFACE)
 
 target_include_directories(Retina.Graphics.Vulkan INTERFACE ${Vulkan_INCLUDE_DIRS})
 target_compile_definitions(Retina.Graphics.Vulkan INTERFACE VK_NO_PROTOTYPES)
-target_link_libraries(Retina.Graphics.Vulkan INTERFACE vma)
+target_link_libraries(Retina.Graphics.Vulkan INTERFACE vma volk)
 
 add_library(Retina.GUI.Dependencies INTERFACE)
 

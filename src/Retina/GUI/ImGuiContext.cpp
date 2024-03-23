@@ -145,7 +145,7 @@ namespace Retina::GUI {
 
     auto fontTexture = [&] noexcept {
       auto& io = ImGui::GetIO();
-      auto* pixels = static_cast<uint8*>(nullptr);
+      auto* pixels = Core::Null<uint8>();
       auto width = 0_i32;
       auto height = 0_i32;
       io.FontAllowUserScaling = true;

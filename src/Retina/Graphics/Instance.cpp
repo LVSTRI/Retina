@@ -1,3 +1,4 @@
+#include <Retina/Graphics/NVIDIA/NvidiaDlssFeature.hpp>
 #include <Retina/Graphics/Instance.hpp>
 #include <Retina/Graphics/Macros.hpp>
 
@@ -75,6 +76,19 @@ namespace Retina::Graphics {
           enabledExtensions.emplace_back(name);
         }
       }
+
+      if (createInfo.Features.DLSS) {
+        const auto dlssExtensions = GetNvidiaDlssIstanceExtensions();
+        for (const auto& name : dlssExtensions) {
+          if (!IsExtensionAvailable(extensions, name)) {
+            RETINA_GRAPHICS_PANIC_WITH("DLSS extension '{}' is not present", name);
+          }
+          enabledExtensions.emplace_back(name);
+        }
+      }
+
+      std::sort(enabledExtensions.begin(), enabledExtensions.end());
+      enabledExtensions.erase(std::unique(enabledExtensions.begin(), enabledExtensions.end()), enabledExtensions.end());
       return enabledExtensions;
     }
   }

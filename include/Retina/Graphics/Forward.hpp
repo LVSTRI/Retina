@@ -1,6 +1,12 @@
 #pragma once
 
 namespace Retina::Graphics {
+  // <Retina/Graphics/NVIDIA/NvidiaDlssFeature.hpp>
+  enum class ENvidiaDlssQualityPreset;
+  struct SNvidiaDlssInitializeInfo;
+  struct SNvidiaDlssEvaluateInfo;
+  class CNvidiaDlssFeature;
+
   // <Retina/Graphics/Resources/ShaderResource.hpp>
   template <typename T>
   class CShaderResource;
