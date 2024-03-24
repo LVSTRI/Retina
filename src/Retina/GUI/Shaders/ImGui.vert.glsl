@@ -25,8 +25,7 @@ RetinaDeclareBufferPointer(SVertexBuffer, g_VertexBuffer, u_VertexBufferId);
 
 void main() {
   const SVertexFormat vertex = g_VertexBuffer.Data[gl_VertexIndex];
-  const vec4 color = unpackUnorm4x8(vertex.Color);
   o_Uv = vertex.Uv;
-  o_Color = color;
+  o_Color = unpackUnorm4x8(vertex.Color);
   gl_Position = vec4(vertex.Position * u_Scale + u_Translate, 0.0, 1.0);
 }

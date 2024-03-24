@@ -18,9 +18,11 @@ RetinaDeclarePushConstant() {
 #define g_Sampler RetinaGetSampler(u_SamplerId)
 
 void main() {
+  vec4 color = RetinaAsLinearColor(i_Color);
   if (RetinaIsHandleValid(u_TextureId)) {
-    o_Pixel = i_Color * texture(sampler2D(g_Texture, g_Sampler), i_Uv);
-  } else {
-    o_Pixel = i_Color;
+    color *= texture(sampler2D(g_Texture, g_Sampler), i_Uv);
   }
+  color.rgb *= color.a;
+  color.a = 1.0 - RetinaAsLinearComponent(1.0 - color.a);
+  o_Pixel = color;
 }

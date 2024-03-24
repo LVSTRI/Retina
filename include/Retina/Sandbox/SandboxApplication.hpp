@@ -62,6 +62,8 @@ namespace Retina::Sandbox {
     auto InitializeVisbufferResolvePass() noexcept -> void;
     auto InitializeDLSSPass() noexcept -> void;
 
+    auto UpdateDLSSResolution() noexcept -> void;
+
   private:
     bool _isRunning = true;
 
@@ -121,8 +123,14 @@ namespace Retina::Sandbox {
     struct {
       bool IsInitialized = false;
 
+      bool ShouldResize = false;
       bool ShouldReset = true;
       bool AlwaysReset = false;
+
+      glm::vec2 RenderResolution = {};
+      glm::vec2 OutputResolution = {};
+      uint32 JitterSize = 0;
+      Graphics::ENvidiaDlssQualityPreset Preset = Graphics::ENvidiaDlssQualityPreset::E_NATIVE;
 
       glm::mat4 PrevProjection = {};
       glm::mat4 PrevView = {};
@@ -136,7 +144,9 @@ namespace Retina::Sandbox {
       bool IsPassthrough = false;
 
       Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Graphics::CShaderResource<Graphics::CSampler> NearestSampler;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
+      Core::CArcPtr<Graphics::CGraphicsPipeline> CopyPipeline;
     } _tonemap;
   };
 }

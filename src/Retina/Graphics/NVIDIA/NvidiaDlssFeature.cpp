@@ -31,7 +31,6 @@
 namespace Retina::Graphics {
   namespace Details {
     RETINA_NODISCARD RETINA_INLINE constexpr auto MakeNvidiaDlssFeatureCommonInfo() noexcept -> NVSDK_NGX_FeatureCommonInfo {
-      RETINA_PROFILE_SCOPED();
       auto info = NVSDK_NGX_FeatureCommonInfo();
       info.LoggingInfo.LoggingCallback = [](const char* message, NVSDK_NGX_Logging_Level, NVSDK_NGX_Feature feature) noexcept -> void {
         RETINA_PROFILE_SCOPED();
@@ -44,7 +43,6 @@ namespace Retina::Graphics {
     RETINA_NODISCARD RETINA_INLINE constexpr auto MakeNvidiaDlssFeatureDiscoveryInfo(
       const NVSDK_NGX_FeatureCommonInfo& commonInfo
     ) noexcept -> NVSDK_NGX_FeatureDiscoveryInfo {
-      RETINA_PROFILE_SCOPED();
       auto info = NVSDK_NGX_FeatureDiscoveryInfo();
       info.SDKVersion = NVSDK_NGX_Version_API;
       info.FeatureID = NVSDK_NGX_Feature_SuperSampling;

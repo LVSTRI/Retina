@@ -186,8 +186,8 @@ endif ()
 # meshoptimizer
 FetchContent_Declare(
   meshoptimizer
-  GIT_REPOSITORY https://github.com/zeux/meshoptimizer
-  GIT_TAG 1b34f94ff4a322ed38673d84c9f76b86524f90b3
+  GIT_REPOSITORY https://github.com/LVSTRI/meshoptimizer
+  GIT_TAG 084c774e2db01937a9121cb132b7091f7cb26221
   GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )

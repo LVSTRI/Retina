@@ -63,7 +63,7 @@ namespace Retina::Graphics {
   RETINA_NODISCARD auto GetNvidiaDlssIstanceExtensions() noexcept -> std::vector<const char*>;
   RETINA_NODISCARD auto GetNvidiaDlssDeviceExtensions(VkInstance instance, VkPhysicalDevice physicalDevice) noexcept -> std::vector<const char*>;
 
-  RETINA_NODISCARD RETINA_INLINE consteval auto GetScalingRatioFromQualityPreset(ENvidiaDlssQualityPreset quality) noexcept -> float32 {
+  RETINA_NODISCARD RETINA_INLINE constexpr auto GetScalingRatioFromQualityPreset(ENvidiaDlssQualityPreset quality) noexcept -> float32 {
     switch (quality) {
       case ENvidiaDlssQualityPreset::E_PERFORMANCE: return 0.5f;
       case ENvidiaDlssQualityPreset::E_BALANCED: return 0.58f;

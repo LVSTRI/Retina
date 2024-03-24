@@ -149,8 +149,8 @@ RETINA_NODISCARD RETINA_INLINE auto GetSurfacePresentModes(
       std::span<const VkSurfaceFormatKHR> formats
     ) noexcept -> VkFormat {
       const auto targetFormats = std::to_array({
-        VK_FORMAT_R8G8B8A8_SRGB,
-        VK_FORMAT_B8G8R8A8_SRGB,
+        VK_FORMAT_R8G8B8A8_UNORM,
+        VK_FORMAT_B8G8R8A8_UNORM,
       });
       for (const auto& targetFormat : targetFormats) {
         const auto isAvailable = std::ranges::any_of(formats, [&](const auto& format) {

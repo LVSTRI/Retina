@@ -20,6 +20,9 @@ float GetLuminance(in vec3 color) {
 
 vec3 ChangeLuminance(in vec3 color, in float outLum) {
   const float inLum = GetLuminance(color);
+  if (inLum == 0) {
+    return color;
+  }
   return color * (outLum / inLum);
 }
 

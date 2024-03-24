@@ -22,12 +22,13 @@ namespace Retina::Sandbox {
     }
 
     template <typename T>
-    RETINA_NODISCARD RETINA_INLINE constexpr auto NextPowerTwo(T value) noexcept -> T {
-      auto result = static_cast<T>(1);
-      while (result < value) {
-        result <<= 1;
-      }
-      return result;
+    RETINA_NODISCARD RETINA_INLINE constexpr auto PreviousPowerTwo(T value) noexcept -> T {
+      return 1 << (sizeof(T) * CHAR_BIT - std::countl_zero(value - 1) - 1);
+    }
+
+    template <typename T>
+    RETINA_NODISCARD RETINA_INLINE constexpr auto NearestPowerTwo(T value) noexcept -> T {
+      return 1 << (sizeof(T) * CHAR_BIT - std::countl_zero(value - 1));
     }
     
     template <typename T>
@@ -47,26 +48,139 @@ namespace Retina::Sandbox {
         : (dividend - divisor / 2 + 1) / divisor;
     }
 
-    RETINA_NODISCARD RETINA_INLINE auto SampleJitter(uint32 index) noexcept -> glm::vec2 {
-      const static auto table = std::to_array<glm::vec2>({
-        { 0.500000f, 0.333333f },
-        { 0.250000f, 0.666667f },
-        { 0.750000f, 0.111111f },
-        { 0.125000f, 0.444444f },
-        { 0.625000f, 0.777778f },
-        { 0.375000f, 0.222222f },
-        { 0.875000f, 0.555556f },
-        { 0.062500f, 0.888889f },
-        { 0.562500f, 0.037037f },
-        { 0.312500f, 0.370370f },
-        { 0.812500f, 0.703704f },
-        { 0.187500f, 0.148148f },
-        { 0.687500f, 0.481481f },
-        { 0.437500f, 0.814815f },
-        { 0.937500f, 0.259259f },
-        { 0.031250f, 0.592593f },
+    RETINA_NODISCARD RETINA_INLINE auto SampleJitter(uint32 index, uint32 size) noexcept -> glm::vec2 {
+      constexpr static auto table = std::to_array<std::pair<float32, float32>>({
+        { 0.0f, 0.0f },
+        { 0.5f, 0.33333333f },
+        { 0.25f, 0.66666667f },
+        { 0.75f, 0.11111111f },
+        { 0.125f, 0.44444444f },
+        { 0.625f, 0.77777778f },
+        { 0.375f, 0.22222222f },
+        { 0.875f, 0.55555556f },
+        { 0.0625f, 0.88888889f },
+        { 0.5625f, 0.03703704f },
+        { 0.3125f, 0.37037037f },
+        { 0.8125f, 0.7037037f },
+        { 0.1875f, 0.14814815f },
+        { 0.6875f, 0.48148148f },
+        { 0.4375f, 0.81481481f },
+        { 0.9375f, 0.25925926f },
+        { 0.03125f, 0.59259259f },
+        { 0.53125f, 0.92592593f },
+        { 0.28125f, 0.07407407f },
+        { 0.78125f, 0.40740741f },
+        { 0.15625f, 0.74074074f },
+        { 0.65625f, 0.18518519f },
+        { 0.40625f, 0.51851852f },
+        { 0.90625f, 0.85185185f },
+        { 0.09375f, 0.2962963f },
+        { 0.59375f, 0.62962963f },
+        { 0.34375f, 0.96296296f },
+        { 0.84375f, 0.01234568f },
+        { 0.21875f, 0.34567901f },
+        { 0.71875f, 0.67901235f },
+        { 0.46875f, 0.12345679f },
+        { 0.96875f, 0.45679012f },
+        { 0.015625f, 0.79012346f },
+        { 0.515625f, 0.2345679f },
+        { 0.265625f, 0.56790123f },
+        { 0.765625f, 0.90123457f },
+        { 0.140625f, 0.04938272f },
+        { 0.640625f, 0.38271605f },
+        { 0.390625f, 0.71604938f },
+        { 0.890625f, 0.16049383f },
+        { 0.078125f, 0.49382716f },
+        { 0.578125f, 0.82716049f },
+        { 0.328125f, 0.27160494f },
+        { 0.828125f, 0.60493827f },
+        { 0.203125f, 0.9382716f },
+        { 0.703125f, 0.08641975f },
+        { 0.453125f, 0.41975309f },
+        { 0.953125f, 0.75308642f },
+        { 0.046875f, 0.19753086f },
+        { 0.546875f, 0.5308642f },
+        { 0.296875f, 0.86419753f },
+        { 0.796875f, 0.30864198f },
+        { 0.171875f, 0.64197531f },
+        { 0.671875f, 0.97530864f },
+        { 0.421875f, 0.02469136f },
+        { 0.921875f, 0.35802469f },
+        { 0.109375f, 0.69135802f },
+        { 0.609375f, 0.13580247f },
+        { 0.359375f, 0.4691358f },
+        { 0.859375f, 0.80246914f },
+        { 0.234375f, 0.24691358f },
+        { 0.734375f, 0.58024691f },
+        { 0.484375f, 0.91358025f },
+        { 0.984375f, 0.0617284f },
+        { 0.0078125f, 0.39506173f },
+        { 0.5078125f, 0.72839506f },
+        { 0.2578125f, 0.17283951f },
+        { 0.7578125f, 0.50617284f },
+        { 0.1328125f, 0.83950617f },
+        { 0.6328125f, 0.28395062f },
+        { 0.3828125f, 0.61728395f },
+        { 0.8828125f, 0.95061728f },
+        { 0.0703125f, 0.09876543f },
+        { 0.5703125f, 0.43209877f },
+        { 0.3203125f, 0.7654321f },
+        { 0.8203125f, 0.20987654f },
+        { 0.1953125f, 0.54320988f },
+        { 0.6953125f, 0.87654321f },
+        { 0.4453125f, 0.32098765f },
+        { 0.9453125f, 0.65432099f },
+        { 0.0390625f, 0.98765432f },
+        { 0.5390625f, 0.00411523f },
+        { 0.2890625f, 0.33744856f },
+        { 0.7890625f, 0.67078189f },
+        { 0.1640625f, 0.11522634f },
+        { 0.6640625f, 0.44855967f },
+        { 0.4140625f, 0.781893f },
+        { 0.9140625f, 0.22633745f },
+        { 0.1015625f, 0.55967078f },
+        { 0.6015625f, 0.89300412f },
+        { 0.3515625f, 0.04115226f },
+        { 0.8515625f, 0.3744856f },
+        { 0.2265625f, 0.70781893f },
+        { 0.7265625f, 0.15226337f },
+        { 0.4765625f, 0.48559671f },
+        { 0.9765625f, 0.81893004f },
+        { 0.0234375f, 0.26337449f },
+        { 0.5234375f, 0.59670782f },
+        { 0.2734375f, 0.93004115f },
+        { 0.7734375f, 0.0781893f },
+        { 0.1484375f, 0.41152263f },
+        { 0.6484375f, 0.74485597f },
+        { 0.3984375f, 0.18930041f },
+        { 0.8984375f, 0.52263374f },
+        { 0.0859375f, 0.85596708f },
+        { 0.5859375f, 0.30041152f },
+        { 0.3359375f, 0.63374486f },
+        { 0.8359375f, 0.96707819f },
+        { 0.2109375f, 0.01646091f },
+        { 0.7109375f, 0.34979424f },
+        { 0.4609375f, 0.68312757f },
+        { 0.9609375f, 0.12757202f },
+        { 0.0546875f, 0.46090535f },
+        { 0.5546875f, 0.79423868f },
+        { 0.3046875f, 0.23868313f },
+        { 0.8046875f, 0.57201646f },
+        { 0.1796875f, 0.90534979f },
+        { 0.6796875f, 0.05349794f },
+        { 0.4296875f, 0.38683128f },
+        { 0.9296875f, 0.72016461f },
+        { 0.1171875f, 0.16460905f },
+        { 0.6171875f, 0.49794239f },
+        { 0.3671875f, 0.83127572f },
+        { 0.8671875f, 0.27572016f },
+        { 0.2421875f, 0.6090535f },
+        { 0.7421875f, 0.94238683f },
+        { 0.4921875f, 0.09053498f },
+        { 0.9921875f, 0.42386831f },
       });
-      return table[index % table.size()] - 0.5f;
+      const auto [x, y] = table[index % std::min<uint32>(table.size(), size)];
+      return glm::vec2(x, y) - 0.5f;
     }
 
     template <typename T>
@@ -170,6 +284,7 @@ namespace Retina::Sandbox {
       .Capacity = 1,
     });
 
+    UpdateDLSSResolution();
     InitializeGUI();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
@@ -216,6 +331,9 @@ namespace Retina::Sandbox {
     _device->WaitIdle();
     _frameTimeline = Graphics::CHostDeviceTimeline::Make(*_device, FRAMES_IN_FLIGHT);
     _swapchain = Graphics::CSwapchain::Recreate(std::move(_swapchain));
+
+    UpdateDLSSResolution();
+
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
     InitializeTonemapPass();
@@ -248,6 +366,15 @@ namespace Retina::Sandbox {
     WSI::PollEvents();
     const auto frameIndex = WaitForNextFrameIndex();
 
+    if (_dlss.ShouldResize) {
+      _device->WaitIdle();
+      UpdateDLSSResolution();
+      InitializeVisbufferPass();
+      InitializeVisbufferResolvePass();
+      InitializeTonemapPass();
+      InitializeDLSSPass();
+    }
+
     auto& viewBuffer = _viewBuffer[frameIndex];
     auto mainView = SViewInfo();
     {
@@ -257,7 +384,7 @@ namespace Retina::Sandbox {
       const auto viewportSize = glm::vec2(_visbuffer.MainImage->GetWidth(), _visbuffer.MainImage->GetHeight());
       const auto aspectRatio = viewportSize.x / viewportSize.y;
       const auto projection = MakeInfiniteReversePerspective(fov, aspectRatio, _cameraState.Near);
-      const auto jitter = _dlss.AlwaysReset ? glm::vec2(0.0f) : Details::SampleJitter(_frameTimeline->GetHostTimelineValue());
+      const auto jitter = _dlss.AlwaysReset ? glm::vec2(0.0f) : Details::SampleJitter(_frameTimeline->GetHostTimelineValue(), _dlss.JitterSize);
       const auto jitterMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f * jitter / viewportSize, 0.0f));
       const auto view = _camera->GetViewMatrix();
       const auto projView = projection * view;
@@ -480,11 +607,8 @@ namespace Retina::Sandbox {
       .Depth = *_visbuffer.DepthImage,
       .Velocity = *_visbuffer.VelocityImage,
       .Output = *_dlss.MainImage,
-      .JitterOffset = Details::SampleJitter(_frameTimeline->GetHostTimelineValue()),
-      .MotionVectorScale = {
-        _swapchain->GetWidth(),
-        _swapchain->GetHeight(),
-      },
+      .JitterOffset = Details::SampleJitter(_frameTimeline->GetHostTimelineValue(), _dlss.JitterSize),
+      .MotionVectorScale = _dlss.RenderResolution,
     });
     commandBuffer
       .EndNamedRegion()
@@ -573,7 +697,41 @@ namespace Retina::Sandbox {
           ImGui::DragFloat("FOV", &_cameraState.Fov, 1.0f, 0.0f, 180.0f);
           ImGui::DragFloat("Movement Speed", &_cameraState.MovementSpeed, 0.1f, 0.0f, 100.0f);
           ImGui::DragFloat("View Sensitivity", &_cameraState.ViewSensitivity, 0.01f, 0.0f, 1.0f);
-          ImGui::DragFloat("Near", &_cameraState.Near, 0.1f, 0.0f, 5.0f);
+          ImGui::DragFloat("Near", &_cameraState.Near, 0.01f, 0.0f, 5.0f);
+        }
+
+        if (ImGui::CollapsingHeader("DLSS", ImGuiTreeNodeFlags_DefaultOpen)) {
+          {
+            const auto qualityPresetNames = std::to_array<const char*>({
+              "Performance",
+              "Balanced",
+              "Quality",
+              "Native",
+            });
+            auto currentPresetIndex = [&] noexcept {
+              switch (_dlss.Preset) {
+                case Graphics::ENvidiaDlssQualityPreset::E_PERFORMANCE: return 0;
+                case Graphics::ENvidiaDlssQualityPreset::E_BALANCED: return 1;
+                case Graphics::ENvidiaDlssQualityPreset::E_QUALITY: return 2;
+                case Graphics::ENvidiaDlssQualityPreset::E_NATIVE: return 3;
+              }
+            }();
+            const auto oldPresetIndex = currentPresetIndex;
+            if (ImGui::Combo("Quality Preset", &currentPresetIndex, qualityPresetNames.data(), qualityPresetNames.size())) {
+              _dlss.Preset = [&] noexcept {
+                switch (currentPresetIndex) {
+                  case 0: return Graphics::ENvidiaDlssQualityPreset::E_PERFORMANCE;
+                  case 1: return Graphics::ENvidiaDlssQualityPreset::E_BALANCED;
+                  case 2: return Graphics::ENvidiaDlssQualityPreset::E_QUALITY;
+                  case 3: return Graphics::ENvidiaDlssQualityPreset::E_NATIVE;
+                }
+              }();
+              if (oldPresetIndex != currentPresetIndex) {
+                _dlss.ShouldResize = true;
+              }
+            }
+          }
+          ImGui::Checkbox("Reset", &_dlss.AlwaysReset);
         }
 
         if (ImGui::CollapsingHeader("Tonemap", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -587,37 +745,52 @@ namespace Retina::Sandbox {
       ImGui::End();
     });
     commandBuffer
-      .BeginNamedRegion("SwapchainBlit")
       .Barrier({
         .ImageMemoryBarriers = {
           {
             .Image = *_tonemap.MainImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
-            .DestStage = Graphics::EPipelineStageFlag::E_BLIT,
+            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
             .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_READ,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
             .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
-            .NewLayout = Graphics::EImageLayout::E_TRANSFER_SRC_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
           },
           {
             .Image = _swapchain->GetCurrentImage(),
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
-            .DestStage = Graphics::EPipelineStageFlag::E_BLIT,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
-            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
             .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
-            .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
           },
         },
       })
-      .BlitImage(*_tonemap.MainImage, _swapchain->GetCurrentImage(), {})
+      .BeginRendering({
+        .Name = "SwapchainCopy",
+        .ColorAttachments = {
+          {
+            .ImageView = _swapchain->GetCurrentImage().GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          },
+        },
+      })
+      .SetViewport()
+      .SetScissor()
+      .BindPipeline(*_tonemap.CopyPipeline)
+      .BindShaderResourceTable(_device->GetShaderResourceTable())
+      .PushConstants(_tonemap.MainImage.GetHandle(), _tonemap.NearestSampler.GetHandle())
+      .Draw(3)
+      .EndRendering()
       .ImageMemoryBarrier({
         .Image = _swapchain->GetCurrentImage(),
-        .SourceStage = Graphics::EPipelineStageFlag::E_BLIT,
+        .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
         .DestStage = Graphics::EPipelineStageFlag::E_NONE,
-        .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+        .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
         .DestAccess = Graphics::EResourceAccessFlag::E_NONE,
-        .OldLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+        .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
         .NewLayout = Graphics::EImageLayout::E_PRESENT_SRC_KHR,
       })
       .EndNamedRegion()
@@ -626,10 +799,10 @@ namespace Retina::Sandbox {
     _device->GetGraphicsQueue().Submit({
       .CommandBuffers = { commandBuffer },
       .WaitSemaphores = {
-        { *_imageAvailableSemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER },
+        { *_imageAvailableSemaphores[frameIndex], Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER },
       },
       .SignalSemaphores = {
-        { *_presentReadySemaphores[frameIndex], Graphics::EPipelineStageFlag::E_TRANSFER },
+        { *_presentReadySemaphores[frameIndex], Graphics::EPipelineStageFlag::E_BOTTOM_OF_PIPE },
       },
       .Timelines = {
         *_frameTimeline,
@@ -665,8 +838,8 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_visbuffer.MainImage);
     _visbuffer.MainImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "VisbufferMainImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
       .Format = Graphics::EResourceFormat::E_R32_UINT,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
@@ -676,8 +849,8 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_visbuffer.VelocityImage);
     _visbuffer.VelocityImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "VisbufferVelocityImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
       .Format = Graphics::EResourceFormat::E_R16G16_SFLOAT,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
@@ -687,8 +860,8 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_visbuffer.DepthImage);
     _visbuffer.DepthImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "VisbufferDepthImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
       .Format = Graphics::EResourceFormat::E_D32_SFLOAT,
       .Usage =
         Graphics::EImageUsageFlag::E_DEPTH_STENCIL_ATTACHMENT |
@@ -732,8 +905,8 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_visbufferResolve.MainImage);
     _visbufferResolve.MainImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "VisbufferResolveMainImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
       .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
@@ -768,15 +941,21 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_tonemap.MainImage);
     _tonemap.MainImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "TonemapMainImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
-      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
+      .Width = static_cast<uint32>(_dlss.OutputResolution.x),
+      .Height = static_cast<uint32>(_dlss.OutputResolution.y),
+      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
-        Graphics::EImageUsageFlag::E_TRANSFER_SRC,
+        Graphics::EImageUsageFlag::E_SAMPLED,
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
     if (!_tonemap.IsInitialized) {
+      _tonemap.NearestSampler = _device->GetShaderResourceTable().MakeSampler({
+        .Name = "NearestSampler",
+        .Filter = { Graphics::EFilter::E_NEAREST },
+        .Address = { Graphics::ESamplerAddressMode::E_REPEAT },
+        .MipmapMode = Graphics::ESamplerMipmapMode::E_NEAREST,
+      });
       _tonemap.MainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
         .Name = "TonemapPipeline",
         .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
@@ -795,6 +974,31 @@ namespace Retina::Sandbox {
           }
         },
       });
+      _tonemap.CopyPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+        .Name = "TonemapCopyPipeline",
+        .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
+        .FragmentShader = Details::WithShaderPath("CopySwapchain.frag.glsl"),
+        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
+        .DescriptorLayouts = {
+          _device->GetShaderResourceTable().GetDescriptorLayout(),
+        },
+        .ColorBlendState = {
+          .Attachments = {
+            {
+              .BlendEnable = false,
+            }
+          }
+        },
+        .DynamicState = { {
+          Graphics::EDynamicState::E_VIEWPORT,
+          Graphics::EDynamicState::E_SCISSOR,
+        } },
+        .RenderingInfo = {
+          {
+            .ColorAttachmentFormats = { _swapchain->GetFormat() },
+          }
+        },
+      });
       _tonemap.IsInitialized = true;
     }
   }
@@ -802,18 +1006,19 @@ namespace Retina::Sandbox {
   auto CSandboxApplication::InitializeDLSSPass() noexcept -> void {
     RETINA_PROFILE_SCOPED();
     RETINA_SANDBOX_WARN("Initializing DLSS Feature");
-    const auto qualityPreset = Graphics::ENvidiaDlssQualityPreset::E_NATIVE;
+    _dlss.ShouldResize = false;
+    _dlss.ShouldReset = true;
     _dlssInstance->Shutdown();
     _dlssInstance->Initialize({
       .RenderResolution = {
-        _visbuffer.MainImage->GetWidth(),
-        _visbuffer.MainImage->GetHeight(),
+        static_cast<uint32>(_dlss.RenderResolution.x),
+        static_cast<uint32>(_dlss.RenderResolution.y),
       },
       .OutputResolution = {
-        _swapchain->GetWidth(),
-        _swapchain->GetHeight(),
+        static_cast<uint32>(_dlss.OutputResolution.x),
+        static_cast<uint32>(_dlss.OutputResolution.y),
       },
-      .Quality = qualityPreset,
+      .Quality = _dlss.Preset,
       .DepthScale = 1.0f,
       .IsHDR = true,
       .IsReverseDepth = true
@@ -821,8 +1026,8 @@ namespace Retina::Sandbox {
     _device->GetShaderResourceTable().Destroy(_dlss.MainImage);
     _dlss.MainImage = _device->GetShaderResourceTable().MakeImage({
       .Name = "DLSSOutputImage",
-      .Width = _swapchain->GetWidth(),
-      .Height = _swapchain->GetHeight(),
+      .Width = static_cast<uint32>(_dlss.OutputResolution.x),
+      .Height = static_cast<uint32>(_dlss.OutputResolution.y),
       .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
       .Usage =
         Graphics::EImageUsageFlag::E_TRANSFER_DST |
@@ -831,5 +1036,22 @@ namespace Retina::Sandbox {
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
     _dlss.IsInitialized = true;
+  }
+
+  auto CSandboxApplication::UpdateDLSSResolution() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    const auto scalingRatio = Graphics::GetScalingRatioFromQualityPreset(_dlss.Preset);
+    _dlss.RenderResolution = {
+      static_cast<float32>(_swapchain->GetWidth()) * scalingRatio,
+      static_cast<float32>(_swapchain->GetHeight()) * scalingRatio,
+    };
+    _dlss.OutputResolution = {
+      static_cast<float32>(_swapchain->GetWidth()),
+      static_cast<float32>(_swapchain->GetHeight()),
+    };
+    _dlss.JitterSize = [&] -> uint32 {
+      const auto ratio = _dlss.OutputResolution.y / _dlss.RenderResolution.y;
+      return static_cast<uint32>(glm::round(8.0f * ratio * ratio));
+    }();
   }
 }
