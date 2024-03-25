@@ -6,7 +6,9 @@
 
 layout (location = 0) in vec2 i_Uv;
 
-layout (location = 0) out vec4 o_Pixel;
+layout (location = 0) precise out vec4 o_Albedo;
+layout (location = 1) precise out vec2 o_Normal;
+layout (location = 2) precise out uint o_ShaderMaterialId;
 
 RetinaDeclarePushConstant() {
   uint u_VisbufferMainId;
@@ -82,7 +84,7 @@ struct SGradientVec3 {
   vec3 ddy;
 };
 
-precise SPartialDerivatives CalculatePartialDerivatives(in vec4 clip0, in vec4 clip1, in vec4 clip2, in vec2 p) {
+SPartialDerivatives CalculatePartialDerivatives(in vec4 clip0, in vec4 clip1, in vec4 clip2, in vec2 p) {
   const vec2 screenSize = vec2(textureSize(g_VisbufferMain, 0));
   const vec3 invW = 1.0 / vec3(clip0.w, clip1.w, clip2.w);
   const vec2 ndc0 = clip0.xy * invW.x;
@@ -107,9 +109,9 @@ precise SPartialDerivatives CalculatePartialDerivatives(in vec4 clip0, in vec4 c
   );
 
   ddx *= 2.0 / screenSize.x;
-  ddy *= 2.0 / screenSize.y;
+  ddy *= -2.0 / screenSize.y;
   ddxSum *= 2.0 / screenSize.x;
-  ddySum *= 2.0 / screenSize.y;
+  ddySum *= -2.0 / screenSize.y;
 
   const float ddxInterpW = 1.0 / (interpInvW + ddxSum);
   const float ddyInterpW = 1.0 / (interpInvW + ddySum);
@@ -199,10 +201,20 @@ vec3 SampleNormal(in SGradientVec2 uv, in uint normalTexture) {
   return vec3(sampledNormal, z);
 }
 
+vec2 EncodeNormalOctahedral(in vec3 normal) {
+  const vec2 wrapped = RetinaOctahedralWrap(normal.xy);
+  normal /= abs(normal.x) + abs(normal.y) + abs(normal.z);
+  normal.xy = normal.z >= 0.0 ? normal.xy : wrapped;
+  return normal.xy * 0.5 + 0.5;
+}
+
 void main() {
   const uint payload = texelFetch(g_VisbufferMain, ivec2(gl_FragCoord.xy), 0).r;
+  const uint shaderId = 0; // TODO: implement
   if (payload == -1u) {
-    o_Pixel = vec4(0.0, 0.0, 0.0, 1.0);
+    o_Albedo = vec4(0.0, 0.0, 0.0, 1.0);
+    o_Normal = vec2(0.0);
+    o_ShaderMaterialId = -1;
     return;
   }
   const uint meshletInstanceIndex = payload >> MESHLET_VISBUFFER_PRIMITIVE_ID_BITS;
@@ -245,22 +257,26 @@ void main() {
   const vec3 bitangent = cross(normal, tangent.xyz) * tangent.w;
 
   const mat3 normalTransform = transpose(inverse(mat3(transform)));
-  vec3 color = vec3(0.0);
+  vec3 albedo = vec3(0.0);
+  vec2 encodedNormal = vec2(0.0);
   if (meshletInstance.MaterialIndex != uint(-1)) {
     const SMaterial material = g_MaterialBuffer.Data[meshletInstance.MaterialIndex];
     const vec3 baseColorFactor = material.BaseColorFactor;
-    const vec3 baseColor = SampleBaseColor(uv, material.BaseColorTexture);
-    const vec3 baseNormal = SampleNormal(uv, material.NormalTexture);
+    const vec3 sampledBaseColor = SampleBaseColor(uv, material.BaseColorTexture);
+    const vec3 sampledBaseNormal = SampleNormal(uv, material.NormalTexture);
     const mat3 TBN = mat3(
       normalize(normalTransform * tangent.xyz),
       normalize(normalTransform * bitangent),
       normalize(normalTransform * normal)
     );
-    const vec3 actualNormal = material.NormalTexture == uint(-1)
+    const vec3 worldNormal = material.NormalTexture == uint(-1)
       ? TBN[2]
-      : normalize(TBN * (baseNormal * 2.0 - 1.0));
-    color = baseColorFactor * baseColor;
+      : normalize(TBN * (sampledBaseNormal * 2.0 - 1.0));
+    albedo = baseColorFactor * sampledBaseColor;
+    encodedNormal = EncodeNormalOctahedral(worldNormal);
   }
 
-  o_Pixel = vec4(color, 1.0);
+  o_Albedo = vec4(albedo, 1.0);
+  o_Normal = encodedNormal;
+  o_ShaderMaterialId = shaderId << 16 | meshletInstance.MaterialIndex;
 }

@@ -129,7 +129,7 @@ namespace Retina::Graphics {
       auto compiler = shaderc::Compiler();
       auto compilerOptions = shaderc::CompileOptions();
       compilerOptions.SetGenerateDebugInfo();
-      compilerOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+      compilerOptions.SetOptimizationLevel(shaderc_optimization_level_zero);
       compilerOptions.SetIncluder(std::make_unique<Details::CShaderIncludeResolver>(includeDirectoriesWithRoot));
       compilerOptions.SetSourceLanguage(shaderc_source_language_glsl);
       compilerOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);

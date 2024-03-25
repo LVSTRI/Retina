@@ -244,7 +244,6 @@ namespace Retina::Sandbox {
         .Width = textureHandle->baseWidth,
         .Height = textureHandle->baseHeight,
         .Levels = textureHandle->numLevels,
-        .IsCrossDomain = true,
         .Usage =
           Graphics::EImageUsageFlag::E_SAMPLED |
           Graphics::EImageUsageFlag::E_TRANSFER_DST,
@@ -253,7 +252,7 @@ namespace Retina::Sandbox {
           Graphics::EResourceFormat::E_BC7_SRGB_BLOCK,
         .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
       });
-      device.GetTransferQueue().Submit([&](Graphics::CCommandBuffer& commands) noexcept {
+      device.GetGraphicsQueue().Submit([&](Graphics::CCommandBuffer& commands) noexcept {
         commands
           .ImageMemoryBarrier({
             .Image = *image,
@@ -355,6 +354,21 @@ namespace Retina::Sandbox {
 
     _dlssInstance = Graphics::CNvidiaDlssFeature::Make(*_device);
 
+    _pointSampler = _device->GetShaderResourceTable().MakeSampler({
+      .Name = "PointSampler",
+      .Filter = { Graphics::EFilter::E_NEAREST },
+      .Address = { Graphics::ESamplerAddressMode::E_CLAMP_TO_BORDER },
+      .MipmapMode = Graphics::ESamplerMipmapMode::E_NEAREST,
+      .BorderColor = Graphics::EBorderColor::E_FLOAT_OPAQUE_BLACK,
+    });
+    _pointSamplerInt = _device->GetShaderResourceTable().MakeSampler({
+      .Name = "PointSamplerInt",
+      .Filter = { Graphics::EFilter::E_NEAREST },
+      .Address = { Graphics::ESamplerAddressMode::E_CLAMP_TO_BORDER },
+      .MipmapMode = Graphics::ESamplerMipmapMode::E_NEAREST,
+      .BorderColor = Graphics::EBorderColor::E_INT_OPAQUE_BLACK,
+    });
+
     _model = std::move(
       CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/Bistro.gltf"))
         .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
@@ -374,6 +388,7 @@ namespace Retina::Sandbox {
     InitializeGUI();
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
+    InitializeGBufferPass();
     InitializeTonemapPass();
     InitializeDLSSPass();
 
@@ -412,15 +427,6 @@ namespace Retina::Sandbox {
 
       _materialBuffer = Details::UploadBufferAsResource(*_device, std::span<const SMaterial>(materials), "MaterialBuffer");
     }
-    _linearSampler = _device->GetShaderResourceTable().MakeSampler({
-      .Name = "LinearSampler",
-      .Filter = { Graphics::EFilter::E_LINEAR },
-      .Address = { Graphics::ESamplerAddressMode::E_REPEAT },
-      .MipmapMode = Graphics::ESamplerMipmapMode::E_LINEAR,
-      .AnisotropyEnable = true,
-      .Anisotropy = 16.0f,
-      .LodBias = -1.0f,
-    });
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
@@ -457,6 +463,7 @@ namespace Retina::Sandbox {
 
     InitializeVisbufferPass();
     InitializeVisbufferResolvePass();
+    InitializeGBufferPass();
     InitializeTonemapPass();
     InitializeDLSSPass();
 
@@ -492,6 +499,7 @@ namespace Retina::Sandbox {
       UpdateDLSSResolution();
       InitializeVisbufferPass();
       InitializeVisbufferResolvePass();
+      InitializeGBufferPass();
       InitializeTonemapPass();
       InitializeDLSSPass();
     }
@@ -649,7 +657,25 @@ namespace Retina::Sandbox {
             .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
           },
           {
-            .Image = *_visbufferResolve.MainImage,
+            .Image = *_visbufferResolve.AlbedoImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          },
+          {
+            .Image = *_visbufferResolve.NormalImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          },
+          {
+            .Image = *_visbufferResolve.ShaderMaterialIdImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
             .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
@@ -663,10 +689,20 @@ namespace Retina::Sandbox {
         .Name = "VisbufferResolve",
         .ColorAttachments = {
           {
-            .ImageView = _visbufferResolve.MainImage->GetView(),
+            .ImageView = _visbufferResolve.AlbedoImage->GetView(),
             .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
             .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
-          }
+          },
+          {
+            .ImageView = _visbufferResolve.NormalImage->GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          },
+          {
+            .ImageView = _visbufferResolve.ShaderMaterialIdImage->GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_DONT_CARE,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+          },
         },
       })
       .SetViewport()
@@ -691,7 +727,25 @@ namespace Retina::Sandbox {
       .Barrier({
         .ImageMemoryBarriers = {
           {
-            .Image = *_visbufferResolve.MainImage,
+            .Image = *_visbufferResolve.AlbedoImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
+            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+          },
+          {
+            .Image = *_visbufferResolve.NormalImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_SAMPLED_READ,
+            .OldLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+          },
+          {
+            .Image = *_visbufferResolve.ShaderMaterialIdImage,
             .SourceStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
             .DestStage = Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER,
             .SourceAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
@@ -722,11 +776,41 @@ namespace Retina::Sandbox {
             .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
             .NewLayout = Graphics::EImageLayout::E_GENERAL,
           },
+          {
+            .Image = *_gbufferPass.MainImage,
+            .SourceStage = Graphics::EPipelineStageFlag::E_NONE,
+            .DestStage = Graphics::EPipelineStageFlag::E_COLOR_ATTACHMENT_OUTPUT,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_COLOR_ATTACHMENT_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+          }
         },
       })
-      .BeginNamedRegion("DLSSPass");
+      .BeginRendering({
+        .Name = "GBufferResolvePass",
+        .ColorAttachments = {
+          {
+            .ImageView = _gbufferPass.MainImage->GetView(),
+            .LoadOperator = Graphics::EAttachmentLoadOperator::E_CLEAR,
+            .StoreOperator = Graphics::EAttachmentStoreOperator::E_STORE,
+            .ClearValue = Graphics::MakeColorClearValue(0.0f),
+          },
+        },
+      })
+      .BindPipeline(*_gbufferPass.MainPipeline)
+      .BindShaderResourceTable(_device->GetShaderResourceTable())
+      .PushConstants(
+        _visbufferResolve.AlbedoImage.GetHandle(),
+        _visbufferResolve.NormalImage.GetHandle(),
+        _visbufferResolve.ShaderMaterialIdImage.GetHandle(),
+        _pointSampler.GetHandle(),
+        _pointSamplerInt.GetHandle()
+      )
+      .Draw(3)
+      .EndRendering();
     _dlssInstance->Evaluate(commandBuffer, {
-      .Color = *_visbufferResolve.MainImage,
+      .Color = *_gbufferPass.MainImage,
       .Depth = *_visbuffer.DepthImage,
       .Velocity = *_visbuffer.VelocityImage,
       .Output = *_dlss.MainImage,
@@ -734,7 +818,6 @@ namespace Retina::Sandbox {
       .MotionVectorScale = _dlss.RenderResolution,
     });
     commandBuffer
-      .EndNamedRegion()
       .ImageMemoryBarrier({
         .Image = *_dlss.MainImage,
         .SourceStage =
@@ -878,7 +961,24 @@ namespace Retina::Sandbox {
       }
       ImGui::End();
 
-      if (ImGui::Begin("Texture Viewer")) {}
+      if (ImGui::Begin("Texture Viewer")) {
+        if (ImGui::CollapsingHeader("GBuffer", ImGuiTreeNodeFlags_DefaultOpen)) {
+          {
+            ImGui::SeparatorText("Albedo");
+            const auto image = _visbufferResolve.AlbedoImage;
+            const auto width = ImGui::GetContentRegionAvail().x;
+            const auto height = width / image->GetAspectRatio();
+            ImGui::Image(GUI::AsTextureHandle(image), { width, height });
+          }
+          {
+            ImGui::SeparatorText("Normal");
+            const auto image = _visbufferResolve.NormalImage;
+            const auto width = ImGui::GetContentRegionAvail().x;
+            const auto height = width / image->GetAspectRatio();
+            ImGui::Image(GUI::AsTextureHandle(image), { width, height });
+          }
+        }
+      }
       ImGui::End();
     });
     commandBuffer
@@ -918,7 +1018,7 @@ namespace Retina::Sandbox {
       .SetScissor()
       .BindPipeline(*_tonemap.CopyPipeline)
       .BindShaderResourceTable(_device->GetShaderResourceTable())
-      .PushConstants(_tonemap.MainImage.GetHandle(), _tonemap.NearestSampler.GetHandle())
+      .PushConstants(_tonemap.MainImage.GetHandle(), _pointSampler.GetHandle())
       .Draw(3)
       .EndRendering()
       .ImageMemoryBarrier({
@@ -1039,12 +1139,34 @@ namespace Retina::Sandbox {
 
   auto CSandboxApplication::InitializeVisbufferResolvePass() noexcept -> void {
     RETINA_PROFILE_SCOPED();
-    _device->GetShaderResourceTable().Destroy(_visbufferResolve.MainImage);
-    _visbufferResolve.MainImage = _device->GetShaderResourceTable().MakeImage({
-      .Name = "VisbufferResolveMainImage",
+    _device->GetShaderResourceTable().Destroy(_visbufferResolve.AlbedoImage);
+    _visbufferResolve.AlbedoImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferResolveAlbedoImage",
       .Width = static_cast<uint32>(_dlss.RenderResolution.x),
       .Height = static_cast<uint32>(_dlss.RenderResolution.y),
-      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
+      .Format = Graphics::EResourceFormat::E_R8G8B8A8_UNORM,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    _device->GetShaderResourceTable().Destroy(_visbufferResolve.NormalImage);
+    _visbufferResolve.NormalImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferResolveNormalImage",
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
+      .Format = Graphics::EResourceFormat::E_R16G16_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    _device->GetShaderResourceTable().Destroy(_visbufferResolve.ShaderMaterialIdImage);
+    _visbufferResolve.ShaderMaterialIdImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "VisbufferResolveShaderMaterialIdImage",
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
+      .Format = Graphics::EResourceFormat::E_R32_UINT,
       .Usage =
         Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
         Graphics::EImageUsageFlag::E_SAMPLED,
@@ -1065,11 +1187,51 @@ namespace Retina::Sandbox {
         } },
         .RenderingInfo = {
           {
-            .ColorAttachmentFormats = { _visbufferResolve.MainImage->GetFormat() },
+            .ColorAttachmentFormats = {
+              _visbufferResolve.AlbedoImage->GetFormat(),
+              _visbufferResolve.NormalImage->GetFormat(),
+              _visbufferResolve.ShaderMaterialIdImage->GetFormat(),
+            },
           }
         },
       });
       _visbufferResolve.IsInitialized = true;
+    }
+  }
+  
+  auto CSandboxApplication::InitializeGBufferPass() noexcept -> void {
+    RETINA_PROFILE_SCOPED();
+    _device->GetShaderResourceTable().Destroy(_gbufferPass.MainImage);
+    _gbufferPass.MainImage = _device->GetShaderResourceTable().MakeImage({
+      .Name = "GBufferResolveMainImage",
+      .Width = static_cast<uint32>(_dlss.RenderResolution.x),
+      .Height = static_cast<uint32>(_dlss.RenderResolution.y),
+      .Format = Graphics::EResourceFormat::E_R16G16B16A16_SFLOAT,
+      .Usage =
+        Graphics::EImageUsageFlag::E_COLOR_ATTACHMENT |
+        Graphics::EImageUsageFlag::E_SAMPLED,
+      .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+    });
+    if (!_gbufferPass.IsInitialized) {
+      _gbufferPass.MainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
+        .Name = "GBufferResolvePipeline",
+        .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
+        .FragmentShader = Details::WithShaderPath("GBufferResolve.frag.glsl"),
+        .IncludeDirectories = { RETINA_SHADER_DIRECTORY },
+        .DescriptorLayouts = {
+          _device->GetShaderResourceTable().GetDescriptorLayout(),
+        },
+        .DynamicState = { {
+          Graphics::EDynamicState::E_VIEWPORT,
+          Graphics::EDynamicState::E_SCISSOR,
+        } },
+        .RenderingInfo = {
+          {
+            .ColorAttachmentFormats = { _gbufferPass.MainImage->GetFormat() },
+          }
+        },
+      });
+      _gbufferPass.IsInitialized = true;
     }
   }
 
@@ -1087,12 +1249,6 @@ namespace Retina::Sandbox {
       .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
     });
     if (!_tonemap.IsInitialized) {
-      _tonemap.NearestSampler = _device->GetShaderResourceTable().MakeSampler({
-        .Name = "NearestSampler",
-        .Filter = { Graphics::EFilter::E_NEAREST },
-        .Address = { Graphics::ESamplerAddressMode::E_REPEAT },
-        .MipmapMode = Graphics::ESamplerMipmapMode::E_NEAREST,
-      });
       _tonemap.MainPipeline = Graphics::CGraphicsPipeline::Make(*_device, {
         .Name = "TonemapPipeline",
         .VertexShader = Details::WithShaderPath("Fullscreen.vert.glsl"),
@@ -1190,5 +1346,21 @@ namespace Retina::Sandbox {
       const auto ratio = _dlss.OutputResolution.y / _dlss.RenderResolution.y;
       return static_cast<uint32>(glm::round(8.0f * ratio * ratio));
     }();
+
+    const auto lodBias = [&] -> float32 {
+      const auto ratio = _dlss.RenderResolution.y / _dlss.OutputResolution.y;
+      return glm::log2(ratio) - 1.0f;
+    }();
+
+    _device->GetShaderResourceTable().Destroy(_linearSampler);
+    _linearSampler = _device->GetShaderResourceTable().MakeSampler({
+      .Name = "LinearSampler",
+      .Filter = { Graphics::EFilter::E_LINEAR },
+      .Address = { Graphics::ESamplerAddressMode::E_REPEAT },
+      .MipmapMode = Graphics::ESamplerMipmapMode::E_LINEAR,
+      .AnisotropyEnable = true,
+      .Anisotropy = 16.0f,
+      .LodBias = lodBias,
+    });
   }
 }

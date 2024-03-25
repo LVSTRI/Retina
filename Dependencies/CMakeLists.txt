@@ -317,9 +317,7 @@ else ()
   set(KTX_LIBRARY_DYNAMIC_NAME libktx_read.so)
 endif ()
 
-message(STATUS "Copying KTX library to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}")
-add_custom_command(
-  OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}"
+add_custom_target(ktx_read_copy
   COMMAND ${CMAKE_COMMAND} -E copy
     "${RETINA_ROOT_BINARY_DIRECTORY}/${CMAKE_BUILD_TYPE}/${KTX_LIBRARY_DYNAMIC_NAME}"
     "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}"
@@ -367,6 +365,7 @@ target_link_libraries(Retina.Sandbox.Dependencies INTERFACE
   meshoptimizer
   ktx_read
 )
+add_dependencies(Retina.Sandbox.Dependencies ktx_read_copy)
 
 add_library(Retina.WSI.Dependencies INTERFACE)
 

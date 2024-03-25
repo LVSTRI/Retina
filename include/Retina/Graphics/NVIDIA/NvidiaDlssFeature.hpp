@@ -54,8 +54,8 @@ namespace Retina::Graphics {
     auto Evaluate(CCommandBuffer& commands, const SNvidiaDlssEvaluateInfo& evaluateInfo) noexcept -> void;
 
   private:
-    NVSDK_NGX_Parameter* _parameters = nullptr;
-    NVSDK_NGX_Handle* _handle = nullptr;
+    NVSDK_NGX_Parameter* _parameters;
+    NVSDK_NGX_Handle* _handle;
 
     Core::CArcPtr<const CDevice> _device;
   };

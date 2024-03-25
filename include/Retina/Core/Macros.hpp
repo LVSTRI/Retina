@@ -112,8 +112,8 @@
   #define RETINA_ASSERT_WITH(expression, message) assert((expression) && (message))
   #define RETINA_DEBUG_BREAK() debug_break()
 #else
-  #define RETINA_ASSERT(expression) (void)(expression)
-  #define RETINA_ASSERT_WITH(expression, message) ((void)(expression), (void)(message))
+  #define RETINA_ASSERT(expression) RETINA_UNUSED(expression)
+  #define RETINA_ASSERT_WITH(expression, message) RETINA_UNUSED(expression, message)
   #define RETINA_DEBUG_BREAK()
 #endif
 

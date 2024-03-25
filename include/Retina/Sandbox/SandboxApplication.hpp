@@ -60,6 +60,7 @@ namespace Retina::Sandbox {
     auto InitializeTonemapPass() noexcept -> void;
     auto InitializeVisbufferPass() noexcept -> void;
     auto InitializeVisbufferResolvePass() noexcept -> void;
+    auto InitializeGBufferPass() noexcept -> void;
     auto InitializeDLSSPass() noexcept -> void;
 
     auto UpdateDLSSResolution() noexcept -> void;
@@ -98,6 +99,8 @@ namespace Retina::Sandbox {
 
     std::vector<Graphics::CShaderResource<Graphics::CImage>> _textures;
     Graphics::CShaderResource<Graphics::CSampler> _linearSampler;
+    Graphics::CShaderResource<Graphics::CSampler> _pointSampler;
+    Graphics::CShaderResource<Graphics::CSampler> _pointSamplerInt;
 
     Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
     Core::CUniquePtr<Graphics::CNvidiaDlssFeature> _dlssInstance;
@@ -120,9 +123,18 @@ namespace Retina::Sandbox {
     struct {
       bool IsInitialized = false;
 
-      Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Graphics::CShaderResource<Graphics::CImage> AlbedoImage;
+      Graphics::CShaderResource<Graphics::CImage> NormalImage;
+      Graphics::CShaderResource<Graphics::CImage> ShaderMaterialIdImage;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
     } _visbufferResolve;
+
+    struct {
+      bool IsInitialized = false;
+
+      Graphics::CShaderResource<Graphics::CImage> MainImage;
+      Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
+    } _gbufferPass;
 
     struct {
       bool IsInitialized = false;
@@ -148,7 +160,6 @@ namespace Retina::Sandbox {
       bool IsPassthrough = false;
 
       Graphics::CShaderResource<Graphics::CImage> MainImage;
-      Graphics::CShaderResource<Graphics::CSampler> NearestSampler;
       Core::CArcPtr<Graphics::CGraphicsPipeline> MainPipeline;
       Core::CArcPtr<Graphics::CGraphicsPipeline> CopyPipeline;
     } _tonemap;

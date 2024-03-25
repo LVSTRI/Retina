@@ -99,4 +99,11 @@ precise vec3 RetinaUnprojectWorldPosition(in vec2 uv, in float depth, in mat4 in
   return worldPosition.xyz / worldPosition.w;
 }
 
+precise vec2 RetinaOctahedralWrap(in vec2 v) {
+  vec2 oneMinusAbs = 1.0 - abs(v.yx);
+  oneMinusAbs.x = oneMinusAbs.x * (v.x >= 0.0 ? 1.0 : -1.0);
+  oneMinusAbs.y = oneMinusAbs.y * (v.y >= 0.0 ? 1.0 : -1.0);
+  return oneMinusAbs;
+}
+
 #endif
