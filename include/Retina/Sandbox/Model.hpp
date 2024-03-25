@@ -23,6 +23,7 @@ namespace Retina::Sandbox {
       std::span<const uint16>,
       std::span<const uint32>
     > Indices;
+    uint32 MaterialIndex = -1;
   };
 
   struct SMesh {
@@ -32,6 +33,17 @@ namespace Retina::Sandbox {
   struct SNode {
     uint32 Mesh = 0;
     glm::mat4 Transform = {};
+  };
+
+  struct STexture {
+    std::span<const uint8> Data;
+    bool IsNormal = false;
+  };
+
+  struct SMaterial {
+    glm::vec3 BaseColorFactor = {};
+    uint32 BaseColorTexture = -1;
+    uint32 NormalTexture = -1;
   };
 
   class CModel {
@@ -53,6 +65,8 @@ namespace Retina::Sandbox {
     RETINA_NODISCARD auto GetMeshes() const noexcept -> std::span<const SMesh>;
     RETINA_NODISCARD auto GetPrimitives() const noexcept -> std::span<const SPrimitive>;
     RETINA_NODISCARD auto GetNodes() const noexcept -> std::span<const SNode>;
+    RETINA_NODISCARD auto GetTextures() const noexcept -> std::span<const STexture>;
+    RETINA_NODISCARD auto GetMaterials() const noexcept -> std::span<const SMaterial>;
 
   private:
     cgltf_data* _data = nullptr;
@@ -61,5 +75,7 @@ namespace Retina::Sandbox {
     std::vector<SMesh> _meshes;
     std::vector<SPrimitive> _primitives;
     std::vector<SNode> _nodes;
+    std::vector<STexture> _textures;
+    std::vector<SMaterial> _materials;
   };
 }

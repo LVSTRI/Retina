@@ -17,6 +17,8 @@ RetinaDeclarePushConstant() {
   uint u_PositionBufferId;
   uint u_IndexBufferId;
   uint u_PrimitiveBufferId;
+  uint u_MaterialBufferId;
+  uint u_LinearSamplerId;
   uint u_ViewBufferId;
 };
 
@@ -41,6 +43,9 @@ RetinaDeclareQualifiedBuffer(restrict readonly, SIndexBuffer) {
 RetinaDeclareQualifiedBuffer(restrict readonly, SPrimitiveBuffer) {
   uint8_t[] Data;
 };
+RetinaDeclareQualifiedBuffer(restrict readonly, SMaterialBuffer) {
+  SMaterial[] Data;
+};
 RetinaDeclareQualifiedBuffer(restrict readonly, SViewInfoBuffer) {
   SViewInfo[] Data;
 };
@@ -52,9 +57,12 @@ RetinaDeclareBufferPointer(SVertexBuffer, g_VertexBuffer, u_VertexBufferId);
 RetinaDeclareBufferPointer(SPositionBuffer, g_PositionBuffer, u_PositionBufferId);
 RetinaDeclareBufferPointer(SIndexBuffer, g_IndexBuffer, u_IndexBufferId);
 RetinaDeclareBufferPointer(SPrimitiveBuffer, g_PrimitiveBuffer, u_PrimitiveBufferId);
+RetinaDeclareBufferPointer(SMaterialBuffer, g_MaterialBuffer, u_MaterialBufferId);
 RetinaDeclareBufferPointer(SViewInfoBuffer, g_ViewInfoBuffer, u_ViewBufferId);
 
 #define g_VisbufferMain RetinaGetSampledImage(Texture2DU, u_VisbufferMainId)
+
+#define g_LinearSampler RetinaGetSampler(u_LinearSamplerId)
 
 struct SPartialDerivatives {
   vec3 lambda;
@@ -155,6 +163,42 @@ SGradientVec3 MakeGradient(in SPartialDerivatives derivatives, in vec3[3] values
   );
 }
 
+vec3 SampleBaseColor(in SGradientVec2 uv, in uint baseColorTexture) {
+  if (baseColorTexture == uint(-1)) {
+    return vec3(1.0);
+  }
+  return textureGrad(
+    RetinaNonUniform(
+      sampler2D(
+        RetinaGetSampledImage(Texture2D, baseColorTexture),
+        g_LinearSampler
+      )
+    ),
+    uv.lambda,
+    uv.ddx,
+    uv.ddy
+  ).rgb;
+}
+
+vec3 SampleNormal(in SGradientVec2 uv, in uint normalTexture) {
+  if (normalTexture == uint(-1)) {
+    return vec3(0.0, 0.0, 0.0);
+  }
+  const vec2 sampledNormal = textureGrad(
+    RetinaNonUniform(
+      sampler2D(
+        RetinaGetSampledImage(Texture2D, normalTexture),
+        g_LinearSampler
+      )
+    ),
+    uv.lambda,
+    uv.ddx,
+    uv.ddy
+  ).rg;
+  const float z = sqrt(max(1.0 - dot(sampledNormal, sampledNormal), 0.0));
+  return vec3(sampledNormal, z);
+}
+
 void main() {
   const uint payload = texelFetch(g_VisbufferMain, ivec2(gl_FragCoord.xy), 0).r;
   if (payload == -1u) {
@@ -198,7 +242,25 @@ void main() {
     vertexData[1].Tangent,
     vertexData[2].Tangent
   ));
+  const vec3 bitangent = cross(normal, tangent.xyz) * tangent.w;
 
-  const vec3 color = RetinaHsvToRgb(fract(float(meshletInstanceIndex) * M_GOLDEN_CONJUGATE), 0.75, 0.75);
-  o_Pixel = vec4(normal * 0.5 + 0.5, 1.0);
+  const mat3 normalTransform = transpose(inverse(mat3(transform)));
+  vec3 color = vec3(0.0);
+  if (meshletInstance.MaterialIndex != uint(-1)) {
+    const SMaterial material = g_MaterialBuffer.Data[meshletInstance.MaterialIndex];
+    const vec3 baseColorFactor = material.BaseColorFactor;
+    const vec3 baseColor = SampleBaseColor(uv, material.BaseColorTexture);
+    const vec3 baseNormal = SampleNormal(uv, material.NormalTexture);
+    const mat3 TBN = mat3(
+      normalize(normalTransform * tangent.xyz),
+      normalize(normalTransform * bitangent),
+      normalize(normalTransform * normal)
+    );
+    const vec3 actualNormal = material.NormalTexture == uint(-1)
+      ? TBN[2]
+      : normalize(TBN * (baseNormal * 2.0 - 1.0));
+    color = baseColorFactor * baseColor;
+  }
+
+  o_Pixel = vec4(color, 1.0);
 }

@@ -69,7 +69,7 @@ namespace Retina::Sandbox {
 
     CFrameTimer _timer = {};
 
-    std::optional<CMeshletModel> _model = {};
+    CMeshletModel _model = {};
 
     Core::CUniquePtr<CCamera> _camera;
 
@@ -89,11 +89,15 @@ namespace Retina::Sandbox {
 
     Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshlet>> _meshletBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshletInstance>> _meshletInstanceBuffer;
+    Graphics::CShaderResource<Graphics::CTypedBuffer<SMaterial>> _materialBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<glm::mat4>> _transformBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<glm::vec3>> _positionBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<SMeshletVertex>> _vertexBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint32>> _indexBuffer;
     Graphics::CShaderResource<Graphics::CTypedBuffer<uint8>> _primitiveBuffer;
+
+    std::vector<Graphics::CShaderResource<Graphics::CImage>> _textures;
+    Graphics::CShaderResource<Graphics::CSampler> _linearSampler;
 
     Core::CUniquePtr<GUI::CImGuiContext> _imGuiContext;
     Core::CUniquePtr<Graphics::CNvidiaDlssFeature> _dlssInstance;

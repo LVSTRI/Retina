@@ -18,6 +18,7 @@ namespace Retina::Sandbox {
   struct SMeshletInstance {
     uint32 MeshletIndex = 0;
     uint32 TransformIndex = 0;
+    uint32 MaterialIndex = 0;
   };
 
   struct SMeshletVertex {
@@ -42,6 +43,8 @@ namespace Retina::Sandbox {
     RETINA_NODISCARD auto GetVertices() const noexcept -> std::span<const SMeshletVertex>;
     RETINA_NODISCARD auto GetIndices() const noexcept -> std::span<const uint32>;
     RETINA_NODISCARD auto GetPrimitives() const noexcept -> std::span<const uint8>;
+    RETINA_NODISCARD auto GetTextures() const noexcept -> std::span<const STexture>;
+    RETINA_NODISCARD auto GetMaterials() const noexcept -> std::span<const SMaterial>;
 
   private:
     std::vector<SMeshlet> _meshlets;
@@ -51,5 +54,7 @@ namespace Retina::Sandbox {
     std::vector<SMeshletVertex> _vertices;
     std::vector<uint32> _indices;
     std::vector<uint8> _primitives;
+
+    CModel _model = {};
   };
 }

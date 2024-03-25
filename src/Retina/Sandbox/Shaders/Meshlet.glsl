@@ -22,6 +22,13 @@ struct SMeshlet {
 struct SMeshletInstance {
   uint MeshletIndex;
   uint TransformIndex;
+  uint MaterialIndex;
+};
+
+struct SMaterial {
+  vec3 BaseColorFactor;
+  uint BaseColorTexture;
+  uint NormalTexture;
 };
 
 struct SMeshletVertex {

@@ -183,6 +183,15 @@ if (NOT cgltf_POPULATED)
   target_compile_options(cgltf PRIVATE -w)
 endif ()
 
+# basisu
+FetchContent_Declare(
+  basisu
+  GIT_REPOSITORY https://github.com/BinomialLLC/basis_universal
+  GIT_TAG 900e40fb5d2502927360fe2f31762bdbb624455f
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+)
+
 # meshoptimizer
 FetchContent_Declare(
   meshoptimizer
@@ -191,8 +200,11 @@ FetchContent_Declare(
   GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
+set(MESHOPT_BASISU_PATH ${basisu_SOURCE_DIR} CACHE PATH "" FORCE)
 set(MESHOPT_BUILD_GLTFPACK ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(meshoptimizer)
+target_compile_options(meshoptimizer PRIVATE -w)
+target_compile_options(gltfpack PRIVATE -w)
 
 # imgui
 FetchContent_Declare(
@@ -273,6 +285,47 @@ if (NOT nvdia_dlss_POPULATED)
   target_include_directories(nvdia_dlss INTERFACE ${nvdia_dlss_SOURCE_DIR}/include)
 endif ()
 
+# KTX changes global variables CMAKE_ARCHIVE_OUTPUT_DIRECTORY, CMAKE_LIBRARY_OUTPUT_DIRECTORY and
+# CMAKE_RUNTIME_OUTPUT_DIRECTORY, save them and restore later
+set(RETINA_TEMPORARY_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(RETINA_TEMPORARY_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set(RETINA_TEMPORARY_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+# KTX
+FetchContent_Declare(
+  ktx
+  GIT_REPOSITORY https://github.com/KhronosGroup/KTX-Software
+  GIT_TAG v4.3.2
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+)
+set(KTX_FEATURE_TESTS OFF CACHE BOOL "" FORCE)
+set(KTX_FEATURE_KTX1 ON CACHE BOOL "" FORCE)
+set(KTX_FEATURE_KTX2 ON CACHE BOOL "" FORCE)
+set(KTX_FEATURE_VK_UPLOAD OFF CACHE BOOL "" FORCE)
+set(KTX_FEATURE_GL_UPLOAD OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(ktx)
+
+# Restore global variables
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${RETINA_TEMPORARY_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${RETINA_TEMPORARY_LIBRARY_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${RETINA_TEMPORARY_RUNTIME_OUTPUT_DIRECTORY})
+
+if (WIN32)
+  set(KTX_LIBRARY_DYNAMIC_NAME ktx_read.dll)
+else ()
+  set(KTX_LIBRARY_DYNAMIC_NAME libktx_read.so)
+endif ()
+
+message(STATUS "Copying KTX library to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}")
+add_custom_command(
+  OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}"
+  COMMAND ${CMAKE_COMMAND} -E copy
+    "${RETINA_ROOT_BINARY_DIRECTORY}/${CMAKE_BUILD_TYPE}/${KTX_LIBRARY_DYNAMIC_NAME}"
+    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${KTX_LIBRARY_DYNAMIC_NAME}"
+  DEPENDS ktx_read
+)
+
 add_library(Retina.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Dependencies INTERFACE
@@ -310,8 +363,9 @@ target_link_libraries(Retina.GUI.Dependencies INTERFACE
 add_library(Retina.Sandbox.Dependencies INTERFACE)
 
 target_link_libraries(Retina.Sandbox.Dependencies INTERFACE
-  meshoptimizer
   cgltf
+  meshoptimizer
+  ktx_read
 )
 
 add_library(Retina.WSI.Dependencies INTERFACE)

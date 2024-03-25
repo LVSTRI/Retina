@@ -175,9 +175,10 @@ namespace Retina::Sandbox {
     auto modelIndices = std::vector<uint32>();
     auto modelPrimitives = std::vector<uint8>();
 
+    const auto modelMeshPrimitives = model.GetPrimitives();
     auto meshletPrimitiveMapping = std::vector<std::pair<uint32, uint32>>();
-    meshletPrimitiveMapping.reserve(model.GetPrimitives().size());
-    for (const auto primitive : model.GetPrimitives()) {
+    meshletPrimitiveMapping.reserve(modelMeshPrimitives.size());
+    for (const auto primitive : modelMeshPrimitives) {
       const auto indices = std::visit(
         [](const auto& indices) -> std::vector<uint32> {
           auto result = std::vector<uint32>(indices.size());
@@ -305,10 +306,12 @@ namespace Retina::Sandbox {
       const auto meshes = model.GetMeshes();
       for (const auto& [meshIndex, transform] : model.GetNodes()) {
         const auto& mesh = meshes[meshIndex];
+        const auto transformIndex = static_cast<uint32>(modelTransforms.size());
         for (const auto& primitiveIndex : mesh.Primitives) {
+          const auto& meshPrimitive = modelMeshPrimitives[primitiveIndex];
           const auto [begin, end] = meshletPrimitiveMapping[primitiveIndex];
           for (auto i = begin; i < end; ++i) {
-            modelMeshletInstances.emplace_back(i, static_cast<uint32>(modelTransforms.size()));
+            modelMeshletInstances.emplace_back(i, transformIndex, meshPrimitive.MaterialIndex);
           }
         }
         modelTransforms.emplace_back(transform);
@@ -322,7 +325,7 @@ namespace Retina::Sandbox {
     self._vertices = std::move(modelVertices);
     self._indices = std::move(modelIndices);
     self._primitives = std::move(modelPrimitives);
-
+    self._model = std::move(model);
     return self;
   }
 
@@ -359,5 +362,15 @@ namespace Retina::Sandbox {
   auto CMeshletModel::GetPrimitives() const noexcept -> std::span<const uint8> {
     RETINA_PROFILE_SCOPED();
     return _primitives;
+  }
+
+  auto CMeshletModel::GetTextures() const noexcept -> std::span<const STexture> {
+    RETINA_PROFILE_SCOPED();
+    return _model.GetTextures();
+  }
+
+  auto CMeshletModel::GetMaterials() const noexcept -> std::span<const SMaterial> {
+    RETINA_PROFILE_SCOPED();
+    return _model.GetMaterials();
   }
 }

@@ -19,7 +19,9 @@ namespace Retina::Sandbox {
       _files(std::exchange(other._files, {})),
       _meshes(std::exchange(other._meshes, {})),
       _primitives(std::exchange(other._primitives, {})),
-      _nodes(std::exchange(other._nodes, {}))
+      _nodes(std::exchange(other._nodes, {})),
+      _textures(std::exchange(other._textures, {})),
+      _materials(std::exchange(other._materials, {}))
   {
     RETINA_PROFILE_SCOPED();
   }
@@ -39,6 +41,7 @@ namespace Retina::Sandbox {
       return std::unexpected(EError::E_FILE_NOT_FOUND);
     }
 
+    const auto parent = path.parent_path();
     auto* gltf = Core::Null<cgltf_data>();
     {
       auto options = cgltf_options();
@@ -76,6 +79,67 @@ namespace Retina::Sandbox {
         if (result != cgltf_result_success) {
           return std::unexpected(EError::E_BUFFER_LOAD_FAILURE);
         }
+      }
+
+      auto textures = std::vector<STexture>();
+      auto textureIndices = Core::FlatHashMap<uint32, uint32>();
+      auto materials = std::vector<SMaterial>(gltf->materials_count);
+      const auto isTextureValid = [&](const cgltf_texture* texture) noexcept -> bool {
+        const auto isValid = texture && texture->basisu_image;
+        const auto isDataPresent = isValid && texture->basisu_image->buffer_view;
+        const auto isUriPresent = isValid && texture->basisu_image->uri;
+        return isValid && (isDataPresent || isUriPresent);
+      };
+      const auto getImageData = [&](const cgltf_image& image) noexcept -> std::pair<const uint8*, usize> {
+        if (image.buffer_view) {
+          const auto& bufferView = *image.buffer_view;
+          const auto& buffer = *bufferView.buffer;
+          const auto* data = static_cast<const uint8*>(buffer.data) + bufferView.offset;
+          const auto size = bufferView.size;
+          return { data, size };
+        }
+        if (image.uri) {
+          const auto& file = self._files.emplace_back((parent / image.uri).generic_string());
+          const auto* data = reinterpret_cast<const uint8*>(file.data());
+          const auto size = file.size();
+          return { data, size };
+        }
+        std::unreachable();
+      };
+      for (auto i = 0_u32; i < gltf->materials_count; ++i) {
+        const auto& currentMaterial = gltf->materials[i];
+        auto material = SMaterial();
+        material.BaseColorFactor = glm::make_vec3(currentMaterial.pbr_metallic_roughness.base_color_factor);
+
+        const auto* baseColorTexture = currentMaterial.pbr_metallic_roughness.base_color_texture.texture;
+        if (isTextureValid(baseColorTexture)) {
+          const auto textureIndex = cgltf_texture_index(gltf, currentMaterial.pbr_metallic_roughness.base_color_texture.texture);
+          if (textureIndices.contains(textureIndex)) {
+            material.BaseColorTexture = textureIndices[textureIndex];
+            continue;
+          }
+          const auto& image = *baseColorTexture->basisu_image;
+          const auto& [data, size] = getImageData(image);
+          textures.emplace_back(std::span(data, size), false);
+          material.BaseColorTexture = textures.size() - 1;
+          textureIndices[textureIndex] = material.BaseColorTexture;
+        }
+
+        const auto* normalTexture = currentMaterial.normal_texture.texture;
+        if (isTextureValid(normalTexture)) {
+          const auto textureIndex = cgltf_texture_index(gltf, currentMaterial.normal_texture.texture);
+          if (textureIndices.contains(textureIndex)) {
+            material.NormalTexture = textureIndices[textureIndex];
+            continue;
+          }
+          const auto& image = *normalTexture->basisu_image;
+          const auto& [data, size] = getImageData(image);
+          textures.emplace_back(std::span(data, size), true);
+          material.NormalTexture = textures.size() - 1;
+          textureIndices[textureIndex] = material.NormalTexture;
+        }
+
+        materials[i] = material;
       }
 
       auto primitives = std::vector<SPrimitive>();
@@ -176,6 +240,14 @@ namespace Retina::Sandbox {
               }
             }
           }
+
+          const auto* material = currentPrimitive.material;
+          if (!material) {
+            RETINA_SANDBOX_WARN("Primitive has no material, skipping");
+          } else {
+            primitive.MaterialIndex = cgltf_material_index(gltf, material);
+          }
+
           primitives.emplace_back(primitive);
           primitiveIndices.emplace(&currentPrimitive, primitives.size() - 1);
         }
@@ -207,12 +279,16 @@ namespace Retina::Sandbox {
       RETINA_SANDBOX_INFO(" - Meshes: {}", meshes.size());
       RETINA_SANDBOX_INFO(" - Primitives: {}", primitives.size());
       RETINA_SANDBOX_INFO(" - Nodes: {}", nodes.size());
+      RETINA_SANDBOX_INFO(" - Textures: {}", textures.size());
+      RETINA_SANDBOX_INFO(" - Materials: {}", materials.size());
       RETINA_SANDBOX_INFO("I/O Info:");
       RETINA_SANDBOX_INFO(" - Files: {}", self._files.size());
 
       self._meshes = std::move(meshes);
       self._primitives = std::move(primitives);
       self._nodes = std::move(nodes);
+      self._textures = std::move(textures);
+      self._materials = std::move(materials);
       self._data = gltf;
       return self;
     }
@@ -231,5 +307,15 @@ namespace Retina::Sandbox {
   auto CModel::GetNodes() const noexcept -> std::span<const SNode> {
     RETINA_PROFILE_SCOPED();
     return _nodes;
+  }
+
+  auto CModel::GetTextures() const noexcept -> std::span<const STexture> {
+    RETINA_PROFILE_SCOPED();
+    return _textures;
+  }
+
+  auto CModel::GetMaterials() const noexcept -> std::span<const SMaterial> {
+    RETINA_PROFILE_SCOPED();
+    return _materials;
   }
 }

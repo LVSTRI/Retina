@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 
+#include <ktx.h>
+
 namespace Retina {
   auto MakeApplication() noexcept -> Core::CUniquePtr<Entry::IApplication> {
     RETINA_PROFILE_SCOPED();
@@ -30,17 +32,17 @@ namespace Retina::Sandbox {
     RETINA_NODISCARD RETINA_INLINE constexpr auto NearestPowerTwo(T value) noexcept -> T {
       return 1 << (sizeof(T) * CHAR_BIT - std::countl_zero(value - 1));
     }
-    
+
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundUp(T dividend, T divisor) noexcept -> T {
       return (dividend + divisor - 1) / divisor;
     }
-    
+
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundDown(T dividend, T divisor) noexcept -> T {
       return dividend / divisor;
     }
-    
+
     template <typename T>
     RETINA_NODISCARD RETINA_INLINE constexpr auto DivideRoundNearest(T dividend, T divisor) noexcept -> T {
       return (dividend >= 0)
@@ -50,70 +52,70 @@ namespace Retina::Sandbox {
 
     RETINA_NODISCARD RETINA_INLINE auto SampleJitter(uint32 index, uint32 size) noexcept -> glm::vec2 {
       constexpr static auto table = std::to_array<std::pair<float32, float32>>({
-        { 0.0f, 0.0f },
-        { 0.5f, 0.33333333f },
-        { 0.25f, 0.66666667f },
-        { 0.75f, 0.11111111f },
-        { 0.125f, 0.44444444f },
-        { 0.625f, 0.77777778f },
-        { 0.375f, 0.22222222f },
-        { 0.875f, 0.55555556f },
-        { 0.0625f, 0.88888889f },
-        { 0.5625f, 0.03703704f },
-        { 0.3125f, 0.37037037f },
-        { 0.8125f, 0.7037037f },
-        { 0.1875f, 0.14814815f },
-        { 0.6875f, 0.48148148f },
-        { 0.4375f, 0.81481481f },
-        { 0.9375f, 0.25925926f },
-        { 0.03125f, 0.59259259f },
-        { 0.53125f, 0.92592593f },
-        { 0.28125f, 0.07407407f },
-        { 0.78125f, 0.40740741f },
-        { 0.15625f, 0.74074074f },
-        { 0.65625f, 0.18518519f },
-        { 0.40625f, 0.51851852f },
-        { 0.90625f, 0.85185185f },
-        { 0.09375f, 0.2962963f },
-        { 0.59375f, 0.62962963f },
-        { 0.34375f, 0.96296296f },
-        { 0.84375f, 0.01234568f },
-        { 0.21875f, 0.34567901f },
-        { 0.71875f, 0.67901235f },
-        { 0.46875f, 0.12345679f },
-        { 0.96875f, 0.45679012f },
-        { 0.015625f, 0.79012346f },
-        { 0.515625f, 0.2345679f },
-        { 0.265625f, 0.56790123f },
-        { 0.765625f, 0.90123457f },
-        { 0.140625f, 0.04938272f },
-        { 0.640625f, 0.38271605f },
-        { 0.390625f, 0.71604938f },
-        { 0.890625f, 0.16049383f },
-        { 0.078125f, 0.49382716f },
-        { 0.578125f, 0.82716049f },
-        { 0.328125f, 0.27160494f },
-        { 0.828125f, 0.60493827f },
-        { 0.203125f, 0.9382716f },
-        { 0.703125f, 0.08641975f },
-        { 0.453125f, 0.41975309f },
-        { 0.953125f, 0.75308642f },
-        { 0.046875f, 0.19753086f },
-        { 0.546875f, 0.5308642f },
-        { 0.296875f, 0.86419753f },
-        { 0.796875f, 0.30864198f },
-        { 0.171875f, 0.64197531f },
-        { 0.671875f, 0.97530864f },
-        { 0.421875f, 0.02469136f },
-        { 0.921875f, 0.35802469f },
-        { 0.109375f, 0.69135802f },
-        { 0.609375f, 0.13580247f },
-        { 0.359375f, 0.4691358f },
-        { 0.859375f, 0.80246914f },
-        { 0.234375f, 0.24691358f },
-        { 0.734375f, 0.58024691f },
-        { 0.484375f, 0.91358025f },
-        { 0.984375f, 0.0617284f },
+        { 0.0000000f, 0.00000000f },
+        { 0.5000000f, 0.33333333f },
+        { 0.2500000f, 0.66666667f },
+        { 0.7500000f, 0.11111111f },
+        { 0.1250000f, 0.44444444f },
+        { 0.6250000f, 0.77777778f },
+        { 0.3750000f, 0.22222222f },
+        { 0.8750000f, 0.55555556f },
+        { 0.0625000f, 0.88888889f },
+        { 0.5625000f, 0.03703704f },
+        { 0.3125000f, 0.37037037f },
+        { 0.8125000f, 0.70370370f },
+        { 0.1875000f, 0.14814815f },
+        { 0.6875000f, 0.48148148f },
+        { 0.4375000f, 0.81481481f },
+        { 0.9375000f, 0.25925926f },
+        { 0.0312500f, 0.59259259f },
+        { 0.5312500f, 0.92592593f },
+        { 0.2812500f, 0.07407407f },
+        { 0.7812500f, 0.40740741f },
+        { 0.1562500f, 0.74074074f },
+        { 0.6562500f, 0.18518519f },
+        { 0.4062500f, 0.51851852f },
+        { 0.9062500f, 0.85185185f },
+        { 0.0937500f, 0.29629630f },
+        { 0.5937500f, 0.62962963f },
+        { 0.3437500f, 0.96296296f },
+        { 0.8437500f, 0.01234568f },
+        { 0.2187500f, 0.34567901f },
+        { 0.7187500f, 0.67901235f },
+        { 0.4687500f, 0.12345679f },
+        { 0.9687500f, 0.45679012f },
+        { 0.0156250f, 0.79012346f },
+        { 0.5156250f, 0.23456790f },
+        { 0.2656250f, 0.56790123f },
+        { 0.7656250f, 0.90123457f },
+        { 0.1406250f, 0.04938272f },
+        { 0.6406250f, 0.38271605f },
+        { 0.3906250f, 0.71604938f },
+        { 0.8906250f, 0.16049383f },
+        { 0.0781250f, 0.49382716f },
+        { 0.5781250f, 0.82716049f },
+        { 0.3281250f, 0.27160494f },
+        { 0.8281250f, 0.60493827f },
+        { 0.2031250f, 0.93827160f },
+        { 0.7031250f, 0.08641975f },
+        { 0.4531250f, 0.41975309f },
+        { 0.9531250f, 0.75308642f },
+        { 0.0468750f, 0.19753086f },
+        { 0.5468750f, 0.53086420f },
+        { 0.2968750f, 0.86419753f },
+        { 0.7968750f, 0.30864198f },
+        { 0.1718750f, 0.64197531f },
+        { 0.6718750f, 0.97530864f },
+        { 0.4218750f, 0.02469136f },
+        { 0.9218750f, 0.35802469f },
+        { 0.1093750f, 0.69135802f },
+        { 0.6093750f, 0.13580247f },
+        { 0.3593750f, 0.46913580f },
+        { 0.8593750f, 0.80246914f },
+        { 0.2343750f, 0.24691358f },
+        { 0.7343750f, 0.58024691f },
+        { 0.4843750f, 0.91358025f },
+        { 0.9843750f, 0.06172840f },
         { 0.0078125f, 0.39506173f },
         { 0.5078125f, 0.72839506f },
         { 0.2578125f, 0.17283951f },
@@ -124,7 +126,7 @@ namespace Retina::Sandbox {
         { 0.8828125f, 0.95061728f },
         { 0.0703125f, 0.09876543f },
         { 0.5703125f, 0.43209877f },
-        { 0.3203125f, 0.7654321f },
+        { 0.3203125f, 0.76543210f },
         { 0.8203125f, 0.20987654f },
         { 0.1953125f, 0.54320988f },
         { 0.6953125f, 0.87654321f },
@@ -136,12 +138,12 @@ namespace Retina::Sandbox {
         { 0.7890625f, 0.67078189f },
         { 0.1640625f, 0.11522634f },
         { 0.6640625f, 0.44855967f },
-        { 0.4140625f, 0.781893f },
+        { 0.4140625f, 0.78189300f },
         { 0.9140625f, 0.22633745f },
         { 0.1015625f, 0.55967078f },
         { 0.6015625f, 0.89300412f },
         { 0.3515625f, 0.04115226f },
-        { 0.8515625f, 0.3744856f },
+        { 0.8515625f, 0.37448560f },
         { 0.2265625f, 0.70781893f },
         { 0.7265625f, 0.15226337f },
         { 0.4765625f, 0.48559671f },
@@ -149,7 +151,7 @@ namespace Retina::Sandbox {
         { 0.0234375f, 0.26337449f },
         { 0.5234375f, 0.59670782f },
         { 0.2734375f, 0.93004115f },
-        { 0.7734375f, 0.0781893f },
+        { 0.7734375f, 0.07818930f },
         { 0.1484375f, 0.41152263f },
         { 0.6484375f, 0.74485597f },
         { 0.3984375f, 0.18930041f },
@@ -174,7 +176,7 @@ namespace Retina::Sandbox {
         { 0.6171875f, 0.49794239f },
         { 0.3671875f, 0.83127572f },
         { 0.8671875f, 0.27572016f },
-        { 0.2421875f, 0.6090535f },
+        { 0.2421875f, 0.60905350f },
         { 0.7421875f, 0.94238683f },
         { 0.4921875f, 0.09053498f },
         { 0.9921875f, 0.42386831f },
@@ -184,7 +186,7 @@ namespace Retina::Sandbox {
     }
 
     template <typename T>
-    RETINA_NODISCARD auto UploadBufferAsResource(
+    RETINA_NODISCARD RETINA_INLINE auto UploadBufferAsResource(
       const Graphics::CDevice& device,
       std::span<const T> data,
       std::string_view name = ""
@@ -207,6 +209,91 @@ namespace Retina::Sandbox {
         commands.CopyBuffer(*buffer, *resource, {});
       });
       return resource;
+    }
+
+    RETINA_NODISCARD RETINA_INLINE auto UploadTexture(
+      const Graphics::CDevice& device,
+      std::span<const uint8> bytes,
+      bool isNormal,
+      std::string_view name = "Texture"
+    ) noexcept -> Graphics::CShaderResource<Graphics::CImage> {
+      RETINA_PROFILE_SCOPED();
+      auto textureHandle = Core::Null<ktxTexture2>();
+      ktxTexture2_CreateFromMemory(
+        bytes.data(),
+        bytes.size(),
+        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,
+        &textureHandle
+      );
+      if (ktxTexture2_NeedsTranscoding(textureHandle)) {
+        if (isNormal) {
+          ktxTexture2_TranscodeBasis(textureHandle, KTX_TTF_BC5_RG, KTX_TF_HIGH_QUALITY);
+        } else {
+          ktxTexture2_TranscodeBasis(textureHandle, KTX_TTF_BC7_RGBA, KTX_TF_HIGH_QUALITY);
+        }
+      }
+      auto staging = Graphics::CTypedBuffer<uint8>::Make(device, {
+        .Name = "StagingBuffer",
+        .Heap = Graphics::EHeapType::E_HOST_ONLY_CACHED,
+        .Capacity = textureHandle->dataSize,
+      });
+      staging->Write(std::span(textureHandle->pData, textureHandle->dataSize));
+
+      auto image = device.GetShaderResourceTable().MakeImage({
+        .Name = name.data(),
+        .Width = textureHandle->baseWidth,
+        .Height = textureHandle->baseHeight,
+        .Levels = textureHandle->numLevels,
+        .IsCrossDomain = true,
+        .Usage =
+          Graphics::EImageUsageFlag::E_SAMPLED |
+          Graphics::EImageUsageFlag::E_TRANSFER_DST,
+        .Format = isNormal ?
+          Graphics::EResourceFormat::E_BC5_UNORM_BLOCK :
+          Graphics::EResourceFormat::E_BC7_SRGB_BLOCK,
+        .ViewInfo = Graphics::DEFAULT_IMAGE_VIEW_CREATE_INFO,
+      });
+      device.GetTransferQueue().Submit([&](Graphics::CCommandBuffer& commands) noexcept {
+        commands
+          .ImageMemoryBarrier({
+            .Image = *image,
+            .SourceStage = Graphics::EPipelineStageFlag::E_TOP_OF_PIPE,
+            .DestStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_NONE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            .OldLayout = Graphics::EImageLayout::E_UNDEFINED,
+            .NewLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+          });
+        for (auto i = 0_u32; i < textureHandle->numLevels; ++i) {
+          auto offset = 0_u64;
+          ktxTexture_GetImageOffset(ktxTexture(textureHandle), i, 0, 0, &offset);
+          commands.CopyBufferToImage(
+            *staging,
+            *image,
+            {
+              .Offset = offset,
+              .SubresourceRange = {
+                .BaseLevel = i,
+                .LevelCount = 1,
+              },
+            }
+          );
+        }
+        commands
+          .ImageMemoryBarrier({
+            .Image = *image,
+            .SourceStage = Graphics::EPipelineStageFlag::E_TRANSFER,
+            .DestStage =
+              Graphics::EPipelineStageFlag::E_FRAGMENT_SHADER |
+              Graphics::EPipelineStageFlag::E_COMPUTE_SHADER,
+            .SourceAccess = Graphics::EResourceAccessFlag::E_TRANSFER_WRITE,
+            .DestAccess = Graphics::EResourceAccessFlag::E_SHADER_READ,
+            .OldLayout = Graphics::EImageLayout::E_TRANSFER_DST_OPTIMAL,
+            .NewLayout = Graphics::EImageLayout::E_SHADER_READ_ONLY_OPTIMAL,
+          });
+      });
+      ktxTexture_Destroy(ktxTexture(textureHandle));
+      return image;
     }
   }
 
@@ -268,15 +355,14 @@ namespace Retina::Sandbox {
 
     _dlssInstance = Graphics::CNvidiaDlssFeature::Make(*_device);
 
-    _model = CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/bistro.gltf"))
-      .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
-        RETINA_SANDBOX_ERROR("Failed to load model");
-        return std::unexpected(error);
-      })
-      .transform([](auto&& model) -> std::optional<CMeshletModel> {
-        return model;
-      })
-      .value_or(std::nullopt);
+    _model = std::move(
+      CMeshletModel::Make(Details::WithAssetPath("Models/Bistro/Bistro.gltf"))
+        .or_else([](const auto& error) -> std::expected<CMeshletModel, CModel::EError> {
+          RETINA_SANDBOX_ERROR("Failed to load model");
+          return std::unexpected(error);
+        })
+        .value()
+    );
 
     _viewBuffer = _device->GetShaderResourceTable().MakeBuffer<SViewInfo>(FRAMES_IN_FLIGHT, {
       .Name = "ViewBuffer",
@@ -291,15 +377,50 @@ namespace Retina::Sandbox {
     InitializeTonemapPass();
     InitializeDLSSPass();
 
-    if (_model) {
-      _meshletBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshlets(), "MeshletBuffer");
-      _meshletInstanceBuffer = Details::UploadBufferAsResource(*_device, _model->GetMeshletInstances(), "MeshletInstanceBuffer");
-      _transformBuffer = Details::UploadBufferAsResource(*_device, _model->GetTransforms(), "TransformBuffer");
-      _positionBuffer = Details::UploadBufferAsResource(*_device, _model->GetPositions(), "PositionBuffer");
-      _vertexBuffer = Details::UploadBufferAsResource(*_device, _model->GetVertices(), "VertexBuffer");
-      _indexBuffer = Details::UploadBufferAsResource(*_device, _model->GetIndices(), "IndexBuffer");
-      _primitiveBuffer = Details::UploadBufferAsResource(*_device, _model->GetPrimitives(), "PrimitiveBuffer");
+    _meshletBuffer = Details::UploadBufferAsResource(*_device, _model.GetMeshlets(), "MeshletBuffer");
+    _meshletInstanceBuffer = Details::UploadBufferAsResource(*_device, _model.GetMeshletInstances(), "MeshletInstanceBuffer");
+    _transformBuffer = Details::UploadBufferAsResource(*_device, _model.GetTransforms(), "TransformBuffer");
+    _positionBuffer = Details::UploadBufferAsResource(*_device, _model.GetPositions(), "PositionBuffer");
+    _vertexBuffer = Details::UploadBufferAsResource(*_device, _model.GetVertices(), "VertexBuffer");
+    _indexBuffer = Details::UploadBufferAsResource(*_device, _model.GetIndices(), "IndexBuffer");
+    _primitiveBuffer = Details::UploadBufferAsResource(*_device, _model.GetPrimitives(), "PrimitiveBuffer");
+
+    {
+      const auto modelMaterials = _model.GetMaterials();
+      const auto modelTextures = _model.GetTextures();
+
+      auto materials = std::vector<SMaterial>();
+      materials.reserve(modelMaterials.size());
+      for (const auto& currentMaterial : modelMaterials) {
+        auto material = currentMaterial;
+        if (currentMaterial.BaseColorTexture != -1) {
+          const auto [bytes, _] = modelTextures[currentMaterial.BaseColorTexture];
+          const auto resource = Details::UploadTexture(*_device, bytes, false);
+          _textures.emplace_back(resource);
+          material.BaseColorTexture = resource.GetHandle();
+        }
+
+        if (currentMaterial.NormalTexture != -1) {
+          const auto [bytes, _] = modelTextures[currentMaterial.NormalTexture];
+          const auto resource = Details::UploadTexture(*_device, bytes, true);
+          _textures.emplace_back(resource);
+          material.NormalTexture = resource.GetHandle();
+        }
+
+        materials.emplace_back(material);
+      }
+
+      _materialBuffer = Details::UploadBufferAsResource(*_device, std::span<const SMaterial>(materials), "MaterialBuffer");
     }
+    _linearSampler = _device->GetShaderResourceTable().MakeSampler({
+      .Name = "LinearSampler",
+      .Filter = { Graphics::EFilter::E_LINEAR },
+      .Address = { Graphics::ESamplerAddressMode::E_REPEAT },
+      .MipmapMode = Graphics::ESamplerMipmapMode::E_LINEAR,
+      .AnisotropyEnable = true,
+      .Anisotropy = 16.0f,
+      .LodBias = -1.0f,
+    });
 
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowResize);
     _window->GetEventDispatcher().Attach(this, &CSandboxApplication::OnWindowClose);
@@ -561,6 +682,8 @@ namespace Retina::Sandbox {
         _positionBuffer.GetHandle(),
         _indexBuffer.GetHandle(),
         _primitiveBuffer.GetHandle(),
+        _materialBuffer.GetHandle(),
+        _linearSampler.GetHandle(),
         viewBuffer.GetHandle()
       )
       .Draw(3)
@@ -717,7 +840,21 @@ namespace Retina::Sandbox {
               }
             }();
             const auto oldPresetIndex = currentPresetIndex;
-            if (ImGui::Combo("Quality Preset", &currentPresetIndex, qualityPresetNames.data(), qualityPresetNames.size())) {
+            if (ImGui::BeginCombo("Quality Preset", qualityPresetNames[currentPresetIndex])) {
+              if (ImGui::Selectable(qualityPresetNames[0])) {
+                currentPresetIndex = 0;
+              }
+              if (ImGui::Selectable(qualityPresetNames[1])) {
+                currentPresetIndex = 1;
+              }
+              if (ImGui::Selectable(qualityPresetNames[2])) {
+                currentPresetIndex = 2;
+              }
+              if (ImGui::Selectable(qualityPresetNames[3])) {
+                currentPresetIndex = 3;
+              }
+              ImGui::EndCombo();
+
               _dlss.Preset = [&] noexcept {
                 switch (currentPresetIndex) {
                   case 0: return Graphics::ENvidiaDlssQualityPreset::E_PERFORMANCE;
